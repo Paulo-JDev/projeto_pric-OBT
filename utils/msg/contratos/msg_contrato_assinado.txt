@@ -1,0 +1,17 @@
+Homologação do Pregão Eletrônico nº{{Processo}}
+
+PTC que o Pregão Eletrônico nº {{Processo}}, cujo objeto é {{material_servico}} {{Objeto}}, foi homologado em {{31JUL2024,}} em favor da empresa {{Empresa}} CNPJ {{cnpj}}, pelo valor mensalde R$ {{Valor}} para um período de {{36 meses,}} perfazendo um total de R$ {{Valor}}.
+
+Em face do exposto, para a efetivação da contratação, CNS PSB:
+
+ALFA - Providenciar a assinatura dos documentos abaixo relacionados e encaminhamento dos arquivos assinados digitalmente a este CeIM para juntada ao processo:
+
+UNO – Termo de Ciência do Gestor e Fiscal do Contrato e seus substitutos;
+
+DOIS – Portaria de Gestor e Fiscal de Contrato e seus substitutos; e
+
+TRÊS – Termo de Contrato.
+
+BRAVO - Efetuar o lançamento no Comprasnet Contratos; e
+
+CHARLIE - PTC ENC, pelo meu e-mail nº {{159/2024,}} os documentos citados no item ALFA e cópia do processo NUP {{nup}}, necessários ao processo de Gestão e Fiscalização do Contrato BT

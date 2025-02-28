@@ -1,0 +1,13 @@
+Prorrogação de contrato relativo à atividade de custeio.
+
+Em atendimento à Circ nº 16/2024, da SGM, e Port. MB/MD nº 38/2022, CNS PSB AUT assinatura do {{Terceiro Termo Aditivo}} de prorrogação aos Contratos Administrativos, com vigência encerrando em {{vigencia_final}}.
+
+ALFA - Números do Contrato/Termos Aditivo (TA): {{Contrato/Ata}} {{Primeiro Termo Aditivo}};
+
+BRAVO - Objeto: {{material_servico}} {{Objeto}};
+
+CHARLIE - Justificativa da contratação:  {{justificativa}}
+ 
+DELTA - Valor do contrato reajustado: R$ {{Valor}}.
+
+PTC ENC, pelo e-mail nº {{1959/2024,}} a minuta dos Contrato/Termo Aditivo BT

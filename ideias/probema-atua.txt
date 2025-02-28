@@ -1,0 +1,17 @@
+um problema que eu ja esta ate imaginando que teria, quando eu faço a requisuição da api colocando a uasg baixando o .json e depois a tabela no .db
+trouxe um problema de atualização, que no momento que eu faço a requisição baixa as informações da api do momento mas se depois se la no sistema da api
+aparece mais contratos ou tiram contratos, o meu sistema não "atualiza" sozinho o "usuario" precisa excluir os arquivo referentes aquela uasg e fazer a 
+requisição novamente.
+
+# Resolução: (acho que é a melhor resolução, talvez jogue no gpt para ver se tem outras formas de resolver esse problema)
+    Por etapas: 1. capacitar o codigo de verificar de maneira correta a existencia das uasgs e deixar o usuario fazer um get na api mesmo se a uasg ja estiver salva
+2. fazer com que não de problema de compadibilidade e visualização com esse "get duplo" de api-uasg
+3. fazer com que o codigo compare os arquivos .json (do que "velho" e o "novo") e adicionar ou apagando as informaçoes no .db e exluindo o antigo .json e deixando o novo
+4. fazer uma forma de não criar uma novo arquivo .db mas sim atualizar o mesmo com as novas informaçoes do .json, e apagando o arquivo json antigo (resumo)
+5. não conflitar com o resto do codigo
+
+# outras funçoes
+1 Com tudo sobre a "atualização de arquivo .db" feita podemos partir para, colocar um botão que abre uma area de comentario na aba de status da janela detaildialog 
+1.1 colocando para salvar mais de um comentario parecendo uma lista
+1.2 e quando eu sair daquela janela ou ate mesmo fechar o programa, fique salvo esses coemntarios
+2. deixar esse comentarios e outras funçoes sobre o contrato mesmo depois da atualização do .db   

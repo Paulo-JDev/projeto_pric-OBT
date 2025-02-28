@@ -1,0 +1,17 @@
+Homologação do Pregão Eletrônico nº {{Processo}}
+
+PTC que o Pregão Eletrônico nº {{Processo}}, cujo objeto é o registro de preços para {{material_servico}} {{Objeto}}, foi homologado em {{26JUL2024,}} em favor da empresa {{Empresa}}, CNPJ {{cnpj}},  Ata de Registro
+de Preços (ARP) nº {{Contrato/Ata}}, no valor total de R$ {{Valor}}.
+
+Em face do exposto, CNS PSB:
+
+ALFA - Providenciar a assinatura dos documentos abaixo relacionados e encaminhar os arquivos assinados digitalmente a este CeIM para juntada ao processo:
+
+UNO – Termo de Ciência do Gestor e Fiscal do Contrato e seus substitutos;
+
+DOIS –  Portaria de Gestor e Fiscal de Contrato, e seus substitutos;
+
+TRÊS – Ata de Registro de Preços n° {{Processo,}} assinada pelo Gestor
+
+BRAVO - PTC ENC, pelo meu e-mail nº {{159/2024,}} os documentos citados no item ALFA e cópia do processo NUP {{nup}}, necessários ao processo de Gestão e Fiscalização BT
+	

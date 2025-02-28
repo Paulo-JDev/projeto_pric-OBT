@@ -1,0 +1,168 @@
+/* Estilização Geral - Dark Mode */
+QWidget {
+    background-color: #121212;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+/* Títulos e Labels */
+QLabel {
+    font-size: 14px;
+    color: #ffffff;  /* Texto branco */
+}
+
+QLabel[title="true"] {
+    font-weight: bold;
+    font-size: 16px;
+    color: #ffffff;
+}
+
+/* Botões */
+QPushButton {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border-radius: 5px;
+    padding: 6px;
+    border: 1px solid #333;
+}
+
+QPushButton:hover {
+    background-color: #333;
+}
+
+/* Inputs */
+QLineEdit, QTextEdit {
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    padding: 4px;
+    border-radius: 4px;
+    color: #ffffff;  /* Texto branco */
+}
+
+QLineEdit:focus, QTextEdit:focus {
+    border: 1px solid #0078D7;
+}
+
+/* Tabelas */
+QTableWidget {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    gridline-color: #555;
+    color: #ffffff; /* Texto branco */
+}
+
+QHeaderView::section {
+    background-color: #333;
+    color: #ffffff;
+    padding: 4px;
+    border: 1px solid #444;
+}
+
+/* ScrollBar */
+QScrollBar:vertical {
+    border: none;
+    background: #121212;
+    width: 8px;
+}
+
+QScrollBar::handle:vertical {
+    background: #444;
+    min-height: 20px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+}
+
+/* Menus */
+QMenu {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+}
+
+QMenu::item {
+    color: #ffffff;
+    padding: 6px 12px;
+}
+
+QMenu::item:selected {
+    background-color: #333;
+}
+
+/* Caixa de Mensagem */
+QMessageBox {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+/* Aba de Navegação */
+QTabWidget::pane {
+    border: 1px solid #333;
+    background: #1e1e1e;
+}
+
+QTabBar::tab {
+    background: #333;
+    color: #ffffff;
+    padding: 8px;
+    border-radius: 3px;
+}
+
+QTabBar::tab:selected {
+    background: #0491f0;
+    color: #ffffff;
+}
+
+/* Aba "Status" - Alinhando o botão no topo esquerdo */
+QTabWidget::tab-bar {
+    alignment: left;
+}
+
+QPushButton#statusButton {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #1e1e1e;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    border: 1px solid #333;
+}
+
+QPushButton#statusButton:hover {
+    background-color: #333;
+}
+
+/* Ajusta o layout da aba "Informações Gerais" */
+QLineEdit {
+    background-color: #2E2E2E;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 5px;
+    padding: 4px;
+}
+
+QLabel {
+    font-weight: bold;
+    color: white;
+    font-size: 14px;
+}
+
+/* Botões de copiar */
+/*QPushButton {
+    background-color: #4c9bdb;
+    color: white;
+    border-radius: 5px;
+    padding: 4px;
+}*/
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+/* Estilização dos RadioButtons */
+QRadioButton {
+    color: white;
+}
