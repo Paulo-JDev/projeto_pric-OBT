@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         self.uasg_input = QLineEdit()
         self.input_layout.addWidget(self.uasg_input)
 
-        self.fetch_button = QPushButton("Requisição ou atualização da tabela")
+        self.fetch_button = QPushButton("Criação ou atualização da tabela")
         self.fetch_button.clicked.connect(self.controller.fetch_and_create_table)
         self.input_layout.addWidget(self.fetch_button)
 

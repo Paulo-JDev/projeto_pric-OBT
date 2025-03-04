@@ -34,6 +34,44 @@ class UASGModel:
         response = requests.get(url_api)
         response.raise_for_status()
         return response.json()
+    
+    def save_uasg_data(self, uasg, data):
+        uasg_dir = os.path.join(self.database_dir, f"uasg_{uasg}")
+        os.makedirs(uasg_dir, exist_ok=True)
+
+        json_file = os.path.join(uasg_dir, f"uasg_{uasg}_contratos.json")
+        with open(json_file, 'w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+
+        db_file = os.path.join(uasg_dir, f"uasg_{uasg}_contratos.db")
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS contratos (
+                numero INTEGER,
+                nome TEXT,
+                licitacao_numero TEXT,
+                fornecedor_nome TEXT,
+                processo INTEGER
+            )
+        ''')
+
+        for contrato in data:
+            cursor.execute('''
+                INSERT INTO contratos (numero, nome, licitacao_numero, fornecedor_nome, processo)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                contrato.get("numero"),
+                # modalidade 
+                contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
+                contrato.get("licitacao_numero"),
+                contrato.get("fornecedor", {}).get("nome"),
+                # objeto
+                contrato.get("processo"),
+            ))
+        conn.commit()
+        conn.close()
 
     def update_uasg_data(self, uasg):
         """Atualiza os dados da UASG no banco de dados, comparando com os dados antigos."""
@@ -118,3 +156,11 @@ class UASGModel:
 
         conn.commit()
         conn.close()
+
+    def delete_uasg_data(self, uasg):
+        uasg_dir = os.path.join(self.database_dir, f"uasg_{uasg}")
+        if os.path.exists(uasg_dir):
+            for file in os.listdir(uasg_dir):
+                os.remove(os.path.join(uasg_dir, file))
+            os.rmdir(uasg_dir)
+

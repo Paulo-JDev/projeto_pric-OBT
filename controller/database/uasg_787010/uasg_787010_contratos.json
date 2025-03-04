@@ -451,7 +451,7 @@
         "valor_global": "11.334.610,60",
         "num_parcelas": 1,
         "valor_parcela": "11.334.610,60",
-        "valor_acumulado": "146.833.884,60",
+        "valor_acumulado": "22.153.168,00",
         "links": {
             "historico": "https://contratos.comprasnet.gov.br/api/contrato/216297/historico",
             "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/216297/empenhos",

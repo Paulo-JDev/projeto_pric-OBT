@@ -14,7 +14,7 @@ class DetailsDialog(QDialog):
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Detalhes do Contrato")
-        self.setFixedSize(800, 750)
+        self.setFixedSize(800, 650)
 
         self.load_styles()
 
@@ -55,6 +55,8 @@ class DetailsDialog(QDialog):
             ("Contrato/Ata:", "contrato"),
             ("Número:", "numero"),
             ("NUP:", "processo"),
+            ("Vigencia Inicio:", "vigencia_inicio"),
+            ("Vigencia Final:", "vigencia_fim"),
             ("Valor Global:", "valor_global"),
             ("Tipo: ", "tipo"),
         ]
