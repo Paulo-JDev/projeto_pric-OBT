@@ -239,12 +239,11 @@ class DetailsDialog(QDialog):
 
     def close_and_save(self):
         """Salva o status e os comentários ao fechar a janela"""
-        self.save_status(id_contrato=self.id_contrato, uasg=self.uasg)
-        self.close()
+        self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", ""))
 
     def save_status(self, id_contrato, uasg):
         """Salva o status, comentários e opções dos radio buttons em um arquivo separado para cada contrato dentro da UASG"""
-        
+        id_contrato = self.data.get("id", "")
         # Diretório base dos status
         base_dir = Path("status_glob")
         base_dir.mkdir(exist_ok=True)  # Cria se não existir
@@ -279,22 +278,34 @@ class DetailsDialog(QDialog):
 
     def load_status(self):
         """Carrega os dados salvos no JSON"""
-        if os.path.exists(self.save_file):
-            with open(self.save_file, "r", encoding="utf-8") as file:
+        uasg = self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
+        id_contrato = self.data.get("id", "")
+
+        # Caminho correto do arquivo
+        status_file = Path("status_glob") / str(uasg) / f"{id_contrato}.json"
+
+        if status_file.exists():
+            with status_file.open("r", encoding="utf-8") as file:
                 status_data = json.load(file)
 
                 self.status_dropdown.setCurrentText(status_data.get("status", ""))
                 self.objeto_edit.setText(status_data.get("objeto", "Não informado"))
 
+                # Restaurando os radio buttons
                 for title, selected_value in status_data.get("radio_options", {}).items():
                     if selected_value in self.radio_buttons.get(title, {}):
                         self.radio_buttons[title][selected_value].setChecked(True)
 
+                # Limpando e recarregando a lista de comentários
+                self.comment_list.clear()
                 for comment in status_data.get("comments", []):
                     item = QListWidgetItem(comment)
                     item.setCheckState(Qt.CheckState.Checked)
                     self.comment_list.addItem(item)
 
+            print(f"Status carregado de {status_file}")
+        else:
+            print("Nenhum status salvo encontrado.")
 
     def copy_to_clipboard(self, line_edit):
         """Copia o texto do campo para a área de transferência"""

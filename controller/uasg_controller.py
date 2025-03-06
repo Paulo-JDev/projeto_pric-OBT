@@ -94,9 +94,11 @@ class UASGController:
 
         for contrato in data:
             vigencia_fim_str = contrato.get("vigencia_fim", "")
+            #vigencia_inicio_str = contrato.get("vigencia_inicio", "")
             if vigencia_fim_str:
                 try:
                     vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
+                    #vigencia_inicio = datetime.strptime(vigencia_inicio_str, "%Y-%m-%d").date()
                     dias_restantes = (vigencia_fim - today).days
                 except ValueError:
                     dias_restantes = float('-inf')  # Se a data for inválida, coloca no final
