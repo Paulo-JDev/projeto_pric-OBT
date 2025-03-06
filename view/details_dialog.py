@@ -2,7 +2,8 @@ import os
 import json
 from PyQt6.QtWidgets import (
     QDialog, QLabel, QVBoxLayout, QScrollArea, QWidget, QPushButton,
-    QTabWidget, QFormLayout, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup, QComboBox, QTextEdit, QListWidget, QListWidgetItem, QApplication
+    QTabWidget, QFormLayout, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup, 
+    QComboBox, QTextEdit, QListWidget, QListWidgetItem, QApplication
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QClipboard
@@ -52,7 +53,7 @@ class DetailsDialog(QDialog):
         # Criar os campos conforme a imagem
         fields = [
             ("ID Processo:", "licitacao_numero"),
-            ("Contrato/Ata:", "contrato"),
+            #("Contrato/Ata:", "contrato"),
             ("Número:", "numero"),
             ("NUP:", "processo"),
             ("Vigencia Inicio:", "vigencia_inicio"),
@@ -186,7 +187,7 @@ class DetailsDialog(QDialog):
         # Lista de comentários
         self.comment_list = QListWidget()
         layout.addWidget(self.comment_list)
-
+       
         # Botão "Excluir Comentário"
         self.delete_comment_button = QPushButton("Excluir Comentário")
         self.delete_comment_button.clicked.connect(self.delete_comment)
@@ -225,10 +226,12 @@ class DetailsDialog(QDialog):
         comment_text = self.comment_box.toPlainText().strip()
         if comment_text:
             item = QListWidgetItem(comment_text)
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Checked)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable) # Permite que o item seja marcável
+            item.setCheckState(Qt.CheckState.Unchecked) #Uncheckend deixa deselecionado e Checkend deixa selecionado 
             self.comment_list.addItem(item)
             self.comment_box.clear()  # Limpa a caixa de texto
+
+            self.comment_list.clearSelection()  # Remove qualquer seleção ativa
 
     def delete_comment(self):
         """Remove os comentários selecionados"""
@@ -300,8 +303,10 @@ class DetailsDialog(QDialog):
                 self.comment_list.clear()
                 for comment in status_data.get("comments", []):
                     item = QListWidgetItem(comment)
-                    item.setCheckState(Qt.CheckState.Checked)
+                    item.setCheckState(Qt.CheckState.Unchecked)
                     self.comment_list.addItem(item)
+
+                self.comment_list.clearSelection()  # 🟢 Garante que nenhum item está selecionado
 
             print(f"Status carregado de {status_file}")
         else:

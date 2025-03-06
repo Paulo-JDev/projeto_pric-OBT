@@ -65,7 +65,7 @@ class MainWindow(QMainWindow):
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu) # Permite a exibição do menu de contexto
         self.table.customContextMenuRequested.connect(self.controller.show_context_menu) # Exibe o menu de contexto
 
-        self.table.verticalHeader().setVisible(False) # Oculta os números das linhas
+        self.table.verticalHeader().setVisible(True) # Oculta os números das linhas
 
         self.table_layout.addWidget(self.table) # Adiciona a tabela ao layout
 
