@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from PyQt6.QtWidgets import (
     QDialog, QLabel, QVBoxLayout, QScrollArea, QWidget, QPushButton,
@@ -9,9 +10,14 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QClipboard
 from pathlib import Path
 
-class DetailsDialog(QDialog):
-    save_file = "status_data.json"  # Arquivo para salvar o status e os comentários
+view_dir = Path(__file__).resolve().parent
+sys.path.append(str(view_dir))
 
+from abas_detalhes.general_tab import create_general_tab
+from abas_detalhes.object_tab import create_object_tab
+from abas_detalhes.status_tab import create_status_tab
+
+class DetailsDialog(QDialog):
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Detalhes do Contrato")
@@ -22,14 +28,17 @@ class DetailsDialog(QDialog):
         self.data = data
         self.main_layout = QVBoxLayout(self)
 
+        self.radio_groups = {}  # Adicione esta linha
+        self.radio_buttons = {}  # Adicione esta linha (se ainda não estiver presente)
+
         # Criar o TabWidget
         self.tabs = QTabWidget()
         self.main_layout.addWidget(self.tabs)
 
         # Criar abas
-        self.create_general_tab()
-        self.create_object_tab()
-        self.create_status_tab()  # Atualização na aba Status
+        self.tabs.addTab(create_general_tab(self), "Informações Gerais")
+        self.tabs.addTab(create_object_tab(self), "Objeto")
+        self.tabs.addTab(create_status_tab(self), "Status")
 
         # Botão de salvar
         close_button = QPushButton("Salvar")
@@ -39,207 +48,25 @@ class DetailsDialog(QDialog):
         # Carregar dados salvos
         self.load_status()
 
-    def create_general_tab(self):
-        """Cria a aba de Informações Gerais"""
-        general_tab = QWidget()
-        layout = QVBoxLayout(general_tab)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_widget = QWidget()
-        scroll_layout = QFormLayout(scroll_widget)
-        scroll.setWidget(scroll_widget)
-
-        # Criar os campos conforme a imagem
-        fields = [
-            ("ID Processo:", "licitacao_numero"),
-            #("Contrato/Ata:", "contrato"),
-            ("Número:", "numero"),
-            ("NUP:", "processo"),
-            ("Vigencia Inicio:", "vigencia_inicio"),
-            ("Vigencia Final:", "vigencia_fim"),
-            ("Valor Global:", "valor_global"),
-            ("Tipo: ", "tipo"),
-        ]
-
-        self.line_edits = {}  # Armazena os campos de entrada
-
-        for label_text, field in fields:
-            hbox = QHBoxLayout()
-            label = QLabel(label_text)
-
-            line_edit = QLineEdit(str(self.data.get(field, "Não informado")))
-            line_edit.setReadOnly(True)
-
-            # Criar botão de copiar
-            copy_button = QPushButton("Copiar")
-            copy_button.clicked.connect(lambda _, text=line_edit: self.copy_to_clipboard(text))
-
-            hbox.addWidget(line_edit)
-            hbox.addWidget(copy_button)
-
-            self.line_edits[field] = line_edit
-            scroll_layout.addRow(label, hbox)
-
-        #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-        # Campo Empresa obtendo apenas o nome correto dentro de "fornecedor"
-        empresa_label = QLabel("Empresa:")
-        empresa_hbox = QHBoxLayout()
-
-        empresa_value = self.data.get("fornecedor", {}).get("nome", "Não informado")
-        self.empresa_edit = QLineEdit(str(empresa_value))
-        self.empresa_edit.setReadOnly(True)
-
-        copy_empresa_button = QPushButton("Copiar")
-        copy_empresa_button.clicked.connect(lambda: self.copy_to_clipboard(self.empresa_edit))
-
-        empresa_hbox.addWidget(self.empresa_edit)
-        empresa_hbox.addWidget(copy_empresa_button)
-        scroll_layout.addRow(empresa_label, empresa_hbox)
-
-        #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-        # Campo CNPJ obtendo a informação correta do JSON
-        cnpj_label = QLabel("CNPJ:")
-        cnpj_hbox = QHBoxLayout()
-        
-        # Acessando a chave "cnpj_cpf_idgener" dentro de "fornecedor"
-        cnpj_value = self.data.get("fornecedor", {}).get("cnpj_cpf_idgener", "Não informado")
-        self.cnpj_edit = QLineEdit(str(cnpj_value))
-        self.cnpj_edit.setReadOnly(True)
-
-        copy_cnpj_button = QPushButton("Copiar")
-        copy_cnpj_button.clicked.connect(lambda: self.copy_to_clipboard(self.cnpj_edit))
-
-        cnpj_hbox.addWidget(self.cnpj_edit)
-        cnpj_hbox.addWidget(copy_cnpj_button)
-        scroll_layout.addRow(cnpj_label, cnpj_hbox)
-
-        #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-        objeto_label = QLabel("Objeto:")
-        objeto_hbox = QHBoxLayout()
-        self.objeto_edit = QLineEdit(str(self.data.get("objeto", "Não informado")))
-        copy_objeto_button = QPushButton("Copiar")
-        copy_objeto_button.clicked.connect(lambda: self.copy_to_clipboard(self.objeto_edit))
-
-        objeto_hbox.addWidget(self.objeto_edit)
-        objeto_hbox.addWidget(copy_objeto_button)
-        scroll_layout.addRow(objeto_label, objeto_hbox)
-
-        #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-        # Adicionar radio buttons (corrigido)
-        self.radio_groups = {}
-        self.radio_buttons = {}
-        self.add_radio_buttons(scroll_layout)
-
-        layout.addWidget(scroll)
-        self.tabs.addTab(general_tab, "Informações Gerais")
-
-    def create_object_tab(self):
-        """Cria a aba para exibir o Objeto"""
-        object_tab = QWidget()
-        layout = QVBoxLayout(object_tab)
-
-        key_label = QLabel("<b>Objeto:</b>")
-        value_label = QLabel(self.objeto_edit.text())  # Pega do campo editável
-        value_label.setWordWrap(True)
-
-        layout.addWidget(key_label)
-        layout.addWidget(value_label)
-
-        self.tabs.addTab(object_tab, "Objeto")
-
-    def create_status_tab(self):
-        """Cria a aba 'Status' com dropdown de seleção, botões e lista de comentários"""
-        self.status_tab = QWidget()
-        layout = QVBoxLayout(self.status_tab)
-
-        # Layout horizontal para Status
-        status_layout = QHBoxLayout()
-
-        # Dropdown para selecionar status
-        self.status_dropdown = QComboBox()
-        self.status_dropdown.addItems([
-            "Ata Gerada", "Empresa", "SIGDEM", "Assinado", "Publicado",
-            "Alerta Prazo", "Seção de Contratos", "Nota Técnica", "AGU", "Prorrogado"
-        ])
-        status_layout.addWidget(QLabel("Status:"))
-        status_layout.addWidget(self.status_dropdown)
-
-        layout.addLayout(status_layout)
-
-        # Botão para adicionar registro
-        self.add_record_button = QPushButton("Adicionar Registro")
-        layout.addWidget(self.add_record_button)
-
-        # Campo de texto para comentário
-        self.comment_box = QTextEdit()
-        layout.addWidget(self.comment_box)
-
-        # Botão "Adicionar Comentário"
-        self.add_comment_button = QPushButton("Adicionar Comentário")
-        self.add_comment_button.clicked.connect(self.add_comment)
-        layout.addWidget(self.add_comment_button)
-
-        # Lista de comentários
-        self.comment_list = QListWidget()
-        layout.addWidget(self.comment_list)
-       
-        # Botão "Excluir Comentário"
-        self.delete_comment_button = QPushButton("Excluir Comentário")
-        self.delete_comment_button.clicked.connect(self.delete_comment)
-        layout.addWidget(self.delete_comment_button)
-
-        self.tabs.addTab(self.status_tab, "Status")
-
-    def add_radio_buttons(self, layout):
-        """Adiciona opções de radio buttons e corrige salvamento"""
-        options = {
-            "Pode Renovar?": ["Sim", "Não"],
-            "Custeio?": ["Sim", "Não"],
-            "Natureza Continuada?": ["Sim", "Não"],
-            "Material/Serviço?": ["Material", "Serviço"]
-        }
-
-        for title, choices in options.items():
-            group = QWidget()
-            group_layout = QHBoxLayout(group)
-            group_layout.addWidget(QLabel(title))
-
-            radio_group = QButtonGroup(self)
-            self.radio_groups[title] = radio_group  
-            self.radio_buttons[title] = {}
-
-            for option in choices:
-                radio = QRadioButton(option)
-                group_layout.addWidget(radio)
-                radio_group.addButton(radio)
-                self.radio_buttons[title][option] = radio  # Salvar referência dos botões
-
-            layout.addRow(group)
-
     def add_comment(self):
-        """Adiciona um comentário na lista"""
-        comment_text = self.comment_box.toPlainText().strip()
-        if comment_text:
-            item = QListWidgetItem(comment_text)
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable) # Permite que o item seja marcável
-            item.setCheckState(Qt.CheckState.Unchecked) #Uncheckend deixa deselecionado e Checkend deixa selecionado 
-            self.comment_list.addItem(item)
-            self.comment_box.clear()  # Limpa a caixa de texto
+            """Adiciona um comentário na lista"""
+            comment_text = self.comment_box.toPlainText().strip()
+            if comment_text:
+                item = QListWidgetItem(comment_text)
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable) # Permite que o item seja marcável
+                item.setCheckState(Qt.CheckState.Unchecked) #Uncheckend deixa deselecionado e Checkend deixa selecionado 
+                self.comment_list.addItem(item)
+                self.comment_box.clear()  # Limpa a caixa de texto
 
-            self.comment_list.clearSelection()  # Remove qualquer seleção ativa
+                self.comment_list.clearSelection()  # Remove qualquer seleção ativa
 
     def delete_comment(self):
-        """Remove os comentários selecionados"""
-        for i in range(self.comment_list.count() - 1, -1, -1):  # Iteração reversa para remoção segura
-            item = self.comment_list.item(i)
-            if item.checkState() == Qt.CheckState.Checked:
-                self.comment_list.takeItem(i)
-
+            """Remove os comentários selecionados"""
+            for i in range(self.comment_list.count() - 1, -1, -1):  # Iteração reversa para remoção segura
+                item = self.comment_list.item(i)
+                if item.checkState() == Qt.CheckState.Checked:
+                    self.comment_list.takeItem(i)
+        
     def close_and_save(self):
         """Salva o status e os comentários ao fechar a janela"""
         self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", ""))
