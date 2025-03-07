@@ -25,6 +25,7 @@ def create_status_tab(self):
 
     # Botão para adicionar registro
     self.add_record_button = QPushButton("Adicionar Registro")
+    self.add_record_button.clicked.connect(self.registro_def)
     layout.addWidget(self.add_record_button)
 
     # Campo de texto para comentário

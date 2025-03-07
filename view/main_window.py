@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import (
     QHeaderView, QGridLayout, QMenu, QMessageBox
 )
 from PyQt6.QtCore import Qt
+import os
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -10,6 +11,8 @@ class MainWindow(QMainWindow):
         self.controller = controller
         self.setWindowTitle("Gerenciador de UASG")
         self.setGeometry(100, 100, 800, 600)
+
+        self.load_styles()
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -65,8 +68,20 @@ class MainWindow(QMainWindow):
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu) # Permite a exibição do menu de contexto
         self.table.customContextMenuRequested.connect(self.controller.show_context_menu) # Exibe o menu de contexto
 
-        self.table.verticalHeader().setVisible(True) # Oculta os números das linhas
+        self.table.verticalHeader().setVisible(False) # Oculta os números das linhas
 
         self.table_layout.addWidget(self.table) # Adiciona a tabela ao layout
 
         self.tabs.addTab(self.table_tab, "Visualizar Tabelas")
+
+    def load_styles(self):
+        """Carrega os estilos do arquivo style.qss"""
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        project_dir = os.path.abspath(os.path.join(base_dir, ".."))
+        style_path = os.path.join(project_dir, "style.qss")
+
+        if os.path.exists(style_path):
+            with open(style_path, "r") as f:
+                self.setStyleSheet(f.read())
+        else:
+            print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")

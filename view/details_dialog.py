@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QClipboard
 from pathlib import Path
+from datetime import datetime
 
 view_dir = Path(__file__).resolve().parent
 sys.path.append(str(view_dir))
@@ -39,6 +40,7 @@ class DetailsDialog(QDialog):
         self.tabs.addTab(create_general_tab(self), "Informações Gerais")
         self.tabs.addTab(create_object_tab(self), "Objeto")
         self.tabs.addTab(create_status_tab(self), "Status")
+        self.tabs.addTab(aba_termo_adt(self), "Termo Aditivo")
 
         # Botão de salvar
         close_button = QPushButton("Salvar")
@@ -48,44 +50,68 @@ class DetailsDialog(QDialog):
         # Carregar dados salvos
         self.load_status()
 
-    def add_comment(self):
-            """Adiciona um comentário na lista"""
-            comment_text = self.comment_box.toPlainText().strip()
-            if comment_text:
-                item = QListWidgetItem(comment_text)
-                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable) # Permite que o item seja marcável
-                item.setCheckState(Qt.CheckState.Unchecked) #Uncheckend deixa deselecionado e Checkend deixa selecionado 
-                self.comment_list.addItem(item)
-                self.comment_box.clear()  # Limpa a caixa de texto
-
-                self.comment_list.clearSelection()  # Remove qualquer seleção ativa
-
-    def delete_comment(self):
-            """Remove os comentários selecionados"""
-            for i in range(self.comment_list.count() - 1, -1, -1):  # Iteração reversa para remoção segura
-                item = self.comment_list.item(i)
-                if item.checkState() == Qt.CheckState.Checked:
-                    self.comment_list.takeItem(i)
+    def registro_def(self):
+        print("so testando")
+        """Abre uma mini janela para adicionar um comentário com data, hora e status selecionado."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Adicionar Registro")
+        layout = QVBoxLayout()
         
+        text_edit = QTextEdit()
+        layout.addWidget(text_edit)
+        
+        add_button = QPushButton("Fechar e Adicionar Comentário")
+        layout.addWidget(add_button)
+        
+        dialog.setLayout(layout)
+        
+        def add_comment():
+            comment_text = text_edit.toPlainText().strip()
+            if comment_text:
+                timestamp = datetime.now().strftime("%d/%m/%Y") #"%d/%m/%Y %H:%M"
+                status = self.status_dropdown.currentText()
+                full_comment = f"{timestamp} - {comment_text} - {status}"
+                item = QListWidgetItem(full_comment)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                self.comment_list.addItem(item)
+            dialog.accept()
+        
+        add_button.clicked.connect(add_comment)
+        dialog.exec()
+
+    def add_comment(self):
+        """Adiciona um comentário na lista"""
+        comment_text = self.comment_box.toPlainText().strip()
+        if comment_text:
+            item = QListWidgetItem(comment_text)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Unchecked)
+            self.comment_list.addItem(item)
+            self.comment_box.clear()
+            self.comment_list.clearSelection()
+    
+    def delete_comment(self):
+        """Remove os comentários selecionados"""
+        for i in range(self.comment_list.count() - 1, -1, -1):
+            item = self.comment_list.item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                self.comment_list.takeItem(i)
+    
     def close_and_save(self):
         """Salva o status e os comentários ao fechar a janela"""
         self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", ""))
-
+    
     def save_status(self, id_contrato, uasg):
         """Salva o status, comentários e opções dos radio buttons em um arquivo separado para cada contrato dentro da UASG"""
         id_contrato = self.data.get("id", "")
-        # Diretório base dos status
         base_dir = Path("status_glob")
-        base_dir.mkdir(exist_ok=True)  # Cria se não existir
-
-        # Diretório específico da UASG
+        base_dir.mkdir(exist_ok=True)
+        
         uasg_dir = base_dir / str(uasg)
-        uasg_dir.mkdir(exist_ok=True)  # Cria se não existir
-
-        # Caminho do arquivo JSON para o contrato específico
+        uasg_dir.mkdir(exist_ok=True)
+        
         status_file = uasg_dir / f"{id_contrato}.json"
-
-        # Estrutura de dados a ser salva
+        
         status_data = {
             "id_contrato": id_contrato,
             "uasg": uasg,
@@ -99,42 +125,38 @@ class DetailsDialog(QDialog):
                 ) for title in self.radio_buttons
             }
         }
-
-        # Salvando os dados no arquivo JSON
+        
         with status_file.open("w", encoding="utf-8") as file:
             json.dump(status_data, file, ensure_ascii=False, indent=4)
-
+        
         print(f"Status salvo em {status_file}")
-
+    
     def load_status(self):
         """Carrega os dados salvos no JSON"""
         uasg = self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
         id_contrato = self.data.get("id", "")
-
-        # Caminho correto do arquivo
+        
         status_file = Path("status_glob") / str(uasg) / f"{id_contrato}.json"
-
+        
         if status_file.exists():
             with status_file.open("r", encoding="utf-8") as file:
                 status_data = json.load(file)
-
+                
                 self.status_dropdown.setCurrentText(status_data.get("status", ""))
                 self.objeto_edit.setText(status_data.get("objeto", "Não informado"))
-
-                # Restaurando os radio buttons
+                
                 for title, selected_value in status_data.get("radio_options", {}).items():
                     if selected_value in self.radio_buttons.get(title, {}):
                         self.radio_buttons[title][selected_value].setChecked(True)
-
-                # Limpando e recarregando a lista de comentários
+                
                 self.comment_list.clear()
                 for comment in status_data.get("comments", []):
                     item = QListWidgetItem(comment)
                     item.setCheckState(Qt.CheckState.Unchecked)
                     self.comment_list.addItem(item)
-
-                self.comment_list.clearSelection()  # 🟢 Garante que nenhum item está selecionado
-
+                
+                self.comment_list.clearSelection()
+            
             print(f"Status carregado de {status_file}")
         else:
             print("Nenhum status salvo encontrado.")
