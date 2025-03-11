@@ -2,12 +2,10 @@ import os
 import sys
 import json
 from PyQt6.QtWidgets import (
-    QDialog, QLabel, QVBoxLayout, QScrollArea, QWidget, QPushButton,
-    QTabWidget, QFormLayout, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup, 
-    QComboBox, QTextEdit, QListWidget, QListWidgetItem, QApplication
+    QDialog, QVBoxLayout, QPushButton,
+    QTabWidget, QTextEdit, QListWidgetItem, QApplication
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QClipboard
 from pathlib import Path
 from datetime import datetime
 
@@ -17,6 +15,8 @@ sys.path.append(str(view_dir))
 from abas_detalhes.general_tab import create_general_tab
 from abas_detalhes.object_tab import create_object_tab
 from abas_detalhes.status_tab import create_status_tab
+from abas_detalhes.termo_adt import aba_termo_adt
+
 
 class DetailsDialog(QDialog):
     def __init__(self, data, parent=None):

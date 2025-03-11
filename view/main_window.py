@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(self.input_tab, "Buscar UASG")
 
-        # Table Tab
+        # Table Tab visualizar tabelas
         self.table_tab = QWidget()
         self.table_layout = QVBoxLayout(self.table_tab)
 

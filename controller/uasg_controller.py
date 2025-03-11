@@ -5,6 +5,7 @@ from view.details_dialog import DetailsDialog
 from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem, QMenu
 from PyQt6.QtCore import Qt
 from datetime import datetime, date
+import time
 
 class UASGController:
     def __init__(self):
@@ -37,6 +38,8 @@ class UASGController:
             if uasg in self.loaded_uasgs:
                 added, removed = self.model.update_uasg_data(uasg)
                 self.view.label.setText(f"UASG {uasg} atualizada! {added} contratos adicionados, {removed} removidos.")
+                time.sleep(1)
+                self.view.uasg_input.clear() #testar depois
             else:
                 # Se for nova, buscar e salvar
                 data = self.model.fetch_uasg_data(uasg)
@@ -44,12 +47,16 @@ class UASGController:
                 self.loaded_uasgs[uasg] = data
                 self.add_uasg_to_menu(uasg)
                 self.view.label.setText(f"UASG {uasg} carregada com sucesso!")
+                time.sleep(1)
+                self.view.uasg_input.clear() #testar depois
 
             self.update_table(uasg)
             self.view.tabs.setCurrentWidget(self.view.table_tab)
 
         except Exception as e:
             self.view.label.setText(f"Erro ao buscar UASG {uasg}: {str(e)}")
+            time.sleep(1)
+            self.view.uasg_input.clear() #testar depois
 
     def delete_uasg_data(self):
         """Deleta os dados da UASG informada."""
