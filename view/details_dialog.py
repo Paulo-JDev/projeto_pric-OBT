@@ -12,10 +12,10 @@ from datetime import datetime
 view_dir = Path(__file__).resolve().parent
 sys.path.append(str(view_dir))
 
-from abas_detalhes.general_tab import create_general_tab
-from abas_detalhes.object_tab import create_object_tab
-from abas_detalhes.status_tab import create_status_tab
-from abas_detalhes.termo_adt import aba_termo_adt
+from view.abas_detalhes.general_tab import create_general_tab
+from view.abas_detalhes.object_tab import create_object_tab
+from view.abas_detalhes.status_tab import create_status_tab
+from view.abas_detalhes.termo_adt import aba_termo_adt
 
 
 class DetailsDialog(QDialog):
