@@ -8,8 +8,8 @@ from datetime import datetime, date
 import time
 
 class UASGController:
-    def __init__(self):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+    def __init__(self, base_dir):
+        #base_dir = os.path.dirname(os.path.abspath(__file__))
         self.model = UASGModel(base_dir)
         self.view = MainWindow(self)
 
@@ -55,8 +55,6 @@ class UASGController:
 
         except Exception as e:
             self.view.label.setText(f"Erro ao buscar UASG {uasg}: {str(e)}")
-            time.sleep(1)
-            self.view.uasg_input.clear() #testar depois
 
     def delete_uasg_data(self):
         """Deleta os dados da UASG informada."""

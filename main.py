@@ -10,13 +10,17 @@
 # sys.exit(app.exec())
 
 import sys
+import os
 from PyQt6.QtWidgets import QApplication
 from controller.uasg_controller import UASGController
 
 def setup_application():
     """Inicializa e executa a aplicação."""
     app = QApplication(sys.argv)
-    controller = UASGController()
+    # Obtém o diretório do arquivo principal (main.py)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    controller = UASGController(base_dir)
     controller.run()
     sys.exit(app.exec())
 

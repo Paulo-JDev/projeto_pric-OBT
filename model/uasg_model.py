@@ -6,7 +6,7 @@ import requests
 class UASGModel:
     def __init__(self, base_dir):
         self.base_dir = base_dir
-        self.database_dir = os.path.join(base_dir, "database")
+        self.database_dir = os.path.join(self.base_dir, "database")
         os.makedirs(self.database_dir, exist_ok=True)
 
     def load_saved_uasgs(self):
@@ -163,4 +163,3 @@ class UASGModel:
             for file in os.listdir(uasg_dir):
                 os.remove(os.path.join(uasg_dir, file))
             os.rmdir(uasg_dir)
-
