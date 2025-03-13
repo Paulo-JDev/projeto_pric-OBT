@@ -28,7 +28,9 @@ def get_pdf_url(self):
     return None  # Retorna None se falhar
 
 def download_pdf(self, max_retries=5, wait_time=3):
-    """Faz o download do PDF do contrato e salva na pasta Downloads."""
+    """
+    Faz o download do PDF do contrato e salva na pasta Downloads/pdfs salvos.
+    """
     pdf_url = get_pdf_url(self)
     
     if not pdf_url:
@@ -36,30 +38,48 @@ def download_pdf(self, max_retries=5, wait_time=3):
         return None
 
     download_folder = get_download_folder()
-    pdf_filename = os.path.basename(pdf_url)  # Pega o nome do arquivo do link
-    pdf_path = os.path.join(download_folder, pdf_filename)
+    pdfs_folder = os.path.join(download_folder, "pdfs salvos")
+    os.makedirs(pdfs_folder, exist_ok=True)
+
+    # Obtém informações do contrato
+    contrato_numero = self.data.get("numero", "")
+    empresa_nome = self.data.get("fornecedor", {}).get("nome", "")
+    responsavel = self.data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")
+    novo_nome_arquivo = f"{responsavel}_{contrato_numero} - {empresa_nome}.pdf".replace("/", "-")
+    novo_pdf_path = os.path.join(pdfs_folder, novo_nome_arquivo)
+
+    # Se o arquivo renomeado já existe, retorna direto
+    if os.path.exists(novo_pdf_path):
+        print(f"PDF já salvo: {novo_pdf_path}")
+        return novo_pdf_path  
+
+    # Nome original do arquivo antes de renomear
+    pdf_filename = os.path.basename(pdf_url)
+    pdf_path = os.path.join(pdfs_folder, pdf_filename)
 
     for tentativa in range(1, max_retries + 1):
         try:
-            response = requests.get(pdf_url, timeout=10)  # Timeout para evitar travamento
+            response = requests.get(pdf_url, timeout=10)
             if response.status_code == 200:
                 with open(pdf_path, "wb") as f:
                     f.write(response.content)
-                print(f"PDF salvo em: {pdf_path}")
-                return pdf_path  # Retorna o caminho do PDF salvo
+                print(f"PDF baixado: {pdf_path}")
+
+                # Renomeia para o formato desejado
+                os.rename(pdf_path, novo_pdf_path)
+                print(f"Arquivo renomeado para: {novo_pdf_path}")
+
+                return novo_pdf_path  # Retorna o caminho do PDF salvo
             else:
                 print(f"Tentativa {tentativa}: Erro {response.status_code}, aguardando...")
         
-        except requests.exceptions.ConnectionError:
-            print(f"Tentativa {tentativa}: Erro de conexão. Tentando novamente em {wait_time} segundos...")
-        
-        except requests.exceptions.Timeout:
-            print(f"Tentativa {tentativa}: Tempo de resposta excedido. Tentando novamente...")
+        except requests.exceptions.RequestException as e:
+            print(f"Tentativa {tentativa}: Erro ao baixar PDF: {e}")
 
-        time.sleep(wait_time)  # Aguarda antes da próxima tentativa
+        time.sleep(wait_time)
 
     print("Falha ao baixar o PDF após várias tentativas.")
-    return None  # Retorna None caso falhe todas as tentativas
+    return None
 
 def open_pdf(self):
     """Baixa e abre o PDF no navegador."""
@@ -118,7 +138,6 @@ def create_object_tab(self):
     object_tab = QWidget()
     layout = QVBoxLayout(object_tab)
 
-    id_contrato = self.data.get("id", "")
     pdf_url = get_pdf_url(self)
 
     if pdf_url:

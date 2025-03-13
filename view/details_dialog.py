@@ -17,12 +17,12 @@ from view.abas_detalhes.object_tab import create_object_tab
 from view.abas_detalhes.status_tab import create_status_tab
 from view.abas_detalhes.termo_adt import aba_termo_adt
 
-
 class DetailsDialog(QDialog):
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Detalhes do Contrato")
         self.setFixedSize(800, 650)
+        self.pdf_path = None
 
         self.load_styles()
 

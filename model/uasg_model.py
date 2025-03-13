@@ -163,3 +163,4 @@ class UASGModel:
             for file in os.listdir(uasg_dir):
                 os.remove(os.path.join(uasg_dir, file))
             os.rmdir(uasg_dir)
+
