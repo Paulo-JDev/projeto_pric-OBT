@@ -2,29 +2,37 @@ import os
 import json
 import sqlite3
 import requests
+import sys
+from pathlib import Path
+
+# Adiciona o diretório do script ao sys.path (caminho absoluto)
+view_dir = Path(__file__).resolve().parent
+sys.path.append(str(view_dir))
 
 class UASGModel:
     def __init__(self, base_dir):
-        self.base_dir = base_dir
-        self.database_dir = os.path.join(self.base_dir, "database")
-        os.makedirs(self.database_dir, exist_ok=True)
+        self.base_dir = Path(base_dir)
+        self.database_dir = self.base_dir / "database"
+        print(f"📁 Diretório do banco de dados: {self.database_dir}")
 
     def load_saved_uasgs(self):
         """Carrega todas as UASGs salvas e seus contratos no banco de dados."""
         uasgs = {}
 
-        if not os.path.exists(self.database_dir):
+        # Verifica se o diretório database existe
+        if not self.database_dir.exists():
+            print("⚠ Diretório 'database' não encontrado. Nenhum dado carregado.")
             return uasgs
 
-        for uasg_dir in os.listdir(self.database_dir):
-            if uasg_dir.startswith("uasg_"):
-                json_file = os.path.join(self.database_dir, uasg_dir, f"{uasg_dir}_contratos.json")
-                if os.path.isfile(json_file):
-                    try:
-                        with open(json_file, 'r', encoding='utf-8') as file:
-                            uasgs[uasg_dir.split("_")[1]] = json.load(file)
-                    except Exception as e:
-                        print(f"⚠ Erro ao carregar {json_file}: {e}")
+        # Itera sobre os diretórios de UASGs (caminhos absolutos)
+        for uasg_dir in self.database_dir.glob("uasg_*"):
+            json_file = uasg_dir / f"{uasg_dir.name}_contratos.json"
+            if json_file.exists():
+                try:
+                    with json_file.open('r', encoding='utf-8') as file:
+                        uasgs[uasg_dir.name.split("_")[1]] = json.load(file)
+                except Exception as e:
+                    print(f"⚠ Erro ao carregar {json_file}: {e}")
 
         return uasgs
 
@@ -36,14 +44,22 @@ class UASGModel:
         return response.json()
     
     def save_uasg_data(self, uasg, data):
-        uasg_dir = os.path.join(self.database_dir, f"uasg_{uasg}")
-        os.makedirs(uasg_dir, exist_ok=True)
+        """Salva os dados da UASG em um arquivo JSON e no banco de dados SQLite."""
+        # Cria o diretório database e o subdiretório da UASG (se não existirem)
+        self.database_dir.mkdir(parents=True, exist_ok=True)
+        print(f"📁 Criando diretório da UASG: {self.database_dir / f'uasg_{uasg}'}")
 
-        json_file = os.path.join(uasg_dir, f"uasg_{uasg}_contratos.json")
-        with open(json_file, 'w', encoding='utf-8') as file:
+        # Cria o diretório da UASG
+        uasg_dir = self.database_dir / f"uasg_{uasg}"
+        uasg_dir.mkdir(parents=True, exist_ok=True)
+
+        # Salva os dados em um arquivo JSON (caminho absoluto)
+        json_file = uasg_dir / f"uasg_{uasg}_contratos.json"
+        with json_file.open('w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
-        db_file = os.path.join(uasg_dir, f"uasg_{uasg}_contratos.db")
+        # Salva os dados no banco de dados SQLite (caminho absoluto)
+        db_file = uasg_dir / f"uasg_{uasg}_contratos.db"
         conn = sqlite3.connect(db_file)
         cursor = conn.cursor()
 
@@ -63,11 +79,9 @@ class UASGModel:
                 VALUES (?, ?, ?, ?, ?)
             ''', (
                 contrato.get("numero"),
-                # modalidade 
                 contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
                 contrato.get("licitacao_numero"),
                 contrato.get("fornecedor", {}).get("nome"),
-                # objeto
                 contrato.get("processo"),
             ))
         conn.commit()
@@ -75,17 +89,21 @@ class UASGModel:
 
     def update_uasg_data(self, uasg):
         """Atualiza os dados da UASG no banco de dados, comparando com os dados antigos."""
-        uasg_dir = os.path.join(self.database_dir, f"uasg_{uasg}")
-        json_file = os.path.join(uasg_dir, f"uasg_{uasg}_contratos.json")
-        db_file = os.path.join(uasg_dir, f"uasg_{uasg}_contratos.db")
+        # Cria o diretório database e o subdiretório da UASG (se não existirem)
+        self.database_dir.mkdir(parents=True, exist_ok=True)
+        uasg_dir = self.database_dir / f"uasg_{uasg}"
+        uasg_dir.mkdir(parents=True, exist_ok=True)
+
+        json_file = uasg_dir / f"uasg_{uasg}_contratos.json"
+        db_file = uasg_dir / f"uasg_{uasg}_contratos.db"
 
         # Buscar novos dados da API
         new_data = self.fetch_uasg_data(uasg)
 
         # Carregar dados antigos do JSON, se existir
         old_data = []
-        if os.path.exists(json_file):
-            with open(json_file, "r", encoding="utf-8") as file:
+        if json_file.exists():
+            with json_file.open("r", encoding="utf-8") as file:
                 old_data = json.load(file)
 
         # Criar dicionários para comparar contratos antigos e novos
@@ -124,7 +142,7 @@ class UASGModel:
         conn.close()
 
         # Substituir o JSON antigo pelo novo
-        with open(json_file, "w", encoding="utf-8") as file:
+        with json_file.open("w", encoding="utf-8") as file:
             json.dump(new_data, file, ensure_ascii=False, indent=4)
 
         return len(contracts_to_add), len(contracts_to_remove)
@@ -158,9 +176,12 @@ class UASGModel:
         conn.close()
 
     def delete_uasg_data(self, uasg):
-        uasg_dir = os.path.join(self.database_dir, f"uasg_{uasg}")
-        if os.path.exists(uasg_dir):
-            for file in os.listdir(uasg_dir):
-                os.remove(os.path.join(uasg_dir, file))
-            os.rmdir(uasg_dir)
-
+        """Remove os arquivos e diretório da UASG."""
+        uasg_dir = self.database_dir / f"uasg_{uasg}"
+        if uasg_dir.exists():
+            for file in uasg_dir.iterdir():
+                file.unlink()  # Remove arquivos
+            uasg_dir.rmdir()  # Remove diretório
+            print(f"✅ Dados da UASG {uasg} removidos com sucesso.")
+        else:
+            print(f"⚠ UASG {uasg} não encontrada.")

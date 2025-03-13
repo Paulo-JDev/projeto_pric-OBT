@@ -9,15 +9,17 @@ import time
 
 class UASGController:
     def __init__(self, base_dir):
-        #base_dir = os.path.dirname(os.path.abspath(__file__))
         self.model = UASGModel(base_dir)
         self.view = MainWindow(self)
 
         # Dados carregados
-        self.loaded_uasgs = self.model.load_saved_uasgs()
+        self.loaded_uasgs = {}
         self.current_data = []
         self.filtered_data = []
 
+        # Carrega UASGs salvas, se o diretório database já existir
+        if self.model.database_dir.exists():
+            self.loaded_uasgs = self.model.load_saved_uasgs()
 
         # Inicializar o menu com UASGs salvas
         self.refresh_uasg_menu()
@@ -39,16 +41,16 @@ class UASGController:
                 added, removed = self.model.update_uasg_data(uasg)
                 self.view.label.setText(f"UASG {uasg} atualizada! {added} contratos adicionados, {removed} removidos.")
                 time.sleep(1)
-                self.view.uasg_input.clear() #testar depois
+                self.view.uasg_input.clear()  # Limpa o campo de entrada após a atualização
             else:
                 # Se for nova, buscar e salvar
                 data = self.model.fetch_uasg_data(uasg)
-                self.model.save_uasg_data(uasg, data)
+                self.model.save_uasg_data(uasg, data)  # Aqui o diretório database será criado, se necessário
                 self.loaded_uasgs[uasg] = data
                 self.add_uasg_to_menu(uasg)
                 self.view.label.setText(f"UASG {uasg} carregada com sucesso!")
                 time.sleep(1)
-                self.view.uasg_input.clear() #testar depois
+                self.view.uasg_input.clear()  # Limpa o campo de entrada após o carregamento
 
             self.update_table(uasg)
             self.view.tabs.setCurrentWidget(self.view.table_tab)
@@ -89,7 +91,6 @@ class UASGController:
         self.current_data = self.loaded_uasgs[uasg]
         self.populate_table(self.current_data)
 
-
     def populate_table(self, data):
         """Preenche a tabela com os dados fornecidos, ordenando do maior para o menor tempo de vigência."""
         today = date.today()
@@ -99,11 +100,9 @@ class UASGController:
 
         for contrato in data:
             vigencia_fim_str = contrato.get("vigencia_fim", "")
-            #vigencia_inicio_str = contrato.get("vigencia_inicio", "")
             if vigencia_fim_str:
                 try:
                     vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
-                    #vigencia_inicio = datetime.strptime(vigencia_inicio_str, "%Y-%m-%d").date()
                     dias_restantes = (vigencia_fim - today).days
                 except ValueError:
                     dias_restantes = float('-inf')  # Se a data for inválida, coloca no final
@@ -120,7 +119,7 @@ class UASGController:
 
         # Atualizar a tabela com os dados ordenados
         self.view.table.setRowCount(len(self.current_data))
-        self.view.table.setColumnCount(7)  
+        self.view.table.setColumnCount(7)
         self.view.table.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto"])
 
         for row_index, contrato in enumerate(self.current_data):
@@ -152,25 +151,6 @@ class UASGController:
             ))
             self.view.table.setItem(row_index, 5, QTableWidgetItem(str(contrato.get("processo", ""))))
             self.view.table.setItem(row_index, 6, QTableWidgetItem(str(contrato.get("objeto", "Não informado"))))
-
-    # def filter_table(self):
-    #     """
-    #     Filtra a tabela com base no texto digitado na barra de busca.
-    #     A busca é insensível a maiúsculas/minúsculas e verifica todos os campos de cada contrato.
-    #     """
-    #     filter_text = self.view.search_bar.text().strip().lower()
-
-    #     # Se não houver filtro, mostrar todos os contratos
-    #     if not filter_text:
-    #         self.filtered_data = self.current_data
-    #     else:
-    #         self.filtered_data = [
-    #             contrato for contrato in self.current_data
-    #             if any(filter_text in str(value).lower() for value in contrato.values())
-    #         ]
-
-    #     # Atualiza a tabela com os dados filtrados
-    #     self.populate_table(self.filtered_data)
 
     def filter_table(self):
         """Filtra a tabela com base no texto digitado na barra de busca, incluindo o campo 'Objeto'."""

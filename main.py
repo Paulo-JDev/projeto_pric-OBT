@@ -17,11 +17,22 @@ from controller.uasg_controller import UASGController
 def setup_application():
     """Inicializa e executa a aplicação."""
     app = QApplication(sys.argv)
-    # Obtém o diretório do arquivo principal (main.py)
-    base_dir = os.path.dirname(os.path.abspath(__file__))
 
+    # Obtém o diretório base (onde o executável está sendo executado)
+    if getattr(sys, 'frozen', False):
+        # Se estiver rodando como executável
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        # Se estiver rodando como script
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    print(f"📁 Diretório base: {base_dir}")
+
+    # Inicializa o controlador com o diretório base
     controller = UASGController(base_dir)
     controller.run()
+
+    # Executa a aplicação
     sys.exit(app.exec())
 
 if __name__ == "__main__":
