@@ -2,7 +2,7 @@ import os
 from view.main_window import MainWindow
 from model.uasg_model import UASGModel
 from view.details_dialog import DetailsDialog
-from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem, QMenu
+from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem, QMenu, QHeaderView
 from PyQt6.QtCore import Qt
 from datetime import datetime, date
 import time
@@ -119,8 +119,35 @@ class UASGController:
 
         # Atualizar a tabela com os dados ordenados
         self.view.table.setRowCount(len(self.current_data))
-        self.view.table.setColumnCount(7)
-        self.view.table.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto"])
+        self.view.table.setColumnCount(8)
+        self.view.table.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "valor_global"])
+
+        # Configuração do cabeçalho
+        header = self.view.table.horizontalHeader()
+
+        # Define a largura mínima para todas as colunas
+        header.setMinimumSectionSize(80)
+
+        # Configuração específica para cada coluna
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Coluna "Dias"
+        header.resizeSection(0, 80)  # Largura inicial da coluna "Dias"
+
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Coluna "Sigla OM"
+        header.resizeSection(1, 110)  # Largura inicial da coluna "Sigla OM"
+
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # Coluna "Contrato/Ata"
+        header.resizeSection(2, 110)  # Largura inicial da coluna "Contrato/Ata"
+
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)  # Coluna "Processo"
+        header.resizeSection(3, 105)  # Largura inicial da Coluna "Processo"
+
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Coluna "Fornecedor"
+        
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive) # Coluna "N° de Série"
+        header.resizeSection(5, 175) # Largura inicial da coluna "N° de Série"
+
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
 
         for row_index, contrato in enumerate(self.current_data):
             vigencia_fim_str = contrato.get("vigencia_fim", "")
@@ -133,6 +160,7 @@ class UASGController:
             else:
                 dias_restantes = "Sem Data"
 
+            # Cria e centraliza o item da coluna "Dias"
             dias_item = QTableWidgetItem(str(dias_restantes))
             dias_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -141,17 +169,23 @@ class UASGController:
                 dias_item.setForeground(Qt.GlobalColor.red)
 
             self.view.table.setItem(row_index, 0, dias_item)
-            self.view.table.setItem(row_index, 1, QTableWidgetItem(
-                contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")
-            ))
-            self.view.table.setItem(row_index, 2, QTableWidgetItem(str(contrato.get("numero", ""))))
-            self.view.table.setItem(row_index, 3, QTableWidgetItem(str(contrato.get("licitacao_numero", ""))))
-            self.view.table.setItem(row_index, 4, QTableWidgetItem(
-                contrato.get("fornecedor", {}).get("nome", "")
-            ))
-            self.view.table.setItem(row_index, 5, QTableWidgetItem(str(contrato.get("processo", ""))))
-            self.view.table.setItem(row_index, 6, QTableWidgetItem(str(contrato.get("objeto", "Não informado"))))
 
+            # Função auxiliar para criar e centralizar itens
+            def create_centered_item(text):
+                item = QTableWidgetItem(str(text))
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                return item
+
+            # Preenche as demais colunas com itens centralizados
+            self.view.table.setItem(row_index, 1, create_centered_item(
+                contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")))
+            self.view.table.setItem(row_index, 2, create_centered_item(str(contrato.get("numero", ""))))
+            self.view.table.setItem(row_index, 3, create_centered_item(str(contrato.get("licitacao_numero", ""))))
+            self.view.table.setItem(row_index, 4, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
+            self.view.table.setItem(row_index, 5, create_centered_item(str(contrato.get("processo", ""))))
+            self.view.table.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
+            self.view.table.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
+            
     def filter_table(self):
         """Filtra a tabela com base no texto digitado na barra de busca, incluindo o campo 'Objeto'."""
         filter_text = self.view.search_bar.text().strip().lower()

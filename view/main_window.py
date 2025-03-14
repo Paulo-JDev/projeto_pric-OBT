@@ -1,9 +1,13 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QLineEdit, QPushButton, QTableWidget,
-    QHeaderView, QGridLayout, QMenu, QMessageBox
+    QHeaderView, QGridLayout, QMenu, QTableWidgetItem
 )
+
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
+from pathlib import Path
 import os
+
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -11,6 +15,10 @@ class MainWindow(QMainWindow):
         self.controller = controller
         self.setWindowTitle("Gerenciador de UASG")
         self.setGeometry(100, 100, 800, 600)
+        self.setMinimumSize(1000, 600)  # Define o tamanho mínimo da janela
+
+        # Define o ícone da janela
+        self.set_window_icon()
 
         self.load_styles()
 
@@ -62,12 +70,11 @@ class MainWindow(QMainWindow):
         self.table_layout.addWidget(self.search_bar)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Serie", "Objeto"])
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Serie", "Objeto", "Valor"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu) # Permite a exibição do menu de contexto
         self.table.customContextMenuRequested.connect(self.controller.show_context_menu) # Exibe o menu de contexto
-
         self.table.verticalHeader().setVisible(False) # Oculta os números das linhas
 
         self.table_layout.addWidget(self.table) # Adiciona a tabela ao layout
@@ -85,3 +92,17 @@ class MainWindow(QMainWindow):
                 self.setStyleSheet(f.read())
         else:
             print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
+
+    def set_window_icon(self):
+        """Define o ícone da janela a partir de um arquivo na pasta utils/icons."""
+        base_dir = Path(__file__).parent.parent  # Pasta do arquivo atual
+        icons_dir = base_dir / "utils" / "icons"  # Caminho para a pasta de ícones
+        icon_file = "mn.png"  # Substitua pelo nome do seu arquivo de ícone
+        icon_path = icons_dir / icon_file
+
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))  # Define o ícone da janela
+        else:
+            print(f"⚠ Arquivo de ícone não encontrado: {icon_path}")
+    
+    

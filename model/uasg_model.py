@@ -126,7 +126,7 @@ class UASGModel:
         # Adicionar novos contratos
         for contrato in contracts_to_add.values():
             cursor.execute('''
-                INSERT INTO contratos (nome, numero, licitacao_numero, fornecedor_nome, processo, objeto, vigencia_fim)
+                INSERT INTO contratos (nome, numero, licitacao_numero, fornecedor_nome, processo, objeto, vigencia_fim, valor_global)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
@@ -135,7 +135,8 @@ class UASGModel:
                 contrato.get("fornecedor", {}).get("nome"),
                 contrato.get("processo"),
                 contrato.get("objeto", "Não informado"),
-                contrato.get("vigencia_fim", "")
+                contrato.get("vigencia_fim", ""),
+                contrato.get("valor_global") 
             ))
 
         conn.commit()
@@ -163,7 +164,8 @@ class UASGModel:
             "fornecedor_nome": "TEXT",
             "processo": "INTEGER",
             "objeto": "TEXT",
-            "vigencia_fim": "TEXT"
+            "vigencia_fim": "TEXT",
+            "valor_global": "TEXT"
         }
 
         # Adicionar colunas que estão faltando
