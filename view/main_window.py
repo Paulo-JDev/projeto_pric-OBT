@@ -9,6 +9,7 @@ from pathlib import Path
 import os
 
 from controller.detalhe_controller import setup_search_bar, MultiColumnFilterProxyModel
+from model.uasg_model import resource_path
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -55,7 +56,7 @@ class MainWindow(QMainWindow):
         # Adiciona os botões
         self.buttons_grid = QGridLayout()
         self.menu_button = QPushButton("UASG")
-        self.menu_button.setMenu(QMenu(self.menu_button))
+        self.menu_button.setMenu(QMenu(self.menu_button))  # Conecta o botão ao menu
         self.buttons_grid.addWidget(self.menu_button, 0, 0)
 
         self.clear_button = QPushButton("Limpar")
@@ -63,15 +64,12 @@ class MainWindow(QMainWindow):
         self.buttons_grid.addWidget(self.clear_button, 0, 1)
 
         self.table_layout.addLayout(self.buttons_grid)
-        # self.table_layout.setSpacing(0)  # Remove espaçamento entre widgets
-        # self.table_layout.setContentsMargins(0, 10, 0, 0)  # Remove margens ao redor do layout
 
         # Adiciona a tabela
         self.table = QTableView()
         self.table.setStyleSheet("""
-            QTableView::item {
-                border-bottom: 1px solid #333333;    /* Borda inferior das células */
-                border-right: 1px solid #333333; /* Borda lateral direita */
+        QTableView::item:selected {
+                background-color: rgba(163, 213, 255, 0.4);
             }
         """)
         self.model = QStandardItemModel()  # Modelo base
@@ -94,26 +92,23 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.table_tab, "Visualizar Tabelas")
 
     def load_styles(self):
-        """Carrega os estilos do arquivo style.qss"""
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        project_dir = os.path.abspath(os.path.join(base_dir, ".."))
-        style_path = os.path.join(project_dir, "style.qss")
+        """Carrega os estilos do arquivo style.qss."""
+        style_path = resource_path("style.qss")  # Usa resource_path para garantir o caminho correto
 
         if os.path.exists(style_path):
-            with open(style_path, "r") as f:
+            with open(style_path, "r", encoding="utf-8") as f:
                 self.setStyleSheet(f.read())
+            print(f"✅ Estilos carregados de {style_path}.")
         else:
             print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
 
     def set_window_icon(self):
         """Define o ícone da janela a partir de um arquivo na pasta utils/icons."""
-        base_dir = Path(__file__).parent.parent  # Pasta do arquivo atual
-        icons_dir = base_dir / "utils" / "icons"  # Caminho para a pasta de ícones
-        icon_file = "mn.png"  # Substitua pelo nome do seu arquivo de ícone
-        icon_path = icons_dir / icon_file
+        icon_path = resource_path("utils/icons/mn.ico")  # Usa resource_path para garantir o caminho correto
 
-        if icon_path.exists():
-            self.setWindowIcon(QIcon(str(icon_path)))  # Define o ícone da janela
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+            print(f"✅ Ícone da janela carregado de {icon_path}.")
         else:
             print(f"⚠ Arquivo de ícone não encontrado: {icon_path}")
     

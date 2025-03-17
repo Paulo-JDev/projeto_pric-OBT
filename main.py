@@ -9,6 +9,8 @@
 # view.show()
 # sys.exit(app.exec())
 
+# _internal
+
 import sys
 import os
 from PyQt6.QtWidgets import QApplication
@@ -27,6 +29,10 @@ def setup_application():
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
     print(f"📁 Diretório base: {base_dir}")
+
+    # Carrega estilos e ícones
+    # load_styles(app)
+    # load_icon(app)
 
     # Inicializa o controlador com o diretório base
     controller = UASGController(base_dir)

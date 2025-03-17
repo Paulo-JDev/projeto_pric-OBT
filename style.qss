@@ -45,7 +45,7 @@ QLineEdit:focus, QTextEdit:focus {
 }
 
 /* Tabelas */
-QTableWidget {
+QTableView {
     background-color: #1e1e1e;
     border: 1px solid #333;
     gridline-color: #555;
@@ -53,11 +53,12 @@ QTableWidget {
 }
 
 QHeaderView::section {
-    background-color: #333;
+    background-color:#333;
     color: #ffffff;
     padding: 4px;
     border: 1px solid #444;
 }
+
 
 /* ScrollBar */
 QScrollBar:vertical {

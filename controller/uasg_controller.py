@@ -1,11 +1,13 @@
 import os
+import sys
 from view.main_window import MainWindow
 from model.uasg_model import UASGModel
 from view.details_dialog import DetailsDialog
-from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem, QMenu, QHeaderView
+from PyQt6.QtWidgets import QMessageBox, QMenu, QHeaderView, QTableView 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import  QStandardItem
 from datetime import datetime, date
+from controller.detalhe_controller import setup_search_bar, MultiColumnFilterProxyModel
 import time
 
 class UASGController:
@@ -18,9 +20,13 @@ class UASGController:
         self.current_data = []
         self.filtered_data = []
 
-        # Carrega UASGs salvas, se o diretório database já existir
+        # Verifica se o diretório database existe
         if self.model.database_dir.exists():
+            print(f"📁 Diretório 'database' encontrado: {self.model.database_dir}")
             self.loaded_uasgs = self.model.load_saved_uasgs()
+            print(f"📂 UASGs carregadas: {list(self.loaded_uasgs.keys())}")
+        else:
+            print("⚠ Diretório 'database' não encontrado. Nenhum dado carregado.")
 
         # Inicializar o menu com UASGs salvas
         self.refresh_uasg_menu()
@@ -46,6 +52,10 @@ class UASGController:
             else:
                 # Se for nova, buscar e salvar
                 data = self.model.fetch_uasg_data(uasg)
+                if data is None:
+                    self.view.label.setText(f"Erro ao buscar dados da UASG {uasg}.")
+                    return
+
                 self.model.save_uasg_data(uasg, data)  # Aqui o diretório database será criado, se necessário
                 self.loaded_uasgs[uasg] = data
                 self.add_uasg_to_menu(uasg)
@@ -83,14 +93,22 @@ class UASGController:
 
     def refresh_uasg_menu(self):
         """Atualiza o menu com as UASGs carregadas."""
-        self.view.menu_button.menu().clear()
+        menu = self.view.menu_button.menu()
+        menu.clear()  # Limpa o menu antes de adicionar as UASGs
+
         for uasg in self.loaded_uasgs:
-            self.add_uasg_to_menu(uasg)
+            print(f"➕ Adicionando UASG {uasg} ao menu.")
+            action = menu.addAction(f"UASG {uasg}")
+            action.triggered.connect(lambda checked, uasg=uasg: self.update_table(uasg))
 
     def update_table(self, uasg):
         """Atualiza a tabela com os dados da UASG selecionada."""
-        self.current_data = self.loaded_uasgs[uasg]
-        self.populate_table(self.current_data)
+        if uasg in self.loaded_uasgs:
+            self.current_data = self.loaded_uasgs[uasg]
+            self.populate_table(self.current_data)
+            print(f"✅ Tabela atualizada com os dados da UASG {uasg}.")
+        else:
+            print(f"⚠ UASG {uasg} não encontrada nos dados carregados.")
 
     def populate_table(self, data):
         """Preenche a tabela com os dados fornecidos, ordenando do maior para o menor tempo de vigência."""
@@ -107,9 +125,7 @@ class UASGController:
                     dias_restantes = (vigencia_fim - today).days
                 except ValueError:
                     dias_restantes = float('-inf')  # Se a data for inválida, coloca no final
-            else:
-                dias_restantes = float('-inf')  # Se não houver data, coloca no final
-
+        
             contratos_ordenados.append((dias_restantes, contrato))
 
         # Ordenar do maior tempo para o menor (negativos no final)
@@ -117,6 +133,8 @@ class UASGController:
 
         # Atualiza self.current_data com os contratos ordenados
         self.current_data = [contrato for _, contrato in contratos_ordenados]
+
+        self.view.table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
 
         # Obtém o modelo base da tabela
         model = self.view.table.model().sourceModel()
@@ -129,6 +147,32 @@ class UASGController:
             item = QStandardItem(str(text))
             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             return item
+        
+        header = self.view.table.horizontalHeader()
+
+        # Define a largura mínima para todas as colunas
+        header.setMinimumSectionSize(80)
+
+        # Configuração específica para cada coluna
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Coluna "Dias"
+        header.resizeSection(0, 80)  # Largura inicial da coluna "Dias"
+
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Coluna "Sigla OM"
+        header.resizeSection(1, 110)  # Largura inicial da coluna "Sigla OM"
+
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # Coluna "Contrato/Ata"
+        header.resizeSection(2, 110)  # Largura inicial da coluna "Contrato/Ata"
+
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)  # Coluna "Processo"
+        header.resizeSection(3, 105)  # Largura inicial da Coluna "Processo"
+
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Coluna "Fornecedor"
+            
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive) # Coluna "N° de Série"
+        header.resizeSection(5, 175) # Largura inicial da coluna "N° de Série"
+
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
 
         for row_index, contrato in enumerate(self.current_data):
             vigencia_fim_str = contrato.get("vigencia_fim", "")
@@ -145,32 +189,6 @@ class UASGController:
             dias_item = QStandardItem(str(dias_restantes))
             dias_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
-            header = self.view.table.horizontalHeader()
-
-            # Define a largura mínima para todas as colunas
-            header.setMinimumSectionSize(80)
-
-            # Configuração específica para cada coluna
-            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Coluna "Dias"
-            header.resizeSection(0, 80)  # Largura inicial da coluna "Dias"
-
-            header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Coluna "Sigla OM"
-            header.resizeSection(1, 110)  # Largura inicial da coluna "Sigla OM"
-
-            header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # Coluna "Contrato/Ata"
-            header.resizeSection(2, 110)  # Largura inicial da coluna "Contrato/Ata"
-
-            header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)  # Coluna "Processo"
-            header.resizeSection(3, 105)  # Largura inicial da Coluna "Processo"
-
-            header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Coluna "Fornecedor"
-            
-            header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive) # Coluna "N° de Série"
-            header.resizeSection(5, 175) # Largura inicial da coluna "N° de Série"
-
-            header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
-            header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
-
             # Definir cor do texto se o contrato já venceu
             if isinstance(dias_restantes, int) and dias_restantes < 0:
                 dias_item.setForeground(Qt.GlobalColor.red)
@@ -186,27 +204,15 @@ class UASGController:
             model.setItem(row_index, 5, create_centered_item(str(contrato.get("processo", ""))))
             model.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
             model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
-            
-    # def filter_table(self):
-    #     """Filtra a tabela dinamicamente com base no texto da barra de busca, restaurando ao apagar."""
-    #     filter_text = self.view.search_bar.text().strip().lower()
 
-    #     if not filter_text:  # Se o campo estiver vazio, restaura os dados originais
-    #         self.filtered_data = self.current_data
-    #     else:
-    #         pattern = re.compile(re.escape(filter_text), re.IGNORECASE)
-    #         self.filtered_data = [
-    #             contrato for contrato in self.current_data
-    #             if any(pattern.search(str(value)) for value in contrato.values())
-    #         ]
+    #    Exibe uma mensagem de conclusão
+        QMessageBox.information(self.view, "Concluido", f"A tabela foi carregada com sucesso!")
 
-    #     self.populate_table(self.filtered_data)
-        
     def clear_table(self):
         """Limpa o conteúdo da tabela."""
         self.view.search_bar.clear()
-        self.view.table.clearContents()
-        self.view.table.setRowCount(0)
+        model = self.view.table.model()
+        model.removeRows(0, model.rowCount())
         QMessageBox.information(self.view, "Limpeza", "A tabela foi limpa com sucesso!")
 
     def show_context_menu(self, position):

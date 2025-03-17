@@ -6,13 +6,21 @@ import sys
 from pathlib import Path
 
 # Adiciona o diretório do script ao sys.path (caminho absoluto)
-view_dir = Path(__file__).resolve().parent
-sys.path.append(str(view_dir))
+def resource_path(relative_path):
+    """Retorna o caminho absoluto para um recurso, funcionando tanto no desenvolvimento quanto no empacotamento."""
+    try:
+        # PyInstaller cria uma pasta temporária e armazena o caminho em _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class UASGModel:
     def __init__(self, base_dir):
-        self.base_dir = Path(base_dir)
+        self.base_dir = Path(resource_path(base_dir))  # Usa resource_path para garantir o caminho correto
         self.database_dir = self.base_dir / "database"
+        self.database_dir.mkdir(parents=True, exist_ok=True)  # Cria a pasta database, se não existir
         print(f"📁 Diretório do banco de dados: {self.database_dir}")
 
     def load_saved_uasgs(self):
@@ -24,41 +32,50 @@ class UASGModel:
             print("⚠ Diretório 'database' não encontrado. Nenhum dado carregado.")
             return uasgs
 
-        # Itera sobre os diretórios de UASGs (caminhos absolutos)
+        # Itera sobre os diretórios de UASGs
         for uasg_dir in self.database_dir.glob("uasg_*"):
             json_file = uasg_dir / f"{uasg_dir.name}_contratos.json"
             if json_file.exists():
                 try:
                     with json_file.open('r', encoding='utf-8') as file:
-                        uasgs[uasg_dir.name.split("_")[1]] = json.load(file)
+                        data = json.load(file)
+                        if isinstance(data, list):  # Verifica se o JSON é uma lista
+                            uasgs[uasg_dir.name.split("_")[1]] = data
+                            print(f"✅ UASG {uasg_dir.name.split('_')[1]} carregada com sucesso.")
+                        else:
+                            print(f"⚠ Formato inválido no arquivo {json_file}: esperado uma lista de dicionários.")
+                except json.JSONDecodeError as e:
+                    print(f"⚠ Erro ao decodificar JSON no arquivo {json_file}: {e}")
                 except Exception as e:
                     print(f"⚠ Erro ao carregar {json_file}: {e}")
+            else:
+                print(f"⚠ Arquivo {json_file} não encontrado.")
 
         return uasgs
 
     def fetch_uasg_data(self, uasg):
         """Faz a requisição para a API e retorna os dados mais recentes."""
         url_api = f"https://contratos.comprasnet.gov.br/api/contrato/ug/{uasg}"
-        response = requests.get(url_api)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = requests.get(url_api, timeout=10)  # Adiciona timeout
+            response.raise_for_status()  # Levanta exceção para códigos de erro HTTP
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"⚠ Erro ao buscar dados da UASG {uasg}: {e}")
+            return None
     
     def save_uasg_data(self, uasg, data):
         """Salva os dados da UASG em um arquivo JSON e no banco de dados SQLite."""
-        # Cria o diretório database e o subdiretório da UASG (se não existirem)
-        self.database_dir.mkdir(parents=True, exist_ok=True)
-        print(f"📁 Criando diretório da UASG: {self.database_dir / f'uasg_{uasg}'}")
-
-        # Cria o diretório da UASG
+        # Cria o diretório da UASG (se não existir)
         uasg_dir = self.database_dir / f"uasg_{uasg}"
         uasg_dir.mkdir(parents=True, exist_ok=True)
 
-        # Salva os dados em um arquivo JSON (caminho absoluto)
+        # Salva os dados em um arquivo JSON
         json_file = uasg_dir / f"uasg_{uasg}_contratos.json"
         with json_file.open('w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
-        # Salva os dados no banco de dados SQLite (caminho absoluto)
+        # Salva os dados no banco de dados SQLite
         db_file = uasg_dir / f"uasg_{uasg}_contratos.db"
         conn = sqlite3.connect(db_file)
         cursor = conn.cursor()
@@ -84,13 +101,13 @@ class UASGModel:
                 contrato.get("fornecedor", {}).get("nome"),
                 contrato.get("processo"),
             ))
+
         conn.commit()
         conn.close()
 
     def update_uasg_data(self, uasg):
         """Atualiza os dados da UASG no banco de dados, comparando com os dados antigos."""
-        # Cria o diretório database e o subdiretório da UASG (se não existirem)
-        self.database_dir.mkdir(parents=True, exist_ok=True)
+        # Cria o diretório da UASG (se não existir)
         uasg_dir = self.database_dir / f"uasg_{uasg}"
         uasg_dir.mkdir(parents=True, exist_ok=True)
 
@@ -99,6 +116,9 @@ class UASGModel:
 
         # Buscar novos dados da API
         new_data = self.fetch_uasg_data(uasg)
+        if new_data is None:
+            print(f"⚠ Não foi possível buscar novos dados da UASG {uasg}.")
+            return 0, 0
 
         # Carregar dados antigos do JSON, se existir
         old_data = []
@@ -127,7 +147,7 @@ class UASGModel:
         for contrato in contracts_to_add.values():
             cursor.execute('''
                 INSERT INTO contratos (nome, numero, licitacao_numero, fornecedor_nome, processo, objeto, vigencia_fim, valor_global)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
                 contrato.get("numero"),
@@ -136,7 +156,7 @@ class UASGModel:
                 contrato.get("processo"),
                 contrato.get("objeto", "Não informado"),
                 contrato.get("vigencia_fim", ""),
-                contrato.get("valor_global") 
+                contrato.get("valor_global", "0.0")
             ))
 
         conn.commit()
@@ -146,6 +166,7 @@ class UASGModel:
         with json_file.open("w", encoding="utf-8") as file:
             json.dump(new_data, file, ensure_ascii=False, indent=4)
 
+        print(f"✅ UASG {uasg} atualizada: {len(contracts_to_add)} novos contratos, {len(contracts_to_remove)} removidos.")
         return len(contracts_to_add), len(contracts_to_remove)
 
     def _check_and_update_table(self, db_file):

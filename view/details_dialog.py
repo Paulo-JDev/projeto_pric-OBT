@@ -8,9 +8,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from pathlib import Path
 from datetime import datetime
-
-view_dir = Path(__file__).resolve().parent
-sys.path.append(str(view_dir))
+from model.uasg_model import resource_path
 
 from view.abas_detalhes.general_tab import create_general_tab
 from view.abas_detalhes.object_tab import create_object_tab
@@ -51,7 +49,6 @@ class DetailsDialog(QDialog):
         self.load_status()
 
     def registro_def(self):
-        print("so testando")
         """Abre uma mini janela para adicionar um comentário com data, hora e status selecionado."""
         dialog = QDialog(self)
         dialog.setWindowTitle("Adicionar Registro")
@@ -68,12 +65,13 @@ class DetailsDialog(QDialog):
         def add_comment():
             comment_text = text_edit.toPlainText().strip()
             if comment_text:
-                timestamp = datetime.now().strftime("%d/%m/%Y") #"%d/%m/%Y %H:%M"
+                timestamp = datetime.now().strftime("%d/%m/%Y")  # Formato da data
                 status = self.status_dropdown.currentText()
                 full_comment = f"{timestamp} - {comment_text} - {status}"
                 item = QListWidgetItem(full_comment)
                 item.setCheckState(Qt.CheckState.Unchecked)
                 self.comment_list.addItem(item)
+                print(f"✅ Comentário adicionado: {full_comment}")
             dialog.accept()
         
         add_button.clicked.connect(add_comment)
@@ -103,8 +101,7 @@ class DetailsDialog(QDialog):
     
     def save_status(self, id_contrato, uasg):
         """Salva o status, comentários e opções dos radio buttons em um arquivo separado para cada contrato dentro da UASG"""
-        id_contrato = self.data.get("id", "")
-        base_dir = Path("status_glob")
+        base_dir = Path(resource_path("status_glob"))  # Usa resource_path para garantir o caminho correto
         base_dir.mkdir(exist_ok=True)
         
         uasg_dir = base_dir / str(uasg)
@@ -136,7 +133,7 @@ class DetailsDialog(QDialog):
         uasg = self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
         id_contrato = self.data.get("id", "")
         
-        status_file = Path("status_glob") / str(uasg) / f"{id_contrato}.json"
+        status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"  # Usa resource_path
         
         if status_file.exists():
             with status_file.open("r", encoding="utf-8") as file:
@@ -168,12 +165,10 @@ class DetailsDialog(QDialog):
 
     def load_styles(self):
         """Carrega os estilos do arquivo style.qss"""
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        project_dir = os.path.abspath(os.path.join(base_dir, ".."))
-        style_path = os.path.join(project_dir, "style.qss")
+        style_path = resource_path("style.qss")  # Usa resource_path para garantir o caminho correto
 
         if os.path.exists(style_path):
-            with open(style_path, "r") as f:
+            with open(style_path, "r", encoding="utf-8") as f:
                 self.setStyleSheet(f.read())
         else:
             print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
