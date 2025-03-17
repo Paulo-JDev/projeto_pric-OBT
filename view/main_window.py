@@ -1,13 +1,14 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QLineEdit, QPushButton, QTableWidget,
-    QHeaderView, QGridLayout, QMenu, QTableWidgetItem
+    QHeaderView, QGridLayout, QMenu, QTableView
 )
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QStandardItemModel
 from pathlib import Path
 import os
 
+from controller.detalhe_controller import setup_search_bar, MultiColumnFilterProxyModel
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -15,11 +16,9 @@ class MainWindow(QMainWindow):
         self.controller = controller
         self.setWindowTitle("Gerenciador de UASG")
         self.setGeometry(100, 100, 800, 600)
-        self.setMinimumSize(1000, 600)  # Define o tamanho mínimo da janela
+        self.setMinimumSize(1000, 600)
 
-        # Define o ícone da janela
         self.set_window_icon()
-
         self.load_styles()
 
         self.central_widget = QWidget()
@@ -49,10 +48,11 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(self.input_tab, "Buscar UASG")
 
-        # Table Tab visualizar tabelas
+        # Table Tab
         self.table_tab = QWidget()
         self.table_layout = QVBoxLayout(self.table_tab)
 
+        # Adiciona os botões
         self.buttons_grid = QGridLayout()
         self.menu_button = QPushButton("UASG")
         self.menu_button.setMenu(QMenu(self.menu_button))
@@ -63,21 +63,33 @@ class MainWindow(QMainWindow):
         self.buttons_grid.addWidget(self.clear_button, 0, 1)
 
         self.table_layout.addLayout(self.buttons_grid)
+        # self.table_layout.setSpacing(0)  # Remove espaçamento entre widgets
+        # self.table_layout.setContentsMargins(0, 10, 0, 0)  # Remove margens ao redor do layout
 
-        self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText("Digite para buscar...")
-        self.search_bar.textChanged.connect(self.controller.filter_table)
-        self.table_layout.addWidget(self.search_bar)
-
-        self.table = QTableWidget()
-        self.table.setColumnCount(8)
-        self.table.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Serie", "Objeto", "Valor"])
+        # Adiciona a tabela
+        self.table = QTableView()
+        self.table.setStyleSheet("""
+            QTableView::item {
+                border-bottom: 1px solid #333333;    /* Borda inferior das células */
+                border-right: 1px solid #333333; /* Borda lateral direita */
+            }
+        """)
+        self.model = QStandardItemModel()  # Modelo base
+        self.proxy_model = MultiColumnFilterProxyModel()  # Proxy model
+        # Adiciona a barra de busca
+        icons = {
+            "magnifying-glass": QIcon("caminho/para/icone_lupa.png")  # Substitua pelo caminho do ícone
+        }
+        self.search_bar = setup_search_bar(icons, self.table_layout, self.proxy_model, self.table)
+        
+        self.proxy_model.setSourceModel(self.model)  # Define o modelo base
+        self.table.setModel(self.proxy_model)  # Aplica o proxy model à tabela
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu) # Permite a exibição do menu de contexto
-        self.table.customContextMenuRequested.connect(self.controller.show_context_menu) # Exibe o menu de contexto
-        self.table.verticalHeader().setVisible(False) # Oculta os números das linhas
+        self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self.controller.show_context_menu)
+        self.table.verticalHeader().setVisible(False)
 
-        self.table_layout.addWidget(self.table) # Adiciona a tabela ao layout
+        self.table_layout.addWidget(self.table)
 
         self.tabs.addTab(self.table_tab, "Visualizar Tabelas")
 

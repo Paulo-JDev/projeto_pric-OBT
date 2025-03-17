@@ -4,6 +4,7 @@ from model.uasg_model import UASGModel
 from view.details_dialog import DetailsDialog
 from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem, QMenu, QHeaderView
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import  QStandardItem
 from datetime import datetime, date
 import time
 
@@ -117,37 +118,17 @@ class UASGController:
         # Atualiza self.current_data com os contratos ordenados
         self.current_data = [contrato for _, contrato in contratos_ordenados]
 
-        # Atualizar a tabela com os dados ordenados
-        self.view.table.setRowCount(len(self.current_data))
-        self.view.table.setColumnCount(8)
-        self.view.table.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "valor_global"])
+        # Obtém o modelo base da tabela
+        model = self.view.table.model().sourceModel()
+        model.setRowCount(len(self.current_data))
+        model.setColumnCount(8)
+        model.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "valor_global"])
 
-        # Configuração do cabeçalho
-        header = self.view.table.horizontalHeader()
-
-        # Define a largura mínima para todas as colunas
-        header.setMinimumSectionSize(80)
-
-        # Configuração específica para cada coluna
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Coluna "Dias"
-        header.resizeSection(0, 80)  # Largura inicial da coluna "Dias"
-
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Coluna "Sigla OM"
-        header.resizeSection(1, 110)  # Largura inicial da coluna "Sigla OM"
-
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # Coluna "Contrato/Ata"
-        header.resizeSection(2, 110)  # Largura inicial da coluna "Contrato/Ata"
-
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)  # Coluna "Processo"
-        header.resizeSection(3, 105)  # Largura inicial da Coluna "Processo"
-
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Coluna "Fornecedor"
-        
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive) # Coluna "N° de Série"
-        header.resizeSection(5, 175) # Largura inicial da coluna "N° de Série"
-
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
+        # Função auxiliar para criar e centralizar itens
+        def create_centered_item(text):
+            item = QStandardItem(str(text))
+            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            return item
 
         for row_index, contrato in enumerate(self.current_data):
             vigencia_fim_str = contrato.get("vigencia_fim", "")
@@ -161,42 +142,66 @@ class UASGController:
                 dias_restantes = "Sem Data"
 
             # Cria e centraliza o item da coluna "Dias"
-            dias_item = QTableWidgetItem(str(dias_restantes))
+            dias_item = QStandardItem(str(dias_restantes))
             dias_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            header = self.view.table.horizontalHeader()
+
+            # Define a largura mínima para todas as colunas
+            header.setMinimumSectionSize(80)
+
+            # Configuração específica para cada coluna
+            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Coluna "Dias"
+            header.resizeSection(0, 80)  # Largura inicial da coluna "Dias"
+
+            header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Coluna "Sigla OM"
+            header.resizeSection(1, 110)  # Largura inicial da coluna "Sigla OM"
+
+            header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # Coluna "Contrato/Ata"
+            header.resizeSection(2, 110)  # Largura inicial da coluna "Contrato/Ata"
+
+            header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)  # Coluna "Processo"
+            header.resizeSection(3, 105)  # Largura inicial da Coluna "Processo"
+
+            header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Coluna "Fornecedor"
+            
+            header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive) # Coluna "N° de Série"
+            header.resizeSection(5, 175) # Largura inicial da coluna "N° de Série"
+
+            header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
+            header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
 
             # Definir cor do texto se o contrato já venceu
             if isinstance(dias_restantes, int) and dias_restantes < 0:
                 dias_item.setForeground(Qt.GlobalColor.red)
 
-            self.view.table.setItem(row_index, 0, dias_item)
-
-            # Função auxiliar para criar e centralizar itens
-            def create_centered_item(text):
-                item = QTableWidgetItem(str(text))
-                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                return item
+            model.setItem(row_index, 0, dias_item)
 
             # Preenche as demais colunas com itens centralizados
-            self.view.table.setItem(row_index, 1, create_centered_item(
+            model.setItem(row_index, 1, create_centered_item(
                 contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")))
-            self.view.table.setItem(row_index, 2, create_centered_item(str(contrato.get("numero", ""))))
-            self.view.table.setItem(row_index, 3, create_centered_item(str(contrato.get("licitacao_numero", ""))))
-            self.view.table.setItem(row_index, 4, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
-            self.view.table.setItem(row_index, 5, create_centered_item(str(contrato.get("processo", ""))))
-            self.view.table.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
-            self.view.table.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
+            model.setItem(row_index, 2, create_centered_item(str(contrato.get("numero", ""))))
+            model.setItem(row_index, 3, create_centered_item(str(contrato.get("licitacao_numero", ""))))
+            model.setItem(row_index, 4, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
+            model.setItem(row_index, 5, create_centered_item(str(contrato.get("processo", ""))))
+            model.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
+            model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
             
-    def filter_table(self):
-        """Filtra a tabela com base no texto digitado na barra de busca, incluindo o campo 'Objeto'."""
-        filter_text = self.view.search_bar.text().strip().lower()
+    # def filter_table(self):
+    #     """Filtra a tabela dinamicamente com base no texto da barra de busca, restaurando ao apagar."""
+    #     filter_text = self.view.search_bar.text().strip().lower()
 
-        self.filtered_data = [
-            contrato for contrato in self.current_data
-            if any(filter_text in str(value).lower() for value in contrato.values())
-        ]
+    #     if not filter_text:  # Se o campo estiver vazio, restaura os dados originais
+    #         self.filtered_data = self.current_data
+    #     else:
+    #         pattern = re.compile(re.escape(filter_text), re.IGNORECASE)
+    #         self.filtered_data = [
+    #             contrato for contrato in self.current_data
+    #             if any(pattern.search(str(value)) for value in contrato.values())
+    #         ]
 
-        self.populate_table(self.filtered_data)
-
+    #     self.populate_table(self.filtered_data)
+        
     def clear_table(self):
         """Limpa o conteúdo da tabela."""
         self.view.search_bar.clear()
@@ -206,14 +211,16 @@ class UASGController:
 
     def show_context_menu(self, position):
         """Exibe o menu de contexto ao clicar com o botão direito na tabela."""
-        item = self.view.table.itemAt(position)
-        if item is None:
+        index = self.view.table.indexAt(position)
+        if not index.isValid():
             return
 
-        row = item.row()  # Obtém a linha clicada
+        # Mapeia o índice filtrado para o índice do modelo base
+        source_index = self.view.table.model().mapToSource(index)
+        row = source_index.row()
 
-        # Certifica-se de que a lista usada está correta (filtrada ou completa)
-        data_source = self.filtered_data if self.filtered_data else self.current_data
+        # Certifica-se de que a lista usada está correta
+        data_source = self.current_data
 
         # Verifica se o índice é válido para evitar erro de "index out of range"
         if 0 <= row < len(data_source):
