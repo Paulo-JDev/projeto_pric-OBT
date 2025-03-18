@@ -2,12 +2,14 @@ import os
 import sys
 from view.main_window import MainWindow
 from model.uasg_model import UASGModel
+from utils.utils import refresh_uasg_menu
+
 from view.details_dialog import DetailsDialog
 from PyQt6.QtWidgets import QMessageBox, QMenu, QHeaderView, QTableView 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import  QStandardItem
 from datetime import datetime, date
-from controller.detalhe_controller import setup_search_bar, MultiColumnFilterProxyModel
+
 import time
 
 class UASGController:
@@ -28,12 +30,24 @@ class UASGController:
         else:
             print("⚠ Diretório 'database' não encontrado. Nenhum dado carregado.")
 
-        # Inicializar o menu com UASGs salvas
-        self.refresh_uasg_menu()
+        # Carrega as UASGs salvas e atualiza o menu
+        self.load_saved_uasgs()
+
 
     def run(self):
         """Executa a interface principal."""
         self.view.show()
+
+    def load_saved_uasgs(self):
+        """Carrega as UASGs salvas e atualiza o menu."""
+        self.loaded_uasgs = self.model.load_saved_uasgs()
+        refresh_uasg_menu(self)  # Atualiza o menu após carregar as UASGs
+
+    def add_uasg_to_menu(self, uasg):
+        """Adiciona uma UASG ao menu suspenso."""
+        action = self.view.menu_button.menu().addAction(f"UASG {uasg}")
+        action.triggered.connect(lambda: self.update_table(uasg)) # da juntar as coisa aqui pra nçao deixar o codigo grande sem necessidade
+
 
     def fetch_and_create_table(self):
         """Busca os dados da UASG e atualiza o banco de dados."""
@@ -43,6 +57,8 @@ class UASGController:
             return
 
         try:
+           # Inicializa dias_restantes com um valor padrão
+            dias_restantes = 0
             # Se a UASG já estiver carregada, atualizar os dados
             if uasg in self.loaded_uasgs:
                 added, removed = self.model.update_uasg_data(uasg)
@@ -83,23 +99,8 @@ class UASGController:
         # Deletar os dados localmente
         self.model.delete_uasg_data(uasg)
         self.loaded_uasgs.pop(uasg, None)
-        self.refresh_uasg_menu()
+        self.load_saved_uasgs()
         QMessageBox.information(self.view, "Sucesso", f"UASG {uasg} deletada com sucesso.")
-
-    def add_uasg_to_menu(self, uasg):
-        """Adiciona uma UASG ao menu suspenso."""
-        action = self.view.menu_button.menu().addAction(f"UASG {uasg}")
-        action.triggered.connect(lambda: self.update_table(uasg))
-
-    def refresh_uasg_menu(self):
-        """Atualiza o menu com as UASGs carregadas."""
-        menu = self.view.menu_button.menu()
-        menu.clear()  # Limpa o menu antes de adicionar as UASGs
-
-        for uasg in self.loaded_uasgs:
-            print(f"➕ Adicionando UASG {uasg} ao menu.")
-            action = menu.addAction(f"UASG {uasg}")
-            action.triggered.connect(lambda checked, uasg=uasg: self.update_table(uasg))
 
     def update_table(self, uasg):
         """Atualiza a tabela com os dados da UASG selecionada."""
@@ -109,6 +110,7 @@ class UASGController:
             print(f"✅ Tabela atualizada com os dados da UASG {uasg}.")
         else:
             print(f"⚠ UASG {uasg} não encontrada nos dados carregados.")
+        self.load_saved_uasgs()
 
     def populate_table(self, data):
         """Preenche a tabela com os dados fornecidos, ordenando do maior para o menor tempo de vigência."""
@@ -125,7 +127,9 @@ class UASGController:
                     dias_restantes = (vigencia_fim - today).days
                 except ValueError:
                     dias_restantes = float('-inf')  # Se a data for inválida, coloca no final
-        
+            else:
+                dias_restantes = float('-inf')  # Se a data estiver vazia, coloca no final
+            
             contratos_ordenados.append((dias_restantes, contrato))
 
         # Ordenar do maior tempo para o menor (negativos no final)
@@ -205,7 +209,7 @@ class UASGController:
             model.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
             model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
 
-    #    Exibe uma mensagem de conclusão
+        # Exibe uma mensagem de conclusão
         QMessageBox.information(self.view, "Concluido", f"A tabela foi carregada com sucesso!")
 
     def clear_table(self):

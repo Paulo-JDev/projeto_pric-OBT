@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import (
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QStandardItemModel
-from pathlib import Path
 import os
 
 from controller.detalhe_controller import setup_search_bar, MultiColumnFilterProxyModel
@@ -104,7 +103,8 @@ class MainWindow(QMainWindow):
 
     def set_window_icon(self):
         """Define o ícone da janela a partir de um arquivo na pasta utils/icons."""
-        icon_path = resource_path("utils/icons/mn.ico")  # Usa resource_path para garantir o caminho correto
+        # Caminho do ícone na pasta original
+        icon_path = resource_path("utils/icons/mn.ico")
 
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))

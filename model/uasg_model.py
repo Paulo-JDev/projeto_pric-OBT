@@ -4,6 +4,7 @@ import sqlite3
 import requests
 import sys
 from pathlib import Path
+from utils.utils import refresh_uasg_menu
 
 # Adiciona o diretório do script ao sys.path (caminho absoluto)
 def resource_path(relative_path):
@@ -22,6 +23,11 @@ class UASGModel:
         self.database_dir = self.base_dir / "database"
         self.database_dir.mkdir(parents=True, exist_ok=True)  # Cria a pasta database, se não existir
         print(f"📁 Diretório do banco de dados: {self.database_dir}")
+
+    def load_saved_uasgs(self):
+        """Carrega as UASGs salvas e atualiza o menu."""
+        self.loaded_uasgs = self.model.load_saved_uasgs()
+        refresh_uasg_menu(self)  # Atualiza o menu após carregar as UASGs
 
     def load_saved_uasgs(self):
         """Carrega todas as UASGs salvas e seus contratos no banco de dados."""
@@ -50,7 +56,6 @@ class UASGModel:
                     print(f"⚠ Erro ao carregar {json_file}: {e}")
             else:
                 print(f"⚠ Arquivo {json_file} não encontrado.")
-
         return uasgs
 
     def fetch_uasg_data(self, uasg):
@@ -79,7 +84,7 @@ class UASGModel:
         db_file = uasg_dir / f"uasg_{uasg}_contratos.db"
         conn = sqlite3.connect(db_file)
         cursor = conn.cursor()
-
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS contratos (
                 numero INTEGER,
@@ -208,3 +213,4 @@ class UASGModel:
             print(f"✅ Dados da UASG {uasg} removidos com sucesso.")
         else:
             print(f"⚠ UASG {uasg} não encontrada.")
+        self.load_saved_uasgs()
