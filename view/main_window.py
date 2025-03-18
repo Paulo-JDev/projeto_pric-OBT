@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         self.controller = controller
         self.setWindowTitle("Gerenciador de UASG")
         self.setGeometry(100, 100, 800, 600)
-        self.setMinimumSize(1000, 600)
+        self.setMinimumSize(1150, 600)
 
         self.set_window_icon()
         self.load_styles()

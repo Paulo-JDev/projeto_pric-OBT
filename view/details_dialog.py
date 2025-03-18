@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton,
     QTabWidget, QTextEdit, QListWidgetItem, QApplication
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from pathlib import Path
 from datetime import datetime
 from model.uasg_model import resource_path
@@ -16,6 +16,9 @@ from view.abas_detalhes.status_tab import create_status_tab
 from view.abas_detalhes.termo_adt import aba_termo_adt
 
 class DetailsDialog(QDialog):
+    # Sinal que será emitido quando o botão de salvar for pressionado
+    data_saved = pyqtSignal()
+
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Detalhes do Contrato")
@@ -42,7 +45,7 @@ class DetailsDialog(QDialog):
 
         # Botão de salvar
         close_button = QPushButton("Salvar")
-        close_button.clicked.connect(self.close_and_save)
+        close_button.clicked.connect(self.func_save)
         self.main_layout.addWidget(close_button)
 
         # Carregar dados salvos
@@ -95,10 +98,12 @@ class DetailsDialog(QDialog):
             if item.checkState() == Qt.CheckState.Checked:
                 self.comment_list.takeItem(i)
     
-    def close_and_save(self):
+    def func_save(self):
         """Salva o status e os comentários ao fechar a janela"""
         self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", ""))
-    
+         # Emitir o sinal indicando que os dados foram salvos
+        self.data_saved.emit()
+
     def save_status(self, id_contrato, uasg):
         """Salva o status, comentários e opções dos radio buttons em um arquivo separado para cada contrato dentro da UASG"""
         base_dir = Path(resource_path("status_glob"))  # Usa resource_path para garantir o caminho correto

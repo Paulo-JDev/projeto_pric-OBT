@@ -1,15 +1,14 @@
-import os
-import sys
 from view.main_window import MainWindow
-from model.uasg_model import UASGModel
+from model.uasg_model import UASGModel, resource_path
 from utils.utils import refresh_uasg_menu
-
 from view.details_dialog import DetailsDialog
+
 from PyQt6.QtWidgets import QMessageBox, QMenu, QHeaderView, QTableView 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import  QStandardItem
 from datetime import datetime, date
-
+from pathlib import Path
+import json
 import time
 
 class UASGController:
@@ -143,8 +142,8 @@ class UASGController:
         # Obtém o modelo base da tabela
         model = self.view.table.model().sourceModel()
         model.setRowCount(len(self.current_data))
-        model.setColumnCount(8)
-        model.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "valor_global"])
+        model.setColumnCount(9)  # Aumente o número de colunas para 9
+        model.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "valor_global", "Status"])  # Adicione "Status"
 
         # Função auxiliar para criar e centralizar itens
         def create_centered_item(text):
@@ -177,6 +176,8 @@ class UASGController:
 
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
         header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
+        header.setSectionResizeMode(8, QHeaderView.ResizeMode.Interactive)  # Coluna "Status"
+        header.resizeSection(8, 140)  # Largura inicial da coluna "Status"
 
         for row_index, contrato in enumerate(self.current_data):
             vigencia_fim_str = contrato.get("vigencia_fim", "")
@@ -208,6 +209,21 @@ class UASGController:
             model.setItem(row_index, 5, create_centered_item(str(contrato.get("processo", ""))))
             model.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
             model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
+
+            # Carrega o status do contrato
+            uasg = contrato.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
+            id_contrato = contrato.get("id", "")
+            status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"
+
+            if status_file.exists():
+                with status_file.open("r", encoding="utf-8") as file:
+                    status_data = json.load(file)
+                    status = status_data.get("status", "Sem Status")
+            else:
+                status = "Sem Status"
+
+            # Adiciona o status à coluna "Status"
+            model.setItem(row_index, 8, create_centered_item(status))
 
         # Exibe uma mensagem de conclusão
         QMessageBox.information(self.view, "Concluido", f"A tabela foi carregada com sucesso!")
@@ -243,4 +259,14 @@ class UASGController:
     def show_details_dialog(self, contrato):
         """Exibe o diálogo de detalhes do contrato."""
         details_dialog = DetailsDialog(contrato, self.view)
+        
+        # Conectar o sinal data_saved ao método que atualiza a tabela
+        details_dialog.data_saved.connect(self.update_table_from_details)
+        
         details_dialog.exec()
+
+    def update_table_from_details(self):
+        """Atualiza a tabela quando os dados são salvos na DetailsDialog."""
+        uasg = self.view.uasg_input.text().strip()
+        if uasg:
+            self.update_table(uasg)
