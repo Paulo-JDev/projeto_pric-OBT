@@ -11,6 +11,5 @@ def refresh_uasg_menu(self):
             # Se houver UASGs carregadas, habilita o botão e adiciona as UASGs ao menu
             self.view.menu_button.setEnabled(True)
             for uasg in self.loaded_uasgs:
-                print(f"➕ Adicionando UASG {uasg} ao menu.")
                 action = menu.addAction(f"UASG {uasg}")
                 action.triggered.connect(lambda checked, uasg=uasg: self.update_table(uasg))

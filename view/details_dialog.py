@@ -1,11 +1,10 @@
 import os
-import sys
 import json
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton,
-    QTabWidget, QTextEdit, QListWidgetItem, QApplication
+    QTabWidget, QTextEdit, QListWidgetItem, QApplication, QMessageBox
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from pathlib import Path
 from datetime import datetime
 from model.uasg_model import resource_path
@@ -74,7 +73,7 @@ class DetailsDialog(QDialog):
                 item = QListWidgetItem(full_comment)
                 item.setCheckState(Qt.CheckState.Unchecked)
                 self.comment_list.addItem(item)
-                print(f"✅ Comentário adicionado: {full_comment}")
+                print(f"✅ Registro adicionado: {full_comment}")
             dialog.accept()
         
         add_button.clicked.connect(add_comment)
@@ -90,6 +89,7 @@ class DetailsDialog(QDialog):
             self.comment_list.addItem(item)
             self.comment_box.clear()
             self.comment_list.clearSelection()
+            print(f"✅ Comentário adicionado: {comment_text}")
     
     def delete_comment(self):
         """Remove os comentários selecionados"""
@@ -102,6 +102,18 @@ class DetailsDialog(QDialog):
         """Salva o status e os comentários ao fechar a janela"""
         self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", ""))
          # Emitir o sinal indicando que os dados foram salvos
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Icon.Information)
+        msg_box.setWindowTitle("Concluído")
+        msg_box.setText("Dados salvos com sucesso!")
+        
+        # Mostra a QMessageBox
+        msg_box.open()
+        
+        # Fecha a QMessageBox após 2 segundos
+        QTimer.singleShot(500, msg_box.close)
+        
+        # Emitir o sinal indicando que os dados foram salvos
         self.data_saved.emit()
 
     def save_status(self, id_contrato, uasg):
