@@ -18,8 +18,9 @@ class DetailsDialog(QDialog):
     # Sinal que será emitido quando o botão de salvar for pressionado
     data_saved = pyqtSignal()
 
-    def __init__(self, data, parent=None):
+    def __init__(self, data, parent=None, controller=None):
         super().__init__(parent)
+        self.controller = controller
         self.setWindowTitle("Detalhes do Contrato")
         self.setFixedSize(800, 650)
         self.pdf_path = None
@@ -109,13 +110,13 @@ class DetailsDialog(QDialog):
         
         # Mostra a QMessageBox
         msg_box.open()
+
+        # Emitir o sinal indicando que os dados foram salvos
+        self.data_saved.emit()
         
         # Fecha a QMessageBox após 2 segundos
         QTimer.singleShot(500, msg_box.close)
         
-        # Emitir o sinal indicando que os dados foram salvos
-        self.data_saved.emit()
-
     def save_status(self, id_contrato, uasg):
         """Salva o status, comentários e opções dos radio buttons em um arquivo separado para cada contrato dentro da UASG"""
         base_dir = Path(resource_path("status_glob"))  # Usa resource_path para garantir o caminho correto

@@ -103,12 +103,16 @@ class UASGController:
     def update_table(self, uasg):
         """Atualiza a tabela com os dados da UASG selecionada."""
         if uasg in self.loaded_uasgs:
-            self.current_data = self.loaded_uasgs[uasg]
+            # Carrega os dados atualizados diretamente do modelo
+            self.current_data = self.model.load_uasg_data(uasg)
+            if self.current_data is None:
+                print(f"⚠ Dados da UASG {uasg} não puderam ser carregados.")
+                return
+                
             self.populate_table(self.current_data)
             print(f"✅ Tabela atualizada com os dados da UASG {uasg}.")
         else:
             print(f"⚠ UASG {uasg} não encontrada nos dados carregados.")
-        self.load_saved_uasgs()
 
     def populate_table(self, data):
         """Preenche a tabela com os dados fornecidos, ordenando do maior para o menor tempo de vigência."""
@@ -142,7 +146,7 @@ class UASGController:
         model = self.view.table.model().sourceModel()
         model.setRowCount(len(self.current_data))
         model.setColumnCount(9)  # Aumente o número de colunas para 9
-        model.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "valor_global", "Status"])  # Adicione "Status"
+        model.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "Valor Global", "Status"])  # Adicione "Status"
 
         # Função auxiliar para criar e centralizar itens
         def create_centered_item(text):
@@ -257,15 +261,20 @@ class UASGController:
 
     def show_details_dialog(self, contrato):
         """Exibe o diálogo de detalhes do contrato."""
-        details_dialog = DetailsDialog(contrato, self.view)
+        details_dialog = DetailsDialog(contrato, self.view, controller=self)
         
         # Conectar o sinal data_saved ao método que atualiza a tabela
-        details_dialog.data_saved.connect(self.update_table_from_details)
+        details_dialog.data_saved.connect(lambda: self.update_table_from_details(contrato))
         
         details_dialog.exec()
 
-    def update_table_from_details(self):
+    def update_table_from_details(self, contrato):
         """Atualiza a tabela quando os dados são salvos na DetailsDialog."""
-        uasg = self.view.uasg_input.text().strip()
-        if uasg:
-            self.update_table(uasg)
+        try:
+            uasg = contrato.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
+            if uasg:
+                # Força o recarregamento dos dados atualizados
+                self.loaded_uasgs[uasg] = self.model.load_uasg_data(uasg)
+                self.update_table(uasg)
+        except Exception as e:
+            print(f"⚠ Erro ao atualizar tabela após edição: {e}")

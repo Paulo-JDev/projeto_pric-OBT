@@ -26,6 +26,15 @@ class UASGModel:
         self.database_dir.mkdir(parents=True, exist_ok=True)  # Cria a pasta database, se não existir
         print(f"📁 Diretório do banco de dados: {self.database_dir}")
 
+    def load_uasg_data(self, uasg):
+        """Carrega os dados de uma UASG específica"""
+        uasg_dir = self.database_dir / f"uasg_{uasg}"
+        json_file = uasg_dir / f"uasg_{uasg}_contratos.json"
+        if json_file.exists():
+            with open(json_file, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        return None
+
     def load_saved_uasgs(self):
         """Carrega as UASGs salvas e atualiza o menu."""
         self.loaded_uasgs = self.model.load_saved_uasgs()

@@ -81,6 +81,10 @@ class MainWindow(QMainWindow):
         
         self.proxy_model.setSourceModel(self.model)  # Define o modelo base
         self.table.setModel(self.proxy_model)  # Aplica o proxy model à tabela
+
+        # Configura para atualizar a seleção quando o modelo mudar
+        self.model.layoutChanged.connect(self._handle_model_update)
+
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self.controller.show_context_menu)
@@ -109,5 +113,10 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(icon_path))
         else:
             print(f"⚠ Arquivo de ícone não encontrado: {icon_path}")
+
+    def _handle_model_update(self):
+        """Garante que a tabela seja atualizada visualmente"""
+        self.table.viewport().update()
+        self.table.resizeColumnsToContents()
     
     
