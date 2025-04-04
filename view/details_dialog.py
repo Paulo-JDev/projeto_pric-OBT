@@ -104,7 +104,7 @@ class DetailsDialog(QDialog):
     
     def func_save(self):
         """Salva o status e os comentários ao fechar a janela"""
-        self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", ""))
+        self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", ""))
          # Emitir o sinal indicando que os dados foram salvos
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Icon.Information)
@@ -152,7 +152,7 @@ class DetailsDialog(QDialog):
     def load_status(self):
         """Carrega os dados salvos no JSON"""
         try:
-            uasg = self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
+            uasg = self.data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
             id_contrato = self.data.get("id", "")
             
             status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"

@@ -36,19 +36,21 @@ def create_general_tab(self):
     info_group = QGroupBox("Informações")
     info_layout = QFormLayout(info_group)
     info_layout.setVerticalSpacing(10)
+    info_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
+    info_layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft)
 
     # Função para formatar data (de YYYY-MM-DD para DD/MM/YYYY)
     def format_date(date_str):
         try:
             return datetime.strptime(date_str, "%Y-%m-%d").strftime("%d/%m/%Y")
         except:
-            return date_str  # Retorna o original se não puder formatar
+            return date_str
 
-    # Função modificada para lidar com campos aninhados e datas
+    # Função modificada com largura intermediária
     def create_field_row(label_text, field_name, parent_layout, full_width=False):
         hbox = QHBoxLayout()
         label = QLabel(label_text)
-        label.setStyleSheet("font-weight: bold;")
+        label.setStyleSheet("font-weight: bold; min-width: 140px;")  # Largura aumentada para labels
         
         def get_nested_value(data, keys):
             keys = keys.split('.')
@@ -61,13 +63,12 @@ def create_general_tab(self):
         
         value = get_nested_value(self.data, field_name)
         
-        # Formata datas específicas
         if field_name in ["vigencia_inicio", "vigencia_fim"]:
             value = format_date(value)
             
         line_edit = QLineEdit(str(value))
         line_edit.setReadOnly(True)
-        line_edit.setStyleSheet("min-width: 200px;" if not full_width else "width: 100%;")  # Reduzido de 250px para 200px
+        line_edit.setStyleSheet("min-width: 300px; max-width: 300px;")  # Aumentado para 250px (quase o dobro)
         
         copy_btn = QPushButton()
         copy_btn.setIcon(QIcon(str(Path("utils/icons/copy.png"))))
@@ -76,9 +77,10 @@ def create_general_tab(self):
         copy_btn.setToolTip("Copiar")
         copy_btn.clicked.connect(lambda: self.copy_to_clipboard(line_edit))
         
-        hbox.addWidget(line_edit)
+        hbox.addWidget(line_edit, stretch=0)
         if not full_width:
-            hbox.addWidget(copy_btn)
+            hbox.addWidget(copy_btn, stretch=0)
+        hbox.addStretch(1)
         parent_layout.addRow(label, hbox)
         return line_edit
 
@@ -96,18 +98,20 @@ def create_general_tab(self):
     
     # Campo "Objeto" editável
     objeto_label = QLabel("Objeto:")
-    objeto_label.setStyleSheet("font-weight: bold;")
+    objeto_label.setStyleSheet("font-weight: bold; min-width: 140px;")
     self.objeto_edit = QLineEdit()
     self.objeto_edit.setText(self.data.get("objeto", ""))
+    self.objeto_edit.setMinimumWidth(320)  # Largura específica para o objeto
+    self.objeto_edit.setMaximumWidth(320)  # Fixa o tamanho
     hbox = QHBoxLayout()
-    hbox.addWidget(self.objeto_edit)
+    hbox.addWidget(self.objeto_edit, stretch=1)
     copy_btn = QPushButton()
     copy_btn.setIcon(QIcon(str(Path("utils/icons/copy.png"))))
     copy_btn.setIconSize(QSize(16, 16))
     copy_btn.setFixedSize(24, 24)
     copy_btn.setToolTip("Copiar")
     copy_btn.clicked.connect(lambda: self.copy_to_clipboard(self.objeto_edit))
-    hbox.addWidget(copy_btn)
+    hbox.addWidget(copy_btn, stretch=0)
     info_layout.addRow(objeto_label, hbox)
 
     left_column.addWidget(info_group)
@@ -121,11 +125,11 @@ def create_general_tab(self):
     options_layout = QFormLayout(options_group)
     options_layout.setVerticalSpacing(10)
 
-    # Radio buttons em formato compacto
+    # Radio buttons
     def create_radio_row(title, options):
         hbox = QHBoxLayout()
         label = QLabel(title)
-        label.setStyleSheet("font-weight: bold;")
+        label.setStyleSheet("font-weight: bold; min-width: 120px;")
         hbox.addWidget(label)
         
         btn_group = QButtonGroup(self)
@@ -134,6 +138,7 @@ def create_general_tab(self):
         
         for option in options:
             radio = QRadioButton(option)
+            radio.setStyleSheet("margin-right: 15px;")
             hbox.addWidget(radio)
             btn_group.addButton(radio)
             self.radio_buttons[title][option] = radio
@@ -150,9 +155,10 @@ def create_general_tab(self):
     # Seção de Gestão/Fiscalização
     gestao_group = QGroupBox("Gestão/Fiscalização")
     gestao_layout = QFormLayout(gestao_group)
+    gestao_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
     
     # Campos de gestão
-    create_field_row("Sigla da OM Responsável:", "contratante.orgao_origem.unidade_gestora_origem.nome_resumido", gestao_layout)
+    create_field_row("Sigla OM Resp:", "contratante.orgao_origem.unidade_gestora_origem.nome_resumido", gestao_layout)
     create_field_row("UASG:", "contratante.orgao_origem.unidade_gestora_origem.codigo", gestao_layout)
     create_field_row("Órgão Responsável:", "contratante.orgao.unidade_gestora.nome_resumido", gestao_layout)
     create_field_row("Indicativo:", "indicativo", gestao_layout)
@@ -160,8 +166,8 @@ def create_general_tab(self):
     right_column.addStretch()
 
     # Adicionando colunas ao layout principal
-    content_layout.addLayout(left_column, 60)  # 60% de largura
-    content_layout.addLayout(right_column, 40) # 40% de largura
+    content_layout.addLayout(left_column, 60)
+    content_layout.addLayout(right_column, 40)
     
     main_layout.addLayout(content_layout)
     main_layout.addStretch()

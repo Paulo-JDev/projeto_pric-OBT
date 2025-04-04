@@ -210,7 +210,7 @@ class UASGController:
             model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
 
             # Carrega o status do contrato
-            uasg = contrato.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
+            uasg = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
             id_contrato = contrato.get("id", "")
             status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"
 
