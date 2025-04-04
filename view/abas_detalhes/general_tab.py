@@ -6,6 +6,7 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon
 from pathlib import Path
 from datetime import datetime
+from utils.icon_loader import icon_manager
 
 def create_general_tab(self):
     """Cria a aba de Informações Gerais com layout lado a lado"""
@@ -71,7 +72,7 @@ def create_general_tab(self):
         line_edit.setStyleSheet("min-width: 300px; max-width: 300px;")  # Aumentado para 250px (quase o dobro)
         
         copy_btn = QPushButton()
-        copy_btn.setIcon(QIcon(str(Path("utils/icons/copy.png"))))
+        copy_btn.setIcon(icon_manager.get_icon("copy"))
         copy_btn.setIconSize(QSize(16, 16))
         copy_btn.setFixedSize(24, 24)
         copy_btn.setToolTip("Copiar")
@@ -106,7 +107,7 @@ def create_general_tab(self):
     hbox = QHBoxLayout()
     hbox.addWidget(self.objeto_edit, stretch=1)
     copy_btn = QPushButton()
-    copy_btn.setIcon(QIcon(str(Path("utils/icons/copy.png"))))
+    copy_btn.setIcon(icon_manager.get_icon("copy"))
     copy_btn.setIconSize(QSize(16, 16))
     copy_btn.setFixedSize(24, 24)
     copy_btn.setToolTip("Copiar")

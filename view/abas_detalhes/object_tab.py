@@ -7,6 +7,8 @@ import os
 import time
 import webbrowser
 
+from utils.icon_loader import icon_manager
+
 def get_download_folder():
     """Retorna o caminho da pasta Downloads do usuário."""
     return os.path.join(os.path.expanduser("~"), "Downloads")
@@ -156,7 +158,7 @@ def create_object_tab(self):
             }
         """)
         ver_pdf_button.clicked.connect(lambda: open_pdf(self))  # Abre o PDF ao clicar
-        ver_pdf_button.setIcon(QIcon("utils/icons/download-pdf.png"))
+        ver_pdf_button.setIcon(icon_manager.get_icon("download-pdf")) # copy_btn.setIcon(icon_manager.get_icon("copy"))
         ver_pdf_button.setIconSize(QSize(32, 32))
         layout.addWidget(ver_pdf_button)  # Adiciona o botão no topo da tela
 
