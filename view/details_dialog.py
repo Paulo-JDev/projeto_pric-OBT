@@ -21,7 +21,7 @@ class DetailsDialog(QDialog):
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Detalhes do Contrato")
-        self.setFixedSize(800, 650)
+        self.setFixedSize(1100, 600)
         self.pdf_path = None
 
         self.load_styles()
@@ -31,6 +31,10 @@ class DetailsDialog(QDialog):
 
         self.radio_groups = {}  # Adicione esta linha
         self.radio_buttons = {}  # Adicione esta linha (se ainda não estiver presente)
+
+        self.objeto_edit = None
+        self.status_dropdown = None
+        self.comment_list = None
 
         # Criar o TabWidget
         self.tabs = QTabWidget()
@@ -131,7 +135,7 @@ class DetailsDialog(QDialog):
             "uasg": uasg,
             "status": self.status_dropdown.currentText(),
             "comments": [self.comment_list.item(i).text() for i in range(self.comment_list.count())],
-            "objeto": self.objeto_edit.text(),
+            "objeto": self.objeto_edit.text() if self.objeto_edit is not None else "",
             "radio_options": {
                 title: next(
                     (option for option, button in self.radio_buttons[title].items() if button.isChecked()),
@@ -147,18 +151,22 @@ class DetailsDialog(QDialog):
     
     def load_status(self):
         """Carrega os dados salvos no JSON"""
-        uasg = self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
-        id_contrato = self.data.get("id", "")
-        
-        status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"  # Usa resource_path
-        
-        if status_file.exists():
-            with status_file.open("r", encoding="utf-8") as file:
-                status_data = json.load(file)
-                
-                self.status_dropdown.setCurrentText(status_data.get("status", ""))
-                self.objeto_edit.setText(status_data.get("objeto", "Não informado"))
-                
+        try:
+            uasg = self.data.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
+            id_contrato = self.data.get("id", "")
+            
+            status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"
+            
+            if status_file.exists():
+                with status_file.open("r", encoding="utf-8") as file:
+                    status_data = json.load(file)
+                    
+                    self.status_dropdown.setCurrentText(status_data.get("status", ""))
+                    
+                    # Verifica se objeto_edit existe antes de acessá-lo
+                    if hasattr(self, 'objeto_edit') and self.objeto_edit is not None:
+                        self.objeto_edit.setText(status_data.get("objeto", "Não informado"))
+                    
                 for title, selected_value in status_data.get("radio_options", {}).items():
                     if selected_value in self.radio_buttons.get(title, {}):
                         self.radio_buttons[title][selected_value].setChecked(True)
@@ -172,8 +180,9 @@ class DetailsDialog(QDialog):
                 self.comment_list.clearSelection()
             
             print(f"Status carregado de {status_file}")
-        else:
-            print("Nenhum status salvo encontrado.")
+        except Exception as e:
+            print(f"Erro ao carregar status: {e}")
+        
 
     def copy_to_clipboard(self, line_edit):
         """Copia o texto do campo para a área de transferência"""
