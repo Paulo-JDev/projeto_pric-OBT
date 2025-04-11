@@ -1,8 +1,10 @@
 import os
+import sys
 import json
+import time
 import sqlite3
 import requests
-import sys
+
 from pathlib import Path
 from utils.utils import refresh_uasg_menu
 
@@ -47,7 +49,6 @@ class UASGModel:
                         data = json.load(file)
                         if isinstance(data, list):  # Verifica se o JSON é uma lista
                             uasgs[uasg_dir.name.split("_")[1]] = data
-                            print(f"✅ UASG {uasg_dir.name.split('_')[1]} carregada com sucesso.")
                         else:
                             print(f"⚠ Formato inválido no arquivo {json_file}: esperado uma lista de dicionários.")
                 except json.JSONDecodeError as e:
@@ -61,14 +62,27 @@ class UASGModel:
     def fetch_uasg_data(self, uasg):
         """Faz a requisição para a API e retorna os dados mais recentes."""
         url_api = f"https://contratos.comprasnet.gov.br/api/contrato/ug/{uasg}"
-        try:
-            response = requests.get(url_api, timeout=10)  # Adiciona timeout
-            response.raise_for_status()  # Levanta exceção para códigos de erro HTTP
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"⚠ Erro ao buscar dados da UASG {uasg}: {e}")
-            return None
-    
+        tentativas_maximas = 10
+
+        for tentativa in range(1, tentativas_maximas + 1):
+            try:
+                # Emitir progresso (se necessário)
+                print(f"Tentativa {tentativa}/{tentativas_maximas} - Consultando UASG: {uasg}")
+
+                # Fazer a requisição para obter os dados
+                response = requests.get(url_api, timeout=10)
+                response.raise_for_status()  # Levanta exceção para códigos de erro HTTP
+
+                # Retorna os dados em formato JSON
+                return response.json()
+
+            except requests.exceptions.RequestException as e:
+                print(f"⚠ Erro na tentativa {tentativa}/{tentativas_maximas} ao buscar dados da UASG {uasg}: {e}")
+                if tentativa < tentativas_maximas:
+                    time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
+                else:
+                    raise Exception(f"Falha após {tentativas_maximas} tentativas: {str(e)}")
+        
     def save_uasg_data(self, uasg, data):
         """Salva os dados da UASG em um arquivo JSON e no banco de dados SQLite."""
         # Cria o diretório da UASG (se não existir)

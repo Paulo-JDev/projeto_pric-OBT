@@ -97,7 +97,6 @@ class MainWindow(QMainWindow):
         if os.path.exists(style_path):
             with open(style_path, "r", encoding="utf-8") as f:
                 self.setStyleSheet(f.read())
-            print(f"✅ Estilos carregados de {style_path}.")
         else:
             print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
 
@@ -108,7 +107,6 @@ class MainWindow(QMainWindow):
 
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
-            print(f"✅ Ícone da janela carregado de {icon_path}.")
         else:
             print(f"⚠ Arquivo de ícone não encontrado: {icon_path}")
     

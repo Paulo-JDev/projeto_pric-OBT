@@ -23,7 +23,6 @@ class UASGController:
 
         # Verifica se o diretório database existe
         if self.model.database_dir.exists():
-            print(f"📁 Diretório 'database' encontrado: {self.model.database_dir}")
             self.loaded_uasgs = self.model.load_saved_uasgs()
             print(f"📂 UASGs carregadas: {list(self.loaded_uasgs.keys())}")
         else:
@@ -211,7 +210,7 @@ class UASGController:
             model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
 
             # Carrega o status do contrato
-            uasg = contrato.get("contratante", {}).get("orgao_origem", {}).get("unidade_gestora_origem", {}).get("codigo", "")
+            uasg = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
             id_contrato = contrato.get("id", "")
             status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"
 
@@ -234,7 +233,7 @@ class UASGController:
         model = self.view.table.model()
         model.removeRows(0, model.rowCount())
         QMessageBox.information(self.view, "Limpeza", "A tabela foi limpa com sucesso!")
-
+        
     def show_context_menu(self, position):
         """Exibe o menu de contexto ao clicar com o botão direito na tabela."""
         index = self.view.table.indexAt(position)
