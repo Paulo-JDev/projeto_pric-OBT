@@ -21,9 +21,23 @@ def create_general_tab(self):
         return general_tab
 
     # Título do contrato
+    contrato_title_layout = QHBoxLayout()
+    
+    # Ícone da bandeira do Brasil
+    brasil_icon = QLabel()
+    brasil_icon.setPixmap(icon_manager.get_icon("brasil_2").pixmap(32, 32))
+    brasil_icon.setFixedSize(32, 32)
+    contrato_title_layout.addWidget(brasil_icon)
+    
+    # Texto do título
     contrato_title = QLabel(f"Contrato {self.data.get('numero', '')} - {self.data.get('objeto', '')[:50]}...")
     contrato_title.setStyleSheet("font-size: 16px; font-weight: bold;")
-    main_layout.addWidget(contrato_title)
+    contrato_title_layout.addWidget(contrato_title)
+    
+    # Adiciona espaço à direita para balancear
+    contrato_title_layout.addStretch(1)
+    
+    main_layout.addLayout(contrato_title_layout)
 
     # Layout principal lado a lado
     content_layout = QHBoxLayout()

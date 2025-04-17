@@ -2,12 +2,14 @@ import os
 import json
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton,
-    QTabWidget, QTextEdit, QListWidgetItem, QApplication, QMessageBox
+    QTabWidget, QTextEdit, QListWidgetItem, QApplication, QMessageBox,
+    QHBoxLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from pathlib import Path
 from datetime import datetime
 from model.uasg_model import resource_path
+from utils.icon_loader import icon_manager
 
 from view.abas_detalhes.general_tab import create_general_tab
 from view.abas_detalhes.object_tab import create_object_tab
@@ -46,10 +48,22 @@ class DetailsDialog(QDialog):
         self.tabs.addTab(create_status_tab(self), "Status")
         self.tabs.addTab(aba_termo_adt(self), "Termo Aditivo")
 
+        # Layout dos botões de salvar e cancelar
+        button_layout = QHBoxLayout()
+        
         # Botão de salvar
-        close_button = QPushButton("Salvar")
-        close_button.clicked.connect(self.func_save)
-        self.main_layout.addWidget(close_button)
+        save_button = QPushButton("Salvar")
+        save_button.setIcon(icon_manager.get_icon("concluido"))
+        save_button.clicked.connect(self.func_save)
+        button_layout.addWidget(save_button)
+        
+        # Botão de cancelar
+        cancel_button = QPushButton("Cancelar")
+        cancel_button.setIcon(icon_manager.get_icon("close"))
+        cancel_button.clicked.connect(self.close)  # Fecha a janela sem salvar
+        button_layout.addWidget(cancel_button)
+        
+        self.main_layout.addLayout(button_layout)
 
         # Carregar dados salvos
         self.load_status()
@@ -63,12 +77,13 @@ class DetailsDialog(QDialog):
         text_edit = QTextEdit()
         layout.addWidget(text_edit)
         
-        add_button = QPushButton("Fechar e Adicionar Comentário")
+        add_button = QPushButton("Fechar e Adicionar Registro")
+        add_button.setIcon(icon_manager.get_icon("registrar_status"))
         layout.addWidget(add_button)
         
         dialog.setLayout(layout)
         
-        def add_comment():
+        def add_registro():
             comment_text = text_edit.toPlainText().strip()
             if comment_text:
                 timestamp = datetime.now().strftime("%d/%m/%Y")  # Formato da data
@@ -76,24 +91,41 @@ class DetailsDialog(QDialog):
                 full_comment = f"{timestamp} - {comment_text} - {status}"
                 item = QListWidgetItem(full_comment)
                 item.setCheckState(Qt.CheckState.Unchecked)
-                self.comment_list.addItem(item)
+                self.registro_list.addItem(item)  # Adiciona à lista de registros
                 print(f"✅ Registro adicionado: {full_comment}")
             dialog.accept()
         
-        add_button.clicked.connect(add_comment)
+        add_button.clicked.connect(add_registro)
         dialog.exec()
 
     def add_comment(self):
-        """Adiciona um comentário na lista"""
-        comment_text = self.comment_box.toPlainText().strip()
-        if comment_text:
-            item = QListWidgetItem(comment_text)
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Unchecked)
-            self.comment_list.addItem(item)
-            self.comment_box.clear()
-            self.comment_list.clearSelection()
-            print(f"✅ Comentário adicionado: {comment_text}")
+        """Abre uma mini janela para adicionar um comentário."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Adicionar Comentário")
+        layout = QVBoxLayout()
+        
+        text_edit = QTextEdit()
+        layout.addWidget(text_edit)
+        
+        add_button = QPushButton("Fechar e Adicionar Comentário")
+        add_button.setIcon(icon_manager.get_icon("comments"))
+        layout.addWidget(add_button)
+        
+        dialog.setLayout(layout)
+        
+        def add_comment_func():
+            comment_text = text_edit.toPlainText().strip()
+            if comment_text:
+                timestamp = datetime.now().strftime("%d/%m/%Y")
+                full_comment = f"{timestamp} - {comment_text}"
+                item = QListWidgetItem(full_comment)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                self.comment_list.addItem(item)  # Adiciona à lista de comentários
+                print(f"✅ Comentário adicionado: {full_comment}")
+            dialog.accept()
+        
+        add_button.clicked.connect(add_comment_func)
+        dialog.exec()
     
     def delete_comment(self):
         """Remove os comentários selecionados"""
@@ -101,6 +133,13 @@ class DetailsDialog(QDialog):
             item = self.comment_list.item(i)
             if item.checkState() == Qt.CheckState.Checked:
                 self.comment_list.takeItem(i)
+    
+    def delete_registro(self):
+        """Remove os registros selecionados"""
+        for i in range(self.registro_list.count() - 1, -1, -1):
+            item = self.registro_list.item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                self.registro_list.takeItem(i)
     
     def func_save(self):
         """Salva o status e os comentários ao fechar a janela"""
@@ -134,6 +173,7 @@ class DetailsDialog(QDialog):
             "id_contrato": id_contrato,
             "uasg": uasg,
             "status": self.status_dropdown.currentText(),
+            "registros": [self.registro_list.item(i).text() for i in range(self.registro_list.count())],
             "comments": [self.comment_list.item(i).text() for i in range(self.comment_list.count())],
             "objeto": self.objeto_edit.text() if self.objeto_edit is not None else "",
             "radio_options": {
@@ -171,6 +211,15 @@ class DetailsDialog(QDialog):
                     if selected_value in self.radio_buttons.get(title, {}):
                         self.radio_buttons[title][selected_value].setChecked(True)
                 
+                # Carrega os registros
+                if hasattr(self, 'registro_list'):
+                    self.registro_list.clear()
+                    for registro in status_data.get("registros", []):
+                        item = QListWidgetItem(registro)
+                        item.setCheckState(Qt.CheckState.Unchecked)
+                        self.registro_list.addItem(item)
+                
+                # Carrega os comentários
                 self.comment_list.clear()
                 for comment in status_data.get("comments", []):
                     item = QListWidgetItem(comment)
@@ -178,6 +227,8 @@ class DetailsDialog(QDialog):
                     self.comment_list.addItem(item)
                 
                 self.comment_list.clearSelection()
+                if hasattr(self, 'registro_list'):
+                    self.registro_list.clearSelection()
             
             print(f"Status carregado de {status_file}")
         except Exception as e:
