@@ -9,6 +9,7 @@ import os
 
 from controller.detalhe_controller import setup_search_bar, MultiColumnFilterProxyModel
 from model.uasg_model import resource_path
+from utils.icon_loader import icon_manager
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -39,10 +40,12 @@ class MainWindow(QMainWindow):
         self.input_layout.addWidget(self.uasg_input)
 
         self.fetch_button = QPushButton("Criação ou atualização da tabela")
+        self.fetch_button.setIcon(icon_manager.get_icon("api"))
         self.fetch_button.clicked.connect(self.controller.fetch_and_create_table)
         self.input_layout.addWidget(self.fetch_button)
 
         self.delete_button = QPushButton("Deletar Arquivo e Banco de Dados")
+        self.delete_button.setIcon(icon_manager.get_icon("delete"))
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
         self.input_layout.addWidget(self.delete_button)
 
@@ -51,16 +54,37 @@ class MainWindow(QMainWindow):
         # Table Tab
         self.table_tab = QWidget()
         self.table_layout = QVBoxLayout(self.table_tab)
+        self.table_layout.setSpacing(5)  # Reduz o espaçamento entre elementos
+        self.table_layout.setContentsMargins(10, 5, 10, 10)  # Reduz a margem superior
 
         # Adiciona os botões
         self.buttons_grid = QGridLayout()
+        self.buttons_grid.setContentsMargins(0, 0, 0, 0)  # Remove margens internas
+        self.buttons_grid.setSpacing(15)  # Espaçamento entre botões
+        
+        # Botão UASG com menu
         self.menu_button = QPushButton("UASG")
-        self.menu_button.setMenu(QMenu(self.menu_button))  # Conecta o botão ao menu
+        self.menu_button.setIcon(icon_manager.get_icon("data-server"))
+        menu = QMenu(self.menu_button)
+        self.menu_button.setMenu(menu)
+        self.menu_button.setObjectName("header_button")  # Nome para CSS
         self.buttons_grid.addWidget(self.menu_button, 0, 0)
 
+        # Botão Limpar
         self.clear_button = QPushButton("Limpar")
+        self.clear_button.setIcon(icon_manager.get_icon("limp-blue"))
         self.clear_button.clicked.connect(self.controller.clear_table)
+        self.clear_button.setObjectName("header_button")  # Nome para CSS
         self.buttons_grid.addWidget(self.clear_button, 0, 1)
+        
+        # Label para UASG atual
+        self.uasg_info_label = QLabel("UASG: -")
+        self.uasg_info_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.uasg_info_label.setObjectName("uasg_info_label")  # Nome para CSS
+        self.buttons_grid.addWidget(self.uasg_info_label, 0, 3)
+        
+        # Espaçador para empurrar o label para a direita
+        self.buttons_grid.setColumnStretch(2, 1)
 
         self.table_layout.addLayout(self.buttons_grid)
 
@@ -71,13 +95,20 @@ class MainWindow(QMainWindow):
                 background-color: rgba(163, 213, 255, 0.4);
             }
         """)
+        self.table.setContentsMargins(0, 0, 0, 0)  # Remove margens
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)  # Barra de rolagem apenas quando necessário
+        
         self.model = QStandardItemModel()  # Modelo base
         self.proxy_model = MultiColumnFilterProxyModel()  # Proxy model
+        
         # Adiciona a barra de busca
         icons = {
-            "magnifying-glass": QIcon("caminho/para/icone_lupa.png")  # Substitua pelo caminho do ícone
+            "magnifying-glass": icon_manager.get_icon("find")
         }
         self.search_bar = setup_search_bar(icons, self.table_layout, self.proxy_model, self.table)
+        
+        # Pequeno espaço entre a barra de busca e a tabela
+        self.table_layout.addSpacing(2)
         
         self.proxy_model.setSourceModel(self.model)  # Define o modelo base
         self.table.setModel(self.proxy_model)  # Aplica o proxy model à tabela

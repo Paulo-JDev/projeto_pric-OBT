@@ -2,10 +2,11 @@ from view.main_window import MainWindow
 from model.uasg_model import UASGModel, resource_path
 from utils.utils import refresh_uasg_menu
 from view.details_dialog import DetailsDialog
+from utils.icon_loader import icon_manager
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QHeaderView, QTableView
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import  QStandardItem, QFont
+from PyQt6.QtGui import  QStandardItem, QFont, QIcon, QColor, QBrush
 from datetime import datetime, date
 from pathlib import Path
 import json
@@ -109,11 +110,26 @@ class UASGController:
             # Atualiza os dados atuais com os dados recarregados
             if uasg in self.loaded_uasgs:
                 self.current_data = self.loaded_uasgs[uasg]
+                
+                # Obter o nome resumido da UASG para mostrar no label
+                nome_resumido = ""
+                if self.current_data and len(self.current_data) > 0:
+                    contrato = self.current_data[0]
+                    nome_resumido = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")
+                
+                # Atualiza o label na interface
+                self.view.uasg_info_label.setText(f"UASG: {uasg} - {nome_resumido}")
+                
+                # Popula a tabela com os dados
                 self.populate_table(self.current_data)
                 print(f"✅ Tabela atualizada com os dados da UASG {uasg}.")
             else:
+                # Limpa o label se não houver dados
+                self.view.uasg_info_label.setText(f"UASG: -")
                 print(f"⚠ UASG {uasg} não encontrada nos dados recarregados.")
         else:
+            # Limpa o label se a UASG não for encontrada
+            self.view.uasg_info_label.setText(f"UASG: -")
             print(f"⚠ UASG {uasg} não encontrada nos dados carregados.")
         self.load_saved_uasgs()
 
@@ -148,8 +164,8 @@ class UASGController:
         # Obtém o modelo base da tabela
         model = self.view.table.model().sourceModel()
         model.setRowCount(len(self.current_data))
-        model.setColumnCount(9)  # Aumente o número de colunas para 9
-        model.setHorizontalHeaderLabels(["Dias", "Sigla OM", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "valor_global", "Status"])  # Adicione "Status"
+        model.setColumnCount(8)  # Aumente o número de colunas para 8
+        model.setHorizontalHeaderLabels(["Dias", "Contrato/Ata", "Processo", "Fornecedor", "N° de Série", "Objeto", "Valor Global", "Status"])  # Adicione "Status"
 
         # Função auxiliar para criar e centralizar itens
         def create_centered_item(text):
@@ -166,24 +182,21 @@ class UASGController:
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Coluna "Dias"
         header.resizeSection(0, 80)  # Largura inicial da coluna "Dias"
 
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Coluna "Sigla OM"
-        header.resizeSection(1, 110)  # Largura inicial da coluna "Sigla OM"
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Coluna "Contrato/Ata"
+        header.resizeSection(1, 110)  # Largura inicial da coluna "Contrato/Ata"
 
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # Coluna "Contrato/Ata"
-        header.resizeSection(2, 110)  # Largura inicial da coluna "Contrato/Ata"
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # Coluna "Processo"
+        header.resizeSection(2, 105)  # Largura inicial da Coluna "Processo"
 
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)  # Coluna "Processo"
-        header.resizeSection(3, 105)  # Largura inicial da Coluna "Processo"
-
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Coluna "Fornecedor"
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)  # Coluna "Fornecedor"
             
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive) # Coluna "N° de Série"
-        header.resizeSection(5, 175) # Largura inicial da coluna "N° de Série"
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Interactive) # Coluna "N° de Série"
+        header.resizeSection(4, 175) # Largura inicial da coluna "N° de Série"
 
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
-        header.setSectionResizeMode(8, QHeaderView.ResizeMode.Interactive)  # Coluna "Status"
-        header.resizeSection(8, 180)  # Largura inicial da coluna "Status"
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Interactive)  # Coluna "Status"
+        header.resizeSection(7, 180)  # Largura inicial da coluna "Status"
 
         for row_index, contrato in enumerate(self.current_data):
             vigencia_fim_str = contrato.get("vigencia_fim", "")
@@ -200,9 +213,29 @@ class UASGController:
             dias_item = QStandardItem(str(dias_restantes))
             dias_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
-            # Definir cor do texto se o contrato já venceu
-            if isinstance(dias_restantes, int) and dias_restantes < 0:
-                dias_item.setForeground(Qt.GlobalColor.red)
+            # Definir cor e ícone com base no número de dias restantes
+            if isinstance(dias_restantes, int):
+                if dias_restantes < 0:
+                    # Contrato vencido
+                    dias_item.setForeground(Qt.GlobalColor.red)
+                    dias_item.setIcon(icon_manager.get_icon("delete"))
+                elif dias_restantes <= 89:
+                    # Entre 0 e 89 dias - laranja com ícone de alerta
+                    dias_item.setForeground(QBrush(QColor("#FFA500")))  # Laranja
+                    dias_item.setIcon(icon_manager.get_icon("alert"))
+                elif dias_restantes <= 179:
+                    # Entre 90 e 179 dias - amarelo com ícone de mensagem
+                    dias_item.setForeground(QBrush(QColor("#FFD700")))  # Amarelo
+                    dias_item.setIcon(icon_manager.get_icon("mensagem"))
+                else:
+                    # 180+ dias - verde com ícone de aprovado
+                    dias_item.setForeground(QBrush(QColor("#32CD32")))  # Verde
+                    dias_item.setIcon(icon_manager.get_icon("aproved"))
+                
+                # Deixar o texto em negrito para todos os casos
+                font = dias_item.font()
+                font.setBold(True)
+                dias_item.setFont(font)
 
             model.setItem(row_index, 0, dias_item)
             
@@ -223,14 +256,13 @@ class UASGController:
                 status_text = "Erro"
 
             # Preenche as demais colunas com itens centralizados
-            model.setItem(row_index, 1, create_centered_item(
-                contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")))
-            model.setItem(row_index, 2, create_centered_item(str(contrato.get("numero", ""))))
-            model.setItem(row_index, 3, create_centered_item(str(contrato.get("licitacao_numero", ""))))
-            model.setItem(row_index, 4, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
-            model.setItem(row_index, 5, create_centered_item(str(contrato.get("processo", ""))))
-            model.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
-            model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
+            # Coluna 1 removida
+            model.setItem(row_index, 1, create_centered_item(str(contrato.get("numero", ""))))
+            model.setItem(row_index, 2, create_centered_item(str(contrato.get("licitacao_numero", ""))))
+            model.setItem(row_index, 3, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
+            model.setItem(row_index, 4, create_centered_item(str(contrato.get("processo", ""))))
+            model.setItem(row_index, 5, create_centered_item(str(contrato.get("objeto", "Não informado"))))
+            model.setItem(row_index, 6, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
 
             # Adiciona o status à coluna "Status" com formatação condicional
             status_item = create_centered_item(status_text)
@@ -249,7 +281,7 @@ class UASGController:
                 status_item.setForeground(Qt.GlobalColor.red)
                 status_item.setFont(QFont("", -1, QFont.Weight.Bold))
             
-            model.setItem(row_index, 8, status_item)
+            model.setItem(row_index, 7, status_item)
 
         # Notifica sem mostrar uma mensagem intrusiva
         print(f"✅ Tabela carregada com {len(data)} contratos.")
@@ -259,6 +291,10 @@ class UASGController:
         self.view.search_bar.clear()
         model = self.view.table.model()
         model.removeRows(0, model.rowCount())
+        
+        # Limpa o rótulo da UASG
+        self.view.uasg_info_label.setText("UASG: -")
+        
         QMessageBox.information(self.view, "Limpeza", "A tabela foi limpa com sucesso!")
         
     def show_context_menu(self, position):
@@ -298,11 +334,51 @@ class UASGController:
             
         # Obtém o modelo base da tabela
         model = self.view.table.model().sourceModel()
+        today = date.today()
         
-        # Atualiza apenas a coluna de status para cada linha
+        # Atualiza as colunas de status e dias para cada linha
         for row_index, contrato in enumerate(self.current_data):
             try:
-                # Obtém informações do contrato
+                # Atualiza a coluna de dias
+                vigencia_fim_str = contrato.get("vigencia_fim", "")
+                if vigencia_fim_str:
+                    try:
+                        vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
+                        dias_restantes = (vigencia_fim - today).days
+                        
+                        # Cria e centraliza o item da coluna "Dias"
+                        dias_item = QStandardItem(str(dias_restantes))
+                        dias_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        
+                        # Definir cor e ícone com base no número de dias restantes
+                        if dias_restantes < 0:
+                            # Contrato vencido
+                            dias_item.setForeground(Qt.GlobalColor.red)
+                            dias_item.setIcon(icon_manager.get_icon("delete"))
+                        elif dias_restantes <= 89:
+                            # Entre 0 e 89 dias - laranja com ícone de alerta
+                            dias_item.setForeground(QBrush(QColor("#FFA500")))  # Laranja
+                            dias_item.setIcon(icon_manager.get_icon("alert"))
+                        elif dias_restantes <= 179:
+                            # Entre 90 e 179 dias - amarelo com ícone de mensagem
+                            dias_item.setForeground(QBrush(QColor("#FFD700")))  # Amarelo
+                            dias_item.setIcon(icon_manager.get_icon("mensagem"))
+                        else:
+                            # 180+ dias - verde com ícone de aprovado
+                            dias_item.setForeground(QBrush(QColor("#32CD32")))  # Verde
+                            dias_item.setIcon(icon_manager.get_icon("aproved"))
+                        
+                        # Deixar o texto em negrito para todos os casos
+                        font = dias_item.font()
+                        font.setBold(True)
+                        dias_item.setFont(font)
+                        
+                        # Atualiza a coluna de dias
+                        model.setItem(row_index, 0, dias_item)
+                    except ValueError:
+                        pass
+                
+                # Atualiza a coluna de status
                 uasg_codigo = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
                 contrato_id = contrato.get("id", "")
                 
@@ -342,12 +418,12 @@ class UASGController:
                     status_item.setFont(QFont("", -1, QFont.Weight.Bold))
                 
                 # Atualiza apenas a coluna de status
-                model.setItem(row_index, 8, status_item)
+                model.setItem(row_index, 7, status_item)
                 
             except Exception as e:
                 print(f"Erro ao atualizar status do contrato: {e}")
                 
-        print("✅ Coluna de status atualizada.")
+        print("✅ Colunas de status e dias atualizadas.")
                 
     def update_table_from_details(self):
         """Atualiza a tabela quando os dados são salvos na DetailsDialog."""

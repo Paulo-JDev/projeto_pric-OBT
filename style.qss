@@ -167,3 +167,62 @@ QPushButton:hover {
 QRadioButton {
     color: white;
 }
+
+/* Botões de cabeçalho e info UASG - Estilo mais fino */
+QPushButton#header_button {
+    color: #8AB4F7;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 3px 15px;
+    background-color: #1e1e1e;
+    border-radius: 5px;
+    border: 1px solid #8AB4F7;
+    min-height: 24px;
+    min-width: 120px;
+}
+
+QPushButton#header_button:hover {
+    background-color: #2d2d2d;
+}
+
+QPushButton#header_button:pressed {
+    background-color: #181928;
+}
+
+QPushButton#header_button::menu-indicator {
+    width: 18px;
+    height: 18px;
+    subcontrol-position: right center;
+    subcontrol-origin: padding;
+}
+
+QLabel#uasg_info_label {
+    color: #8AB4F7;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 3px 15px;
+    background-color: #1e1e1e;
+    border-radius: 5px;
+    border: 1px solid #8AB4F7;
+    min-height: 24px;
+}
+
+/* Estilo para o menu dropdown do botão UASG */
+QMenu {
+    background-color: #1e1e1e;
+    color: #8AB4F7;
+    font-size: 14px;
+    border: 1px solid #8AB4F7;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+QMenu::item {
+    padding: 3px 15px;
+    border-radius: 3px;
+    margin: 2px 5px;
+}
+
+QMenu::item:selected {
+    background-color: #181928;
+}

@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLabel, QLineEdit
+from PyQt6.QtWidgets import QLabel, QLineEdit, QHBoxLayout
 from PyQt6.QtCore import QSortFilterProxyModel, Qt, QRegularExpression
 
 class MultiColumnFilterProxyModel(QSortFilterProxyModel):
@@ -25,10 +25,17 @@ def on_search_text_changed(text, proxy_model):
     proxy_model.setFilterRegularExpression(regex)
 
 def setup_search_bar(icons, layout, proxy_model, table_view):
+    # Criar um layout horizontal para a barra de busca
+    search_layout = QHBoxLayout()
+    search_layout.setContentsMargins(0, 0, 0, 0)  # Sem margens
+    search_layout.setSpacing(5)  # Espaçamento mínimo
+    
+    # Label com ícone
     search_label = QLabel()
-    search_label.setPixmap(icons["magnifying-glass"].pixmap(30, 30))
-    layout.addWidget(search_label)
+    search_label.setPixmap(icons["magnifying-glass"].pixmap(24, 24))  # Ícone menor
+    search_layout.addWidget(search_label)
 
+    # Campo de busca
     search_bar = QLineEdit()
     search_bar.setPlaceholderText("Digite para buscar...")
     search_bar.setStyleSheet("""
@@ -37,7 +44,7 @@ def setup_search_bar(icons, layout, proxy_model, table_view):
             color: #8AB4F7;
             font-size: 14px;
             font-weight: bold;
-            padding: 8px;
+            padding: 5px 8px;
             border: 1px solid #8AB4F7;
             border-radius: 5px; 
         }
@@ -50,7 +57,11 @@ def setup_search_bar(icons, layout, proxy_model, table_view):
     """) 
     
     search_bar.textChanged.connect(lambda text: update_search_and_selection(text, proxy_model, table_view))
-    layout.addWidget(search_bar)
+    search_layout.addWidget(search_bar)
+    
+    # Adiciona o layout horizontal ao layout principal
+    layout.addLayout(search_layout)
+    
     return search_bar
 
 def update_search_and_selection(text, proxy_model, table_view):

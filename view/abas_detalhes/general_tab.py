@@ -34,7 +34,7 @@ def create_general_tab(self):
     left_column.setSpacing(15)
 
     # Seção de Informações Básicas
-    info_group = QGroupBox("Informações")
+    info_group = QGroupBox("INFORMAÇÕES")
     info_layout = QFormLayout(info_group)
     info_layout.setVerticalSpacing(10)
     info_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
@@ -122,7 +122,7 @@ def create_general_tab(self):
     right_column.setSpacing(15)
 
     # Seção de Opções
-    options_group = QGroupBox("Opções")
+    options_group = QGroupBox("OPÇÕES")
     options_layout = QFormLayout(options_group)
     options_layout.setVerticalSpacing(10)
 
@@ -154,7 +154,7 @@ def create_general_tab(self):
     right_column.addWidget(options_group)
 
     # Seção de Gestão/Fiscalização
-    gestao_group = QGroupBox("Gestão/Fiscalização")
+    gestao_group = QGroupBox("GESTÃO/FISCALIZAÇÃO")
     gestao_layout = QFormLayout(gestao_group)
     gestao_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
     
