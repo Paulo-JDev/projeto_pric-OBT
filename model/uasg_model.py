@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import time
-import sqlite3
 import requests
 
 from pathlib import Path
@@ -94,35 +93,6 @@ class UASGModel:
         with json_file.open('w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
-        # Salva os dados no banco de dados SQLite
-        db_file = uasg_dir / f"uasg_{uasg}_contratos.db"
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS contratos (
-                numero INTEGER,
-                nome TEXT,
-                licitacao_numero TEXT,
-                fornecedor_nome TEXT,
-                processo INTEGER
-            )
-        ''')
-
-        for contrato in data:
-            cursor.execute('''
-                INSERT INTO contratos (numero, nome, licitacao_numero, fornecedor_nome, processo)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (
-                contrato.get("numero"),
-                contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
-                contrato.get("licitacao_numero"),
-                contrato.get("fornecedor", {}).get("nome"),
-                contrato.get("processo"),
-            ))
-
-        conn.commit()
-        conn.close()
 
     def update_uasg_data(self, uasg):
         """Atualiza os dados da UASG no banco de dados, comparando com os dados antigos."""
@@ -131,7 +101,6 @@ class UASGModel:
         uasg_dir.mkdir(parents=True, exist_ok=True)
 
         json_file = uasg_dir / f"uasg_{uasg}_contratos.json"
-        db_file = uasg_dir / f"uasg_{uasg}_contratos.db"
 
         # Buscar novos dados da API
         new_data = self.fetch_uasg_data(uasg)
@@ -152,70 +121,12 @@ class UASGModel:
         contracts_to_add = {num: c for num, c in new_contracts.items() if num not in old_contracts}
         contracts_to_remove = {num: c for num, c in old_contracts.items() if num not in new_contracts}
 
-        # Atualizar banco de dados
-        self._check_and_update_table(db_file)  # Garante que a tabela tem todas as colunas necessárias
-
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
-
-        # Remover contratos que não existem mais
-        for numero in contracts_to_remove:
-            cursor.execute("DELETE FROM contratos WHERE numero = ?", (numero,))
-
-        # Adicionar novos contratos
-        for contrato in contracts_to_add.values():
-            cursor.execute('''
-                INSERT INTO contratos (nome, numero, licitacao_numero, fornecedor_nome, processo, objeto, vigencia_fim, valor_global)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
-                contrato.get("numero"),
-                contrato.get("licitacao_numero"),
-                contrato.get("fornecedor", {}).get("nome"),
-                contrato.get("processo"),
-                contrato.get("objeto", "Não informado"),
-                contrato.get("vigencia_fim", ""),
-                contrato.get("valor_global", "0.0")
-            ))
-
-        conn.commit()
-        conn.close()
-
         # Substituir o JSON antigo pelo novo
         with json_file.open("w", encoding="utf-8") as file:
             json.dump(new_data, file, ensure_ascii=False, indent=4)
 
         print(f"✅ UASG {uasg} atualizada: {len(contracts_to_add)} novos contratos, {len(contracts_to_remove)} removidos.")
         return len(contracts_to_add), len(contracts_to_remove)
-
-    def _check_and_update_table(self, db_file):
-        """Verifica se a tabela 'contratos' tem todas as colunas e atualiza se necessário."""
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
-
-        # Verificar as colunas existentes
-        cursor.execute("PRAGMA table_info(contratos);")
-        colunas_existentes = {coluna[1] for coluna in cursor.fetchall()}  # Converte para conjunto para busca rápida
-
-        colunas_necessarias = {
-            "nome": "TEXT",
-            "numero": "INTEGER PRIMARY KEY",
-            "licitacao_numero": "TEXT",
-            "fornecedor_nome": "TEXT",
-            "processo": "INTEGER",
-            "objeto": "TEXT",
-            "vigencia_fim": "TEXT",
-            "valor_global": "TEXT"
-        }
-
-        # Adicionar colunas que estão faltando
-        for coluna, tipo in colunas_necessarias.items():
-            if coluna not in colunas_existentes:
-                print(f"🔧 Adicionando a coluna '{coluna}' à tabela contratos...")
-                cursor.execute(f"ALTER TABLE contratos ADD COLUMN {coluna} {tipo};")
-
-        conn.commit()
-        conn.close()
 
     def delete_uasg_data(self, uasg):
         """Remove os arquivos e diretório da UASG."""

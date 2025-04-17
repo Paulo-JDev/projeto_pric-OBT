@@ -104,21 +104,21 @@ class DetailsDialog(QDialog):
     
     def func_save(self):
         """Salva o status e os comentários ao fechar a janela"""
+        # Salvar os dados primeiro
         self.save_status(id_contrato=self.data.get("id", ""), uasg=self.data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", ""))
-         # Emitir o sinal indicando que os dados foram salvos
+        
+        # Emitir o sinal ANTES de mostrar a mensagem para atualizar a tabela imediatamente
+        self.data_saved.emit()
+        
+        # Mostrar mensagem de sucesso sem bloquear a interface
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Icon.Information)
         msg_box.setWindowTitle("Concluído")
         msg_box.setText("Dados salvos com sucesso!")
-        
-        # Mostra a QMessageBox
         msg_box.open()
         
-        # Fecha a QMessageBox após 2 segundos
-        QTimer.singleShot(500, msg_box.close)
-        
-        # Emitir o sinal indicando que os dados foram salvos
-        self.data_saved.emit()
+        # Fechar a mensagem automaticamente depois de 300ms (mais rápido)
+        QTimer.singleShot(300, msg_box.close)
 
     def save_status(self, id_contrato, uasg):
         """Salva o status, comentários e opções dos radio buttons em um arquivo separado para cada contrato dentro da UASG"""

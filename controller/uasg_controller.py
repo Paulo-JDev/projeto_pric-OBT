@@ -3,9 +3,9 @@ from model.uasg_model import UASGModel, resource_path
 from utils.utils import refresh_uasg_menu
 from view.details_dialog import DetailsDialog
 
-from PyQt6.QtWidgets import QMessageBox, QMenu, QHeaderView, QTableView 
+from PyQt6.QtWidgets import QMessageBox, QMenu, QHeaderView, QTableView
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import  QStandardItem
+from PyQt6.QtGui import  QStandardItem, QFont
 from datetime import datetime, date
 from pathlib import Path
 import json
@@ -103,9 +103,16 @@ class UASGController:
     def update_table(self, uasg):
         """Atualiza a tabela com os dados da UASG selecionada."""
         if uasg in self.loaded_uasgs:
-            self.current_data = self.loaded_uasgs[uasg]
-            self.populate_table(self.current_data)
-            print(f"✅ Tabela atualizada com os dados da UASG {uasg}.")
+            # Recarrega os dados do arquivo JSON para garantir que estão atualizados
+            self.loaded_uasgs = self.model.load_saved_uasgs()
+            
+            # Atualiza os dados atuais com os dados recarregados
+            if uasg in self.loaded_uasgs:
+                self.current_data = self.loaded_uasgs[uasg]
+                self.populate_table(self.current_data)
+                print(f"✅ Tabela atualizada com os dados da UASG {uasg}.")
+            else:
+                print(f"⚠ UASG {uasg} não encontrada nos dados recarregados.")
         else:
             print(f"⚠ UASG {uasg} não encontrada nos dados carregados.")
         self.load_saved_uasgs()
@@ -176,7 +183,7 @@ class UASGController:
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Coluna "Objeto"
         header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Coluna "valor_global"
         header.setSectionResizeMode(8, QHeaderView.ResizeMode.Interactive)  # Coluna "Status"
-        header.resizeSection(8, 140)  # Largura inicial da coluna "Status"
+        header.resizeSection(8, 180)  # Largura inicial da coluna "Status"
 
         for row_index, contrato in enumerate(self.current_data):
             vigencia_fim_str = contrato.get("vigencia_fim", "")
@@ -198,6 +205,22 @@ class UASGController:
                 dias_item.setForeground(Qt.GlobalColor.red)
 
             model.setItem(row_index, 0, dias_item)
+            
+            # Buscar status salvo para o contrato atual
+            try:
+                uasg_codigo = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
+                contrato_id = contrato.get("id", "")
+                status_file = Path(resource_path("status_glob")) / str(uasg_codigo) / f"{contrato_id}.json"
+                
+                status_text = "SEÇÃO CONTRATOS"  # Status padrão
+                
+                if status_file.exists():
+                    with status_file.open("r", encoding="utf-8") as file:
+                        status_data = json.load(file)
+                        status_text = status_data.get("status", "SEÇÃO CONTRATOS")
+            except Exception as e:
+                print(f"Erro ao carregar status para contrato {contrato_id}: {e}")
+                status_text = "Erro"
 
             # Preenche as demais colunas com itens centralizados
             model.setItem(row_index, 1, create_centered_item(
@@ -209,23 +232,27 @@ class UASGController:
             model.setItem(row_index, 6, create_centered_item(str(contrato.get("objeto", "Não informado"))))
             model.setItem(row_index, 7, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
 
-            # Carrega o status do contrato
-            uasg = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
-            id_contrato = contrato.get("id", "")
-            status_file = Path(resource_path("status_glob")) / str(uasg) / f"{id_contrato}.json"
+            # Adiciona o status à coluna "Status" com formatação condicional
+            status_item = create_centered_item(status_text)
+            
+            # Aplica cores diferentes dependendo do status
+            if status_text == "SEÇÃO CONTRATOS":
+                status_item.setForeground(Qt.GlobalColor.white)
+                status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+            elif status_text == "PUBLICADO":
+                status_item.setForeground(Qt.GlobalColor.blue)
+                status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+            elif status_text == "ASSINADO":
+                status_item.setForeground(Qt.GlobalColor.darkYellow)
+                status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+            elif status_text == "ALERTA PRAZO":
+                status_item.setForeground(Qt.GlobalColor.red)
+                status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+            
+            model.setItem(row_index, 8, status_item)
 
-            if status_file.exists():
-                with status_file.open("r", encoding="utf-8") as file:
-                    status_data = json.load(file)
-                    status = status_data.get("status", "Sem Status")
-            else:
-                status = "Sem Status"
-
-            # Adiciona o status à coluna "Status"
-            model.setItem(row_index, 8, create_centered_item(status))
-
-        # Exibe uma mensagem de conclusão
-        QMessageBox.information(self.view, "Concluido", f"A tabela foi carregada com sucesso!")
+        # Notifica sem mostrar uma mensagem intrusiva
+        print(f"✅ Tabela carregada com {len(data)} contratos.")
 
     def clear_table(self):
         """Limpa o conteúdo da tabela."""
@@ -264,8 +291,84 @@ class UASGController:
         
         details_dialog.exec()
 
+    def update_status_column(self):
+        """Atualiza apenas a coluna de status da tabela sem recarregar todos os dados."""
+        if not self.current_data:
+            return
+            
+        # Obtém o modelo base da tabela
+        model = self.view.table.model().sourceModel()
+        
+        # Atualiza apenas a coluna de status para cada linha
+        for row_index, contrato in enumerate(self.current_data):
+            try:
+                # Obtém informações do contrato
+                uasg_codigo = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
+                contrato_id = contrato.get("id", "")
+                
+                if not uasg_codigo or not contrato_id:
+                    continue
+                    
+                # Verifica o arquivo de status
+                status_file = Path(resource_path("status_glob")) / str(uasg_codigo) / f"{contrato_id}.json"
+                
+                status_text = "SEÇÃO CONTRATOS"  # Status padrão
+                
+                if status_file.exists():
+                    with status_file.open("r", encoding="utf-8") as file:
+                        status_data = json.load(file)
+                        status_text = status_data.get("status", "SEÇÃO CONTRATOS")
+                
+                # Cria o item de status formatado
+                def create_centered_item(text):
+                    item = QStandardItem(str(text))
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    return item
+                
+                status_item = create_centered_item(status_text)
+                
+                # Aplica cores diferentes dependendo do status
+                if status_text == "SEÇÃO CONTRATOS":
+                    status_item.setForeground(Qt.GlobalColor.white)
+                    status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+                elif status_text == "PUBLICADO":
+                    status_item.setForeground(Qt.GlobalColor.blue)
+                    status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+                elif status_text == "ASSINADO":
+                    status_item.setForeground(Qt.GlobalColor.darkYellow)
+                    status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+                elif status_text == "ALERTA PRAZO":
+                    status_item.setForeground(Qt.GlobalColor.red)
+                    status_item.setFont(QFont("", -1, QFont.Weight.Bold))
+                
+                # Atualiza apenas a coluna de status
+                model.setItem(row_index, 8, status_item)
+                
+            except Exception as e:
+                print(f"Erro ao atualizar status do contrato: {e}")
+                
+        print("✅ Coluna de status atualizada.")
+                
     def update_table_from_details(self):
         """Atualiza a tabela quando os dados são salvos na DetailsDialog."""
-        uasg = self.view.uasg_input.text().strip()
-        if uasg:
-            self.update_table(uasg)
+        # Identifica a UASG atual e o contrato selecionado
+        uasg_atual = None
+        row_atual = -1
+        
+        # Obter índice da linha selecionada
+        selected_indexes = self.view.table.selectionModel().selectedIndexes()
+        if selected_indexes:
+            # Mapeia a seleção para o modelo base
+            source_index = self.view.table.model().mapToSource(selected_indexes[0])
+            row_atual = source_index.row()
+        
+        # Atualizar apenas a coluna de status (método mais rápido)
+        self.update_status_column()
+        
+        # Restaurar a seleção se existia antes
+        if row_atual >= 0 and row_atual < len(self.current_data):
+            new_index = self.view.table.model().sourceModel().index(row_atual, 0)
+            proxy_index = self.view.table.model().mapFromSource(new_index)
+            self.view.table.selectRow(proxy_index.row())
+        
+        return

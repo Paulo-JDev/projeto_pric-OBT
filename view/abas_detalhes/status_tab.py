@@ -15,8 +15,8 @@ def create_status_tab(self):
     # Dropdown para selecionar status
     self.status_dropdown = QComboBox()
     self.status_dropdown.addItems([
-        "Ata Gerada", "Empresa", "SIGDEM", "Assinado", "Publicado",
-        "Alerta Prazo", "Seção de Contratos", "Nota Técnica", "AGU", "Prorrogado"
+        "SEÇÃO CONTRATOS", "EMPRESA", "SIGDEM", "ASSINADO", "PUBLICADO",
+        "ALERTA PRAZO", "ATA GERADA", "NOTA TÉCNICA", "AGU", "PRORROGADO"
     ])
     status_layout.addWidget(QLabel("Status:"))
     status_layout.addWidget(self.status_dropdown)
