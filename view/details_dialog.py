@@ -116,8 +116,7 @@ class DetailsDialog(QDialog):
         def add_comment_func():
             comment_text = text_edit.toPlainText().strip()
             if comment_text:
-                timestamp = datetime.now().strftime("%d/%m/%Y")
-                full_comment = f"{timestamp} - {comment_text}"
+                full_comment = f"{comment_text}"
                 item = QListWidgetItem(full_comment)
                 item.setCheckState(Qt.CheckState.Unchecked)
                 self.comment_list.addItem(item)  # Adiciona à lista de comentários

@@ -1,0 +1,1250 @@
+[
+    {
+        "id": 89008,
+        "receita_despesa": "Despesa",
+        "numero": "00044/2020",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787000",
+                    "nome_resumido": "COM7DN",
+                    "nome": "COMANDO DO 7.DN",
+                    "sisg": "Não",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Não"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "16.417.272/0001-21",
+            "nome": "RS TURISMO E EVENTOS LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.000227/2020-29",
+        "objeto": "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA PARA PRESTAÇÃO DE SERVIÇOS DE NATUREZA CONTINUADA SOB DEMANDA, POR INTERMÉDIO DE AGÊNCIA DE VIAGENS, PARA COTAÇÃO, EMISSÃO, MARCAÇÃO, REMARCAÇÃO, CANCELAMENTOS, SOLICITAÇÕES DE REEMBOLSO E FORNECIMENTO DE PASSAGENS RODOVIÁRIAS NACIONAIS, POR MEIO DE ATENDIMENTO REMOTO (E-MAIL, TELEFONE OU SISTEMA INFORMATIZADO), CONFORME CONDIÇÕES, QUANTIDADES E EXIGÊNCIAS ESTABELECIDAS NESTE INSTRUMENTO PARA OS MILITARES E SERVIDORES CIVIS NA JURISDIÇÃO DO COMANDO DO 7º DISTRITO NAVAL EM BRASÍLIA, ESTABELECIDAS NO TERMO DE REFERÊNCIA, ANEXO DO EDITAL DO PREGÃO ELETRÔNICO Nº 29/2019.",
+        "amparo_legal": "LEI 10.520 / 2002 - Artigo: 1",
+        "informacao_complementar": null,
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787000",
+        "licitacao_numero": "00029/2019",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2020-04-09",
+        "data_publicacao": "2021-02-10",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2020-04-09",
+        "vigencia_fim": "2025-04-08",
+        "valor_inicial": "103.050,00",
+        "valor_global": "104.961,00",
+        "num_parcelas": 1,
+        "valor_parcela": "104.961,00",
+        "valor_acumulado": "2.805.282,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/89008/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/89008/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/89008/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/89008/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/89008/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/89008/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/89008/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/89008/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/89008/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/89008/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/89008/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/89008/arquivos"
+        }
+    },
+    {
+        "id": 95171,
+        "receita_despesa": "Despesa",
+        "numero": "00100/2018",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787000",
+                    "nome_resumido": "COM7DN",
+                    "nome": "COMANDO DO 7.DN",
+                    "sisg": "Não",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Não"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "04.196.645/0001-00",
+            "nome": "IMPRENSA NACIONAL"
+        },
+        "codigo_tipo": "95",
+        "tipo": "Termo de Compromisso",
+        "subtipo": null,
+        "prorrogavel": null,
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.000431/2017-44",
+        "objeto": "SERVIÇOS  DE PUBLICAÇÃO DE MATÉRIAS DE CARÁTER OFICIAL, NAS EDIÇÕES NORMAIS E EXTRAS DO DIÁRIO OFICIAL DA UNIÃO.",
+        "amparo_legal": "LEI 8.666 / 1993 - Artigo: 25",
+        "informacao_complementar": null,
+        "codigo_modalidade": "07",
+        "modalidade": "Inexigibilidade",
+        "unidade_compra": "787000",
+        "licitacao_numero": "00001/2017",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2018-02-15",
+        "data_publicacao": "2021-03-19",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2018-02-15",
+        "vigencia_fim": "2028-02-14",
+        "valor_inicial": "40.000,00",
+        "valor_global": "40.000,00",
+        "num_parcelas": 1,
+        "valor_parcela": "40.000,00",
+        "valor_acumulado": "40.000,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/95171/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/95171/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/95171/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/95171/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/95171/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/95171/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/95171/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/95171/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/95171/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/95171/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/95171/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/95171/arquivos"
+        }
+    },
+    {
+        "id": 101922,
+        "receita_despesa": "Despesa",
+        "numero": "00062/2021",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787000",
+                    "nome_resumido": "COM7DN",
+                    "nome": "COMANDO DO 7.DN",
+                    "sisg": "Não",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Não"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "06.955.770/0001-74",
+            "nome": "R MORAES AGENCIA DE TURISMO LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": null,
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.009301/2020-72",
+        "objeto": "CONTRATAÇÃO DA PRESTAÇÃO DE SERVIÇO DE NATUREZA CONTINUADA, POR INTERMÉDIO DE AGÊNCIA DE VIAGENS, PARA COTAÇÃO, RESERVAS, EMISSÃO, MARCAÇÃO, REMARCAÇÃO, CANCELAMENTOS, SOLICITAÇÕES DE REEMBOLSO E FORNECIMENTO DE PASSAGENS AÉREAS NACIONAIS E INTERNACIONAIS  E SEGURO VIAGEM INTERNACIONAL, POR MEIO DE ATENDIMENTO REMOTO (E-MAIL, TELEFONE OU SISTEMA INFORMATIZADO) E DE POSTO AVANÇADO DE ATENDIMENTO DA CONTRATADA A SER INSTALADA NAS DEPENDÊNCIAS DO COMANDO DO 7º DISTRITO NAVAL (COM7ºDN), ESTABELECIDAS NO TERMO DE REFERÊNCIA, ANEXO DO EDITAL DO PREGÃO ELETRÔNICO Nº 9/2021.",
+        "amparo_legal": "LEI 10.520 / 2002 - Artigo: 1",
+        "informacao_complementar": null,
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787000",
+        "licitacao_numero": "00009/2021",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2021-05-07",
+        "data_publicacao": "2021-05-17",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2021-05-07",
+        "vigencia_fim": "2025-05-06",
+        "valor_inicial": "724.802,54",
+        "valor_global": "724.802,54",
+        "num_parcelas": 1,
+        "valor_parcela": "724.802,54",
+        "valor_acumulado": "18.120.063,50",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/101922/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/101922/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/101922/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/101922/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/101922/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/101922/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/101922/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/101922/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/101922/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/101922/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/101922/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/101922/arquivos"
+        }
+    },
+    {
+        "id": 141075,
+        "receita_despesa": "Despesa",
+        "numero": "00008/2022",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787000",
+                    "nome_resumido": "COM7DN",
+                    "nome": "COMANDO DO 7.DN",
+                    "sisg": "Não",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Não"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "02.479.932/0001-94",
+            "nome": "NORTFORT COMERCIO E SERVICOS LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.001984/2022-81",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS DE MANUTENÇÃO PREVENTIVA E CORRETIVA NO MAQUINÁRIO DO SETOR DE APROVISIONAMENTO, COM FORNECIMENTO E INSTALAÇÃO DE COMPONENTES, NAS DEPENDÊNCIAS DO COMANDO DO 7º DISTRITO NAVAL (COM7ºDN), QUE SERÃO PRESTADOS NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA, ANEXO DO EDITAL PREGÃO POR SISTEMA DE REGISTRO DE PREÇOS Nº 2/2021 DO 2º CGEO-EB",
+        "amparo_legal": "LEI 10.520 / 2002 - Artigo: 1",
+        "informacao_complementar": null,
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787000",
+        "licitacao_numero": "00002/2021",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2022-03-31",
+        "data_publicacao": "2022-04-01",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2022-03-31",
+        "vigencia_fim": "2026-03-30",
+        "valor_inicial": "87.776,23",
+        "valor_global": "109.701,94",
+        "num_parcelas": 1,
+        "valor_parcela": "109.701,94",
+        "valor_acumulado": "2.194.405,75",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/141075/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/141075/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/141075/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/141075/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/141075/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/141075/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/141075/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/141075/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/141075/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/141075/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/141075/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/141075/arquivos"
+        }
+    },
+    {
+        "id": 210813,
+        "receita_despesa": "Despesa",
+        "numero": "00083/2023",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787000",
+                    "nome_resumido": "COM7DN",
+                    "nome": "COMANDO DO 7.DN",
+                    "sisg": "Não",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Não"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "27.850.036/0001-10",
+            "nome": "I.S ENGECLIM SERVICOS DE ENGENHARIA LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.000371/2023-16",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS DE MANUTENÇÃO PREVENTIVA E CORRETIVA DAS CÂMARAS FRIGORÍFICAS, NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 28 - Inciso: I",
+        "informacao_complementar": null,
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787000",
+        "licitacao_numero": "00001/2023",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2023-09-01",
+        "data_publicacao": "2023-09-05",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2023-09-01",
+        "vigencia_fim": "2025-09-01",
+        "valor_inicial": "565.914,20",
+        "valor_global": "601.273,96",
+        "num_parcelas": 1,
+        "valor_parcela": "601.273,96",
+        "valor_acumulado": "7.781.201,72",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/210813/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/210813/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/210813/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/210813/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/210813/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/210813/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/210813/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/210813/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/210813/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/210813/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/210813/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/210813/arquivos"
+        }
+    },
+    {
+        "id": 216297,
+        "receita_despesa": "Despesa",
+        "numero": "00071/2023",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787000",
+                    "nome_resumido": "COM7DN",
+                    "nome": "COMANDO DO 7.DN",
+                    "sisg": "Não",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Não"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "17.301.544/0001-96",
+            "nome": "STAMM MUDANCAS E TRANSPORTES LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.005793/2023-70",
+        "objeto": "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA NA PRESTAÇÃO DE SERVIÇOS DE TRANSPORTE PORTA A PORTA, ESTABELECIDAS NO TERMO DE REFERÊNCIA, ANEXO AO TERMO DE JUSTIFICATIVA DE DISPENSA DE LICITAÇÃO Nº 1002/2023.",
+        "amparo_legal": "LEI 8.666 / 1993 - Artigo: 24 - Inciso: XI",
+        "informacao_complementar": null,
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787000",
+        "licitacao_numero": "01002/2023",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2023-09-22",
+        "data_publicacao": "2023-09-26",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2023-09-22",
+        "vigencia_fim": "2024-12-07",
+        "valor_inicial": "10.818.557,40",
+        "valor_global": "11.334.610,60",
+        "num_parcelas": 1,
+        "valor_parcela": "11.334.610,60",
+        "valor_acumulado": "22.153.168,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/216297/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/216297/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/216297/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/216297/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/216297/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/216297/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/216297/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/216297/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/216297/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/216297/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/216297/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/216297/arquivos"
+        }
+    },
+    {
+        "id": 259743,
+        "receita_despesa": "Despesa",
+        "numero": "00008/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787000",
+                    "nome_resumido": "COM7DN",
+                    "nome": "COMANDO DO 7.DN",
+                    "sisg": "Não",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Não"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "05.283.260/0001-35",
+            "nome": "W & E SERVICOS TECNICOS LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.002194/2020-51",
+        "objeto": "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA EM PRESTAÇÃO DE SERVIÇOS DE LIMPEZA DE FOSSAS E CAIXAS DE ESGOTO COM FORNECIMENTO DE MÃO DE OBRA, TODOS OS INSUMOS, MATERIAIS, EQUIPAMENTOS E FERRAMENTAS NECESSÁRIAS A PRESTAÇÃO DO SERVIÇO, A FIM DE ATENDER NECESSIDADES DO COMANDO DO 7º DISTRITO NAVAL",
+        "amparo_legal": "LEI 10.520 / 2002 - Artigo: 1",
+        "informacao_complementar": null,
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787000",
+        "licitacao_numero": "00001/2022",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2024-03-28",
+        "data_publicacao": "2024-04-02",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2024-03-28",
+        "vigencia_fim": "2025-03-28",
+        "valor_inicial": "643.574,00",
+        "valor_global": "643.574,00",
+        "num_parcelas": 1,
+        "valor_parcela": "643.574,00",
+        "valor_acumulado": "643.574,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/259743/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/259743/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/259743/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/259743/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/259743/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/259743/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/259743/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/259743/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/259743/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/259743/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/259743/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/259743/arquivos"
+        }
+    },
+    {
+        "id": 276293,
+        "receita_despesa": "Despesa",
+        "numero": "00007/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "09.168.704/0001-42",
+            "nome": "EMPRESA BRASIL DE COMUNICACAO S.A. - EBC"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000744/2024-05",
+        "objeto": "CONSTITUI OBJETO DESTE CONTRATO A DISTRIBUIÇÃO, PELA CONTRATADA, DA PUBLICIDADE LEGAL IMPRESSA E/OU ELETRÔNICA DE INTERESSE DO(A) CONTRATANTE, OBEDECIDAS ÀS DETERMINAÇÕES CONTIDAS NO ART. 74, CAPT, DA LEI N° 14.133, DE 01 DE ABRIL DE 2021, NO ART. 8º, INCISO VII, E § 2º, INCISO II, DA LEI Nº 11.652, DE 7 DE ABRIL DE 2008, NA LEI N° 6.650, DE 23 DE MAIO DE 1979, NA LEI N° 4.680, DE 18 DE JUNHO DE 1965, NO DECRETO N° 6.555, DE 8 DE SETEMBRO DE 2008, NO DECRETO N° 57.690, DE 1º DE FEVEREIRO DE 1966, E NAS DEMAIS NORMAS COMPLEMENTARES ESPECÍFICAS, PRINCIPALMENTE AS DIRETRIZES E ORIENTAÇÕES TÉCNICAS DO SISTEMA DE COMUNICAÇÃO DE GOVERNO DO PODER EXECUTIVO FEDERAL – SICOM.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 74 - Inciso: CAPUT",
+        "informacao_complementar": null,
+        "codigo_modalidade": "07",
+        "modalidade": "Inexigibilidade",
+        "unidade_compra": "787010",
+        "licitacao_numero": "00005/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2024-05-29",
+        "data_publicacao": "2024-06-04",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2024-05-29",
+        "vigencia_fim": "2029-05-29",
+        "valor_inicial": "120.768,00",
+        "valor_global": "120.768,00",
+        "num_parcelas": 1,
+        "valor_parcela": "120.768,00",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/276293/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/276293/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/276293/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/276293/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/276293/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/276293/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/276293/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/276293/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/276293/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/276293/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/276293/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/276293/arquivos"
+        }
+    },
+    {
+        "id": 307379,
+        "receita_despesa": "Despesa",
+        "numero": "00009/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "21.347.527/0001-67",
+            "nome": "MINAS BRASILIA REVESTIMENTOS E DECORACOES LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.001519/2024-88",
+        "objeto": "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA NA PRESTAÇÃO DE SERVIÇOS DE INSTALAÇÃO DE PISO VINÍLICO",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 75 - Inciso: II",
+        "informacao_complementar": null,
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90037/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2024-08-29",
+        "data_publicacao": null,
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2024-08-29",
+        "vigencia_fim": "2025-08-29",
+        "valor_inicial": "5.426,26",
+        "valor_global": "5.426,26",
+        "num_parcelas": 1,
+        "valor_parcela": "5.426,26",
+        "valor_acumulado": "5.426,26",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/307379/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/307379/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/307379/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/307379/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/307379/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/307379/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/307379/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/307379/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/307379/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/307379/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/307379/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/307379/arquivos"
+        }
+    },
+    {
+        "id": 324974,
+        "receita_despesa": "Despesa",
+        "numero": "00010/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "14.799.950/0001-32",
+            "nome": "ASSOCIACAO DOS PRODUTORES RURAIS E ARTESANAIS OZIEL ALVES III PIPIRIPAU APRACOA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Compras",
+        "subcategoria": null,
+        "unidades_requisitantes": "787010",
+        "processo": "63402.000403/2024-21",
+        "objeto": "AQUISIÇÃO DE ALIMENTOS DA AGRICULTURA FAMILIAR, MODALIDADE COMPRA INSTITUCIONAL, PARA ATENDIMENTO DA DEMANDA DO CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA, DE ACORDO COM O EDITAL DA CHAMADA PÚBLICA N.º 01/2024 (PROCESSO ADMINISTRATIVO N.° 63402.000403/2024-21), O QUAL FICA FAZENDO PARTE INTEGRANTE DO PRESENTE CONTRATO, INDEPENDENTEMENTE DE ANEXAÇÃO OU TRANSCRIÇÃO.",
+        "amparo_legal": "LEI 14.628/2023 - Artigo: 4 - Parágrafo: 12",
+        "informacao_complementar": null,
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90202/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2024-10-14",
+        "data_publicacao": "2024-10-16",
+        "data_proposta_comercial": "2024-08-26",
+        "vigencia_inicio": "2024-10-14",
+        "vigencia_fim": "2025-10-14",
+        "valor_inicial": "445.822,80",
+        "valor_global": "445.822,80",
+        "num_parcelas": 1,
+        "valor_parcela": "445.822,80",
+        "valor_acumulado": "445.822,80",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/324974/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/324974/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/324974/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/324974/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/324974/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/324974/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/324974/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/324974/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/324974/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/324974/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/324974/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/324974/arquivos"
+        }
+    },
+    {
+        "id": 325009,
+        "receita_despesa": "Despesa",
+        "numero": "00012/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "21.271.706/0001-68",
+            "nome": "COOPERATIVA MISTA DA AGRICULTURA FAMILIAR DO MEIO AMBIENTE E DA CULTURA DO BRASI"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Compras",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000403/2024-21",
+        "objeto": "AQUISIÇÃO DE ALIMENTOS DA AGRICULTURA FAMILIAR, MODALIDADE COMPRA INSTITUCIONAL, PARA ATENDIMENTO DA DEMANDA DO CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA, DE ACORDO COM O EDITAL DA CHAMADA PÚBLICA N.º 01/2024 (PROCESSO ADMINISTRATIVO N.° 63402.000403/2024-21), O QUAL FICA FAZENDO PARTE INTEGRANTE DO PRESENTE CONTRATO, INDEPENDENTEMENTE DE ANEXAÇÃO OU TRANSCRIÇÃO.",
+        "amparo_legal": "LEI 14.628/2023 - Artigo: 4 - Parágrafo: 12",
+        "informacao_complementar": null,
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90201/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2024-10-14",
+        "data_publicacao": "2024-10-16",
+        "data_proposta_comercial": "2024-08-26",
+        "vigencia_inicio": "2024-10-14",
+        "vigencia_fim": "2025-10-14",
+        "valor_inicial": "221.064,36",
+        "valor_global": "221.064,36",
+        "num_parcelas": 1,
+        "valor_parcela": "221.064,36",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/325009/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/325009/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/325009/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/325009/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/325009/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/325009/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/325009/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/325009/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/325009/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/325009/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/325009/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/325009/arquivos"
+        }
+    },
+    {
+        "id": 326445,
+        "receita_despesa": "Despesa",
+        "numero": "00011/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "44.705.791/0001-20",
+            "nome": "CENTRAL DAS COOPERATIVAS DE AGRICULTURA FAMILIAR DO DISTRITO FEDERAL E RIDE - CE"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Compras",
+        "subcategoria": null,
+        "unidades_requisitantes": "787010-CEIMBRA",
+        "processo": "63402.000403/2024-21",
+        "objeto": "AQUISIÇÃO DE ALIMENTOS DA AGRICULTURA FAMILIAR",
+        "amparo_legal": "LEI 14.628/2023 - Artigo: 4 - Parágrafo: 12",
+        "informacao_complementar": null,
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90200/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2024-10-18",
+        "data_publicacao": "2024-10-18",
+        "data_proposta_comercial": "2024-09-02",
+        "vigencia_inicio": "2024-10-18",
+        "vigencia_fim": "2025-10-18",
+        "valor_inicial": "87.247,20",
+        "valor_global": "87.247,20",
+        "num_parcelas": 1,
+        "valor_parcela": "87.247,20",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/326445/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/326445/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/326445/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/326445/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/326445/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/326445/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/326445/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/326445/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/326445/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/326445/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/326445/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/326445/arquivos"
+        }
+    },
+    {
+        "id": 330923,
+        "receita_despesa": "Despesa",
+        "numero": "00013/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "21.347.527/0001-67",
+            "nome": "MINAS BRASILIA REVESTIMENTOS E DECORACOES LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": "787010-CEIMBRA",
+        "processo": "63402.002037/2024-45",
+        "objeto": "PRESTAÇÃO DE SERVIÇOS DE INSTALAÇÃO DE PISO VINÍLICO",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 75 - Inciso: II",
+        "informacao_complementar": null,
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90059/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2024-10-30",
+        "data_publicacao": "2024-10-30",
+        "data_proposta_comercial": "2024-10-10",
+        "vigencia_inicio": "2024-10-30",
+        "vigencia_fim": "2025-10-11",
+        "valor_inicial": "2.822,37",
+        "valor_global": "2.822,37",
+        "num_parcelas": 1,
+        "valor_parcela": "2.822,37",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/330923/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/330923/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/330923/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/330923/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/330923/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/330923/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/330923/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/330923/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/330923/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/330923/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/330923/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/330923/arquivos"
+        }
+    },
+    {
+        "id": 431116,
+        "receita_despesa": "Despesa",
+        "numero": "00001/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "14.911.164/0001-85",
+            "nome": "AMV FESTAS & EVENTOS LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "62055.002453/2023-97",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS DE EVENTOS PROTOCOLARES DE CARÁTER INSTITUCIONAL, COM O RESPECTIVO FORNECIMENTO DE MATERIAIS E TODO O SERVIÇO DE APOIO, INCLUINDO PROFISSIONAIS E DEMAIS ITENS PARA SUPRIR ÀS NECESSIDADES DO CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA, QUE SERÃO PRESTADOS NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA, ANEXO DO EDITAL.",
+        "amparo_legal": "DECRETO 10.024/2019 - Artigo: 1",
+        "informacao_complementar": "",
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787000",
+        "licitacao_numero": "00022/2023",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-01-23",
+        "data_publicacao": "2025-01-29",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2025-01-23",
+        "vigencia_fim": "2026-01-23",
+        "valor_inicial": "60.033,15",
+        "valor_global": "60.033,15",
+        "num_parcelas": 1,
+        "valor_parcela": "60.033,15",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/431116/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/431116/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/431116/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/431116/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/431116/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/431116/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/431116/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/431116/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/431116/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/431116/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/431116/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/431116/arquivos"
+        }
+    },
+    {
+        "id": 458702,
+        "receita_despesa": "Despesa",
+        "numero": "00015/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "17.301.544/0001-96",
+            "nome": "STAMM MUDANCAS E TRANSPORTES LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000766/2024-67",
+        "objeto": "CONTRATAÇÃO DE EMPRESA ESPECIALIZADA NA PRESTAÇÃO DE SERVIÇO DE TRANSPORTE, PORTA A PORTA, EM CAMINHÃO FECHADO, TIPO BAÚ, DE MOBILIÁRIO, EQUIPAMENTOS, BENS PESSOAIS, AUTOMÓVEIS E MOTOCICLETAS EM TERRITÓRIO NACIONAL POR MEIO RODOVIÁRIO, CONSTANDO TODAS AS DESPESAS INCLUSIVE SEGURO ESPECÍFICO POR SERVIÇO DE TRANSPORTE, PARA ATENDER ÀS NECESSIDADES DOS MILITARES E SEUS DEPENDENTES, E SERVIDORES CIVIS NA ÁREA DE COMPETÊNCIA DO COMANDO DO 7º DISTRITO NAVAL(COM7ºDN), MOVIMENTADOS PARA OUTRAS LOCALIDADES DO TERRITÓRIO NACIONAL; ASSIM COMO DOS MILITARES LICENCIADOS, POR CONCLUSÃO DO TEMPO DE SERVIÇO OU DE EX OFFICIO ESTÁGIO E POR CONVENIÊNCIA DO SERVIÇO, NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 28 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90037/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-01-22",
+        "data_publicacao": "2025-02-14",
+        "data_proposta_comercial": "2024-12-12",
+        "vigencia_inicio": "2025-02-17",
+        "vigencia_fim": "2026-02-17",
+        "valor_inicial": "613.427,00",
+        "valor_global": "613.427,00",
+        "num_parcelas": 1,
+        "valor_parcela": "613.427,00",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/458702/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/458702/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/458702/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/458702/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/458702/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/458702/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/458702/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/458702/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/458702/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/458702/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/458702/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/458702/arquivos"
+        }
+    },
+    {
+        "id": 502028,
+        "receita_despesa": "Despesa",
+        "numero": "06406/2024",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "COMANDO DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "34.028.316/0007-07",
+            "nome": "EMPRESA BRASILEIRA DE CORREIOS E TELEGRAFOS"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.001654/2024-23",
+        "objeto": "O PRESENTE INSTRUMENTO TEM POR OBJETO A CONTRATAÇÃO DE PRODUTOS E SERVIÇOS POR MEIO DE PACOTE DE SERVIÇOS DOS CORREIOS MEDIANTE ADESÃO AO TERMO DE CONDIÇÕES COMERCIAIS, QUE PERMITE A COMPRA DE PRODUTOS E UTILIZAÇÃO DOS DIVERSOS SERVIÇOS EXCLUSIVOS DOS CORREIOS POR MEIO DOS CANAIS DE ATENDIMENTO DISPONIBILIZADOS.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 74 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "07",
+        "modalidade": "Inexigibilidade",
+        "unidade_compra": "787010",
+        "licitacao_numero": "00013/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-04-01",
+        "data_publicacao": "2025-04-01",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2025-04-01",
+        "vigencia_fim": "2030-04-01",
+        "valor_inicial": "20.000,00",
+        "valor_global": "20.000,00",
+        "num_parcelas": 1,
+        "valor_parcela": "20.000,00",
+        "valor_acumulado": "20.000,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/502028/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/502028/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/502028/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/502028/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/502028/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/502028/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/502028/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/502028/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/502028/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/502028/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/502028/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/502028/arquivos"
+        }
+    }
+]

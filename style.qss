@@ -226,3 +226,91 @@ QMenu::item {
 QMenu::item:selected {
     background-color: #181928;
 }
+
+/* Estilos da Aba Status */
+/* Dropdown de Status */
+QComboBox#status_dropdown {
+    border: 1px solid #8AB4F7;
+    border-radius: 4px;
+    padding: 5px 10px;
+    background-color: #1e1e1e;
+    color: #8AB4F7;
+    min-height: 24px;
+    max-width: 220px;
+    selection-background-color: #2d2d2d;
+}
+
+QComboBox#status_dropdown::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: right center;
+    width: 20px;
+    border-left: 1px solid #8AB4F7;
+}
+
+QComboBox#status_dropdown::down-arrow {
+    image: url(utils/icons/arrow-down.png);
+    width: 12px;
+    height: 12px;
+}
+
+/* Se a imagem da seta não estiver disponível, usar uma seta simples */
+QComboBox#status_dropdown::down-arrow:!enabled {
+    color: #8AB4F7;
+}
+
+/* Labels da Aba Status */
+QLabel#status_label, QLabel#registros_label, QLabel#comentarios_label {
+    font-weight: bold;
+    color: #8AB4F7;
+}
+
+QLabel#registros_label, QLabel#comentarios_label {
+    margin-top: 10px;
+}
+
+/* Frames (Contêineres) */
+QFrame#registros_frame, QFrame#comentarios_frame {
+    border: 1px solid #666666;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #121212;
+}
+
+/* Listas de registros e comentários */
+QListWidget#registro_list, QListWidget#comment_list {
+    border: none;
+    background-color: #121212;
+    color: white;
+}
+
+QListWidget#registro_list::item, QListWidget#comment_list::item {
+    padding: 5px;
+    border-bottom: 1px solid #333;
+}
+
+QListWidget#registro_list::item:selected, QListWidget#comment_list::item:selected {
+    background-color: rgba(138, 180, 247, 0.2);
+}
+
+/* Botões da Aba Status */
+QPushButton#add_record_button, QPushButton#delete_registro_button, 
+QPushButton#add_comment_button, QPushButton#delete_comment_button {
+    color: #8AB4F7;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 3px 15px;
+    background-color: #1e1e1e;
+    border-radius: 5px;
+    border: 1px solid #8AB4F7;
+    min-height: 24px;
+}
+
+QPushButton#add_record_button:hover, QPushButton#delete_registro_button:hover,
+QPushButton#add_comment_button:hover, QPushButton#delete_comment_button:hover {
+    background-color: #2d2d2d;
+}
+
+QPushButton#add_record_button:pressed, QPushButton#delete_registro_button:pressed,
+QPushButton#add_comment_button:pressed, QPushButton#delete_comment_button:pressed {
+    background-color: #181928;
+}
