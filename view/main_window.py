@@ -7,7 +7,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QStandardItemModel
 import os
 
-from controller.detalhe_controller import setup_search_bar, MultiColumnFilterProxyModel
+from utils.utils import setup_search_bar, MultiColumnFilterProxyModel
 from model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
 

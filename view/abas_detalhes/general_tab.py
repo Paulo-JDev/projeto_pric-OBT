@@ -3,8 +3,6 @@ from PyQt6.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QRadioButton, QButtonGroup, QGroupBox
 )
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon
-from pathlib import Path
 from datetime import datetime
 from utils.icon_loader import icon_manager
 

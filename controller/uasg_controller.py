@@ -6,7 +6,7 @@ from utils.icon_loader import icon_manager
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QHeaderView, QTableView
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import  QStandardItem, QFont, QIcon, QColor, QBrush
+from PyQt6.QtGui import  QStandardItem, QFont, QColor, QBrush
 from datetime import datetime, date
 from pathlib import Path
 import json
