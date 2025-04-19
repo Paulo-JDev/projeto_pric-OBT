@@ -37,6 +37,7 @@ class MainWindow(QMainWindow):
         self.input_layout.addWidget(self.label)
 
         self.uasg_input = QLineEdit()
+        self.uasg_input.setPlaceholderText("Ex: 787010")
         self.input_layout.addWidget(self.uasg_input)
 
         self.fetch_button = QPushButton("Criação ou atualização da tabela")
@@ -49,7 +50,7 @@ class MainWindow(QMainWindow):
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
         self.input_layout.addWidget(self.delete_button)
 
-        self.tabs.addTab(self.input_tab, "Buscar UASG")
+        self.tabs.addTab(self.input_tab, icon_manager.get_icon("dash"), "Buscar UASG")
 
         # Table Tab
         self.table_tab = QWidget()
@@ -119,7 +120,7 @@ class MainWindow(QMainWindow):
 
         self.table_layout.addWidget(self.table)
 
-        self.tabs.addTab(self.table_tab, "Visualizar Tabelas")
+        self.tabs.addTab(self.table_tab, icon_manager.get_icon("table"), "Visualizar Tabelas")
 
     def load_styles(self):
         """Carrega os estilos do arquivo style.qss."""
