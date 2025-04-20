@@ -3,6 +3,7 @@ from model.uasg_model import UASGModel
 from utils.utils import refresh_uasg_menu
 from view.details_dialog import DetailsDialog
 from controller.controller_table import populate_table, update_status_column
+from utils.icon_loader import icon_manager
 
 from PyQt6.QtWidgets import QMessageBox, QMenu
 import time
@@ -156,7 +157,8 @@ class UASGController:
         if 0 <= row < len(data_source):
             contrato = data_source[row]
             menu = QMenu(self.view)
-            details_action = menu.addAction("Ver Detalhes")
+            # Adiciona o ícone "init" à ação "Ver Detalhes"
+            details_action = menu.addAction(icon_manager.get_icon("init"), "Ver Detalhes")
             details_action.triggered.connect(lambda: self.show_details_dialog(contrato))
             menu.exec(self.view.table.mapToGlobal(position))
 

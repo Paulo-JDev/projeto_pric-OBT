@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
+from utils.icon_loader import icon_manager
 import json
 import requests
 
@@ -61,10 +62,16 @@ def aba_termo_adt(self):
     links_widget = QWidget()
     links_layout = QVBoxLayout(links_widget)
     
-    # Título para a seção de links
+    # Título para a seção de links com ícone
+    links_title_layout = QHBoxLayout()
+    links_icon = QLabel()
+    links_icon.setPixmap(icon_manager.get_icon("url2").pixmap(24, 24))
     links_title = QLabel("LINKS:")
     links_title.setStyleSheet("font-size: 18px; font-weight: bold;")
-    links_layout.addWidget(links_title)
+    links_title_layout.addWidget(links_icon)
+    links_title_layout.addWidget(links_title)
+    links_title_layout.addStretch()
+    links_layout.addLayout(links_title_layout)
     
     # Lista de links disponíveis
     self.links_list = QListWidget()
@@ -114,11 +121,17 @@ def aba_termo_adt(self):
     content_widget = QWidget()
     content_layout = QVBoxLayout(content_widget)
     
-    # Título para o conteúdo
+    # Título para o conteúdo com ícone
+    content_title_layout = QHBoxLayout()
     content_title = QLabel("CONTEÚDO DO JSON")
     content_title.setStyleSheet("font-size: 18px; font-weight: bold; text-align: center;")
-    content_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    content_layout.addWidget(content_title)
+    content_title_layout.addStretch()
+    content_title_layout.addWidget(content_title)
+    content_icon = QLabel()
+    content_icon.setPixmap(icon_manager.get_icon("brace").pixmap(24, 24))
+    content_title_layout.addWidget(content_icon)
+    content_title_layout.addStretch()
+    content_layout.addLayout(content_title_layout)
     
     # Área para exibir o JSON
     self.json_display = QTextEdit()
