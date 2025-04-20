@@ -111,6 +111,14 @@ def populate_table(controller, data):
             font = dias_item.font()
             font.setBold(True)
             dias_item.setFont(font)
+        else:
+            # Para os casos "Sem Data" ou "Erro Data"
+            dias_item.setForeground(QBrush(QColor("#AAAAAA")))  # Cor cinza claro
+            dias_item.setIcon(icon_manager.get_icon("time"))
+            # Deixar o texto em negrito também
+            font = dias_item.font()
+            font.setBold(True)
+            dias_item.setFont(font)
 
         model.setItem(row_index, 0, dias_item)
         
@@ -227,7 +235,25 @@ def update_status_column(controller):
                     # Atualiza a coluna de dias
                     model.setItem(row_index, 0, dias_item)
                 except ValueError:
-                    pass
+                    # Caso de erro na data, criar item com ícone de tempo
+                    dias_item = QStandardItem("Erro Data")
+                    dias_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    dias_item.setForeground(QBrush(QColor("#AAAAAA")))  # Cor cinza claro
+                    dias_item.setIcon(icon_manager.get_icon("time"))
+                    font = dias_item.font()
+                    font.setBold(True)
+                    dias_item.setFont(font)
+                    model.setItem(row_index, 0, dias_item)
+            else:
+                # Caso sem data, criar item com ícone de tempo
+                dias_item = QStandardItem("Sem Data")
+                dias_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                dias_item.setForeground(QBrush(QColor("#AAAAAA")))  # Cor cinza claro
+                dias_item.setIcon(icon_manager.get_icon("time"))
+                font = dias_item.font()
+                font.setBold(True)
+                dias_item.setFont(font)
+                model.setItem(row_index, 0, dias_item)
             
             # Atualiza a coluna de status
             uasg_codigo = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
