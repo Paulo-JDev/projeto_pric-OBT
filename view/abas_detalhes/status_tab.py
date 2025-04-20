@@ -1,8 +1,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
-    QPushButton, QTextEdit, QListWidget, QListWidgetItem, QGroupBox, QFrame
+    QPushButton, QListWidget, QFrame
 )
-from PyQt6.QtCore import Qt
 from utils.icon_loader import icon_manager
 
 def create_status_tab(self):
