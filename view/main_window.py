@@ -77,15 +77,26 @@ class MainWindow(QMainWindow):
         self.clear_button.clicked.connect(self.controller.clear_table)
         self.clear_button.setObjectName("header_button")  # Nome para CSS
         self.buttons_grid.addWidget(self.clear_button, 0, 1)
+
+        # Botão Mensagens com tamanho fixo
+        self.msg_button = QPushButton("Mensagens")
+        self.msg_button.setIcon(icon_manager.get_icon("mensagem"))
+        self.msg_button.clicked.connect(self.controller.show_msg_dialog)
+        self.msg_button.setObjectName("header_button")  # Nome para CSS
+        self.buttons_grid.addWidget(self.msg_button, 0, 2)
         
         # Label para UASG atual
         self.uasg_info_label = QLabel("UASG: -")
         self.uasg_info_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.uasg_info_label.setObjectName("uasg_info_label")  # Nome para CSS
-        self.buttons_grid.addWidget(self.uasg_info_label, 0, 3)
+        self.buttons_grid.addWidget(self.uasg_info_label, 0, 4)
         
         # Espaçador para empurrar o label para a direita
-        self.buttons_grid.setColumnStretch(2, 1)
+        self.buttons_grid.setColumnStretch(3, 1)
+        # Remover stretch dos botões para que tenham tamanho uniforme
+        self.buttons_grid.setColumnStretch(0, 0)
+        self.buttons_grid.setColumnStretch(1, 0)
+        self.buttons_grid.setColumnStretch(2, 0)
 
         self.table_layout.addLayout(self.buttons_grid)
 

@@ -192,3 +192,9 @@ class UASGController:
             self.view.table.selectRow(proxy_index.row())
         
         return
+    
+    def show_msg_dialog(self):
+        """Exibe o diálogo de mensagens."""
+        msg_dialog = "Teste Paulo vitor"
+        print(msg_dialog)
+
