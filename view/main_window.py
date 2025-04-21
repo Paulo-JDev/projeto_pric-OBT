@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QLineEdit, QPushButton, QTableWidget,
-    QHeaderView, QGridLayout, QMenu, QTableView
+    QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QLineEdit, QPushButton,
+    QHeaderView, QGridLayout, QMenu, QTableView, QMessageBox
 )
 
 from PyQt6.QtCore import Qt
@@ -71,19 +71,21 @@ class MainWindow(QMainWindow):
         self.menu_button.setObjectName("header_button")  # Nome para CSS
         self.buttons_grid.addWidget(self.menu_button, 0, 0)
 
-        # Botão Limpar
-        self.clear_button = QPushButton("Limpar")
-        self.clear_button.setIcon(icon_manager.get_icon("limp-blue"))
-        self.clear_button.clicked.connect(self.controller.clear_table)
-        self.clear_button.setObjectName("header_button")  # Nome para CSS
-        self.buttons_grid.addWidget(self.clear_button, 0, 1)
-
         # Botão Mensagens com tamanho fixo
         self.msg_button = QPushButton("Mensagens")
         self.msg_button.setIcon(icon_manager.get_icon("mensagem"))
         self.msg_button.clicked.connect(self.controller.show_msg_dialog)
         self.msg_button.setObjectName("header_button")  # Nome para CSS
-        self.buttons_grid.addWidget(self.msg_button, 0, 2)
+        self.buttons_grid.addWidget(self.msg_button, 0, 1)
+
+        # Botão Limpar
+        self.clear_button = QPushButton()
+        self.clear_button.setIcon(icon_manager.get_icon("limp-blue"))
+        self.clear_button.setFixedSize(32, 32)  # Tamanho compacto
+        #self.clear_button.setIconSize(QtCore.QSize(20, 20))  # Ícone menor
+        self.clear_button.clicked.connect(self.controller.clear_table)
+        self.clear_button.setObjectName("icon_button")  # Nome para CSS
+        self.buttons_grid.addWidget(self.clear_button, 0, 2)
         
         # Label para UASG atual
         self.uasg_info_label = QLabel("UASG: -")
@@ -152,5 +154,16 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(icon_path))
         else:
             print(f"⚠ Arquivo de ícone não encontrado: {icon_path}")
-    
-    
+    def closeEvent(self, event):
+        reply = QMessageBox.question(
+            self,
+            "Sair do aplicativo",
+            "Tem certeza que deseja sair?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No  # Botão padrão
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()

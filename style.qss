@@ -197,6 +197,26 @@ QPushButton#header_button::menu-indicator {
     subcontrol-origin: padding;
 }
 
+
+QPushButton#icon_button {
+    padding: 2px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+    border-radius: 4px;
+    background-color: #1e1e1e;
+    border: 1px solid #8AB4F7;
+}
+
+QPushButton#icon_button:hover {
+    background-color: #2d2d2d;
+}
+QPushButton#icon_button:pressed {
+    background-color: #181928;
+}
+
+
 QLabel#uasg_info_label {
     color: #8AB4F7;
     font-weight: bold;
