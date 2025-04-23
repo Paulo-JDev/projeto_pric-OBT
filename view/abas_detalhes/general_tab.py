@@ -174,7 +174,8 @@ def create_general_tab(self):
     create_field_row("Sigla OM Resp:", "contratante.orgao_origem.unidade_gestora_origem.nome_resumido", gestao_layout)
     create_field_row("UASG:", "contratante.orgao_origem.unidade_gestora_origem.codigo", gestao_layout)
     create_field_row("Órgão Responsável:", "contratante.orgao.unidade_gestora.nome_resumido", gestao_layout)
-    create_field_row("Indicativo:", "indicativo", gestao_layout)
+    create_field_row("Tipo:", "tipo", gestao_layout)
+    create_field_row("Modalidade:", "modalidade", gestao_layout)
     right_column.addWidget(gestao_group)
     right_column.addStretch()
 
