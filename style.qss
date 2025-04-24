@@ -46,7 +46,7 @@ QLineEdit:focus, QTextEdit:focus {
 
 /* Tabelas */
 QTableView {
-    background-color: #1e1e1e;
+    background-color:rgb(15, 15, 15);
     border: 1px solid #333;
     gridline-color: #555;
     color: #ffffff; /* Texto branco */
