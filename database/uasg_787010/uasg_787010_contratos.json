@@ -6,7 +6,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787000",
                     "nome_resumido": "COM7DN",
@@ -18,7 +18,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -84,7 +84,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787000",
                     "nome_resumido": "COM7DN",
@@ -96,7 +96,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -162,7 +162,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787000",
                     "nome_resumido": "COM7DN",
@@ -174,7 +174,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -212,11 +212,11 @@
         "data_publicacao": "2021-05-17",
         "data_proposta_comercial": null,
         "vigencia_inicio": "2021-05-07",
-        "vigencia_fim": "2025-05-06",
+        "vigencia_fim": "2026-05-06",
         "valor_inicial": "724.802,54",
-        "valor_global": "724.802,54",
+        "valor_global": "916.810,00",
         "num_parcelas": 1,
-        "valor_parcela": "724.802,54",
+        "valor_parcela": "916.810,00",
         "valor_acumulado": "18.120.063,50",
         "links": {
             "historico": "https://contratos.comprasnet.gov.br/api/contrato/101922/historico",
@@ -240,7 +240,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787000",
                     "nome_resumido": "COM7DN",
@@ -252,7 +252,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -318,7 +318,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787000",
                     "nome_resumido": "COM7DN",
@@ -330,7 +330,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -396,7 +396,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787000",
                     "nome_resumido": "COM7DN",
@@ -408,7 +408,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -474,7 +474,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787000",
                     "nome_resumido": "COM7DN",
@@ -486,7 +486,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -552,7 +552,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -564,7 +564,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -630,7 +630,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -642,7 +642,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -708,7 +708,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -720,7 +720,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -786,7 +786,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -798,7 +798,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -864,7 +864,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -876,7 +876,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -942,7 +942,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -954,7 +954,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -1020,7 +1020,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -1032,7 +1032,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -1098,7 +1098,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -1110,7 +1110,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -1176,7 +1176,7 @@
         "contratante": {
             "orgao_origem": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora_origem": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -1188,7 +1188,7 @@
             },
             "orgao": {
                 "codigo": "52131",
-                "nome": "COMANDO DA MARINHA",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
                 "unidade_gestora": {
                     "codigo": "787010",
                     "nome_resumido": "CEIMBRA",
@@ -1245,6 +1245,630 @@
             "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/502028/ocorrencias",
             "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/502028/terceirizados",
             "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/502028/arquivos"
+        }
+    },
+    {
+        "id": 526401,
+        "receita_despesa": "Despesa",
+        "numero": "00002/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "03.935.660/0001-52",
+            "nome": "CIDE- CAPACITACAO, INSERCAO E DESENVOLVIMENTO"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63056.006281/2024-64",
+        "objeto": "CONTRATAÇÃO DA REPRESENTANTE REGIONAL PELA OM ADERENTE PARA A PRESTAÇÃO DE SERVIÇOS DE INTERMEDIAÇÃO, AGENCIAMENTO E SELEÇÃO DE ESTUDANTES, JUNTO ÀS DIVERSAS INSTITUIÇÕES DE ENSINO, COM O FIM DE CELEBRAR TERMO DE COMPROMISSO DE ESTÁGIO (TCE) PARA O PREENCHIMENTO DAS SEGUINTES VAGAS A SEREM DISPONIBILIZADAS NESTA OM",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 28 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "764003",
+        "licitacao_numero": "90002/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-04-25",
+        "data_publicacao": "2025-04-25",
+        "data_proposta_comercial": "2024-12-10",
+        "vigencia_inicio": "2025-04-25",
+        "vigencia_fim": "2026-04-25",
+        "valor_inicial": "58,80",
+        "valor_global": "58,80",
+        "num_parcelas": 12,
+        "valor_parcela": "4,90",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/526401/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/526401/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/526401/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/526401/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/526401/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/526401/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/526401/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/526401/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/526401/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/526401/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/526401/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/526401/arquivos"
+        }
+    },
+    {
+        "id": 526986,
+        "receita_despesa": "Despesa",
+        "numero": "00013/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "41.779.548/0001-69",
+            "nome": "DESENHARE ARQUITETURA LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços de Engenharia",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000376/2025-78",
+        "objeto": "ELABORAÇÃO DE PROJETO ARQUITETÔNICO, INCLUINDO ESTUDOS PRELIMINARES, PROJETO EXECUTIVO E ACOMPANHAMENTO TÉCNICO, VISANDO ATENDER AS DEMANDAS DO POSTO DE DISTRIBUIÇÃO DE UNIFORMES (PDU) DO CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA (CEIMBRA), NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 75 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90022/2025",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-04-25",
+        "data_publicacao": "2025-04-25",
+        "data_proposta_comercial": "2025-03-10",
+        "vigencia_inicio": "2025-04-25",
+        "vigencia_fim": "2026-04-25",
+        "valor_inicial": "3.332,00",
+        "valor_global": "3.332,00",
+        "num_parcelas": 1,
+        "valor_parcela": "3.332,00",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/526986/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/526986/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/526986/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/526986/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/526986/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/526986/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/526986/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/526986/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/526986/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/526986/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/526986/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/526986/arquivos"
+        }
+    },
+    {
+        "id": 527331,
+        "receita_despesa": "Despesa",
+        "numero": "00011/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "32.270.711/0001-72",
+            "nome": "NK LOGISTICA E TRANSPORTES LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000338/2024-34",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS COMUNS DE EMPRESA ESPECIALIZADA PARA A PRESTAÇÃO DE SERVIÇOS CONTINUADOS SEM FORNECIMENTO DE MÃO DE OBRA EM REGIME DE DEDICAÇÃO EXCLUSIVA DE TRANSPORTE DE CARGA GERAL, FRACIONADA OU DE UM SÓ VOLUME OU UNITIZADA, POR VIA RODOVIÁRIA, PARA ENTREGA PORTA A PORTA, LOCAL, INTERMUNICIPAL E INTERESTADUAL, COM ORIGEM NA CIDADE DE BRASÍLIA/DF PODENDO, TAMBÉM, ATENDER AO FLUXO INVERSO, ISTO É, REALIZAR O TRANSPORTE DE CARGA DE OUTRAS CIDADES PARA A CIDADE DE BRASÍLIA/DF, NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 28 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90008/2025",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-04-17",
+        "data_publicacao": "2025-04-17",
+        "data_proposta_comercial": "2025-02-19",
+        "vigencia_inicio": "2025-04-17",
+        "vigencia_fim": "2026-04-17",
+        "valor_inicial": "1.787.002,00",
+        "valor_global": "1.787.002,00",
+        "num_parcelas": 1,
+        "valor_parcela": "1.787.002,00",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/527331/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/527331/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/527331/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/527331/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/527331/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/527331/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/527331/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/527331/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/527331/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/527331/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/527331/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/527331/arquivos"
+        }
+    },
+    {
+        "id": 536464,
+        "receita_despesa": "Receita",
+        "numero": "00006/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "60.746.948/0001-12",
+            "nome": "BANCO BRADESCO S.A."
+        },
+        "codigo_tipo": "54",
+        "tipo": "Concessão",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Cessão",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000340/2024-11",
+        "objeto": "CESSÃO REMUNERADA DE USO DE BENFEITORIAS MEDINDO 41 M² (QUARENTA E UM METROS QUADRADOS), SITUADA NO PRÉDIO SEDE DO COMANDO DA MARINHA, PARA FUNCIONAMENTO DE 01 (UM) POSTO BANCÁRIO, NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 28 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90010/2025",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-05-05",
+        "data_publicacao": "2025-05-09",
+        "data_proposta_comercial": null,
+        "vigencia_inicio": "2025-05-05",
+        "vigencia_fim": "2030-05-05",
+        "valor_inicial": "222.531,60",
+        "valor_global": "222.531,60",
+        "num_parcelas": 60,
+        "valor_parcela": "3.708,86",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/536464/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/536464/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/536464/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/536464/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/536464/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/536464/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/536464/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/536464/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/536464/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/536464/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/536464/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/536464/arquivos"
+        }
+    },
+    {
+        "id": 538227,
+        "receita_despesa": "Despesa",
+        "numero": "00014/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "29.175.021/0001-20",
+            "nome": "ENGPRO SERVICOS E SOLUCOES EM ENGENHARIA LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Não",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços de Engenharia",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000551/2025-27",
+        "objeto": "CONTRATAÇÃO DE EMPRESA PARA PRESTAÇÃO DE SERVIÇOS DE ENGENHARIA DE ELABORAÇÃO DE PROJETO PARA REFORMA DO SISTEMA DE COMBUSTÍVEIS DO POSTO SITUADO NO GRUPAMENTO DE FUZILEIROS NAVAIS DE BRASÍLIA, LOCALIZADO NA AVENIDA L4 NORTE, LOTE 01 DO TRECHO 02. SETOR DE CLUBES ESPORTIVOS NORTE, VILA PLANALTO, BRASÍLIA-DF, PERTENCENTE CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA (CEIMBRA), NAS CONDIÇÕES ESTABELECIDAS NO TERMO REFERÊNCIA.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 75 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90042/2025",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-05-09",
+        "data_publicacao": "2025-05-09",
+        "data_proposta_comercial": "2025-03-26",
+        "vigencia_inicio": "2025-05-09",
+        "vigencia_fim": "2026-05-09",
+        "valor_inicial": "17.378,32",
+        "valor_global": "17.378,32",
+        "num_parcelas": 1,
+        "valor_parcela": "17.378,32",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/538227/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/538227/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/538227/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/538227/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/538227/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/538227/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/538227/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/538227/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/538227/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/538227/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/538227/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/538227/arquivos"
+        }
+    },
+    {
+        "id": 543531,
+        "receita_despesa": "Despesa",
+        "numero": "00015/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "22.575.793/0001-00",
+            "nome": "CRUZEIRO SERVICOS TECNICOS LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000228/2025-53",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS DE DESENTUPIMENTO E HIGIENIZAÇÃO DE DUTOS DE ESCOAMENTO DA COZINHA E RANCHO DO CENTRO INTENDÊNCIA DA MARINHA EM BRASÍLIA, NAS CONDIÇÕES ESTABELECIDAS NO TERMO REFERÊNCIA.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 75 - Inciso: II",
+        "informacao_complementar": "",
+        "codigo_modalidade": "06",
+        "modalidade": "Dispensa",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90016/2025",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-05-15",
+        "data_publicacao": "2026-05-15",
+        "data_proposta_comercial": "2025-04-08",
+        "vigencia_inicio": "2025-05-15",
+        "vigencia_fim": "2026-05-15",
+        "valor_inicial": "37.696,00",
+        "valor_global": "37.696,00",
+        "num_parcelas": 1,
+        "valor_parcela": "37.696,00",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/543531/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/543531/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/543531/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/543531/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/543531/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/543531/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/543531/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/543531/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/543531/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/543531/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/543531/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/543531/arquivos"
+        }
+    },
+    {
+        "id": 558988,
+        "receita_despesa": "Despesa",
+        "numero": "00019/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "26.722.189/0001-10",
+            "nome": "CERRADO VIAGENS LTDA"
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000114/2025-11",
+        "objeto": "CONTRATAÇÃO DA PRESTAÇÃO DE SERVIÇO DE NATUREZA CONTINUADA SOB DEMANDA, POR INTERMÉDIO DE AGÊNCIA DE VIAGENS, COMPREENDENDO COTAÇÃO, RESERVA, SEGURO, EMISSÃO, MARCAÇÃO, REMARCAÇÃO, CANCELAMENTOS, SOLICITAÇÕES DE REEMBOLSO E FORNECIMENTO DE PASSAGENS RODOVIÁRIAS NACIONAIS, POR MEIO DE ATENDIMENTO REMOTO (E-MAIL,TELEFONE OU SISTEMA INFORMATIZADO, NOS TERMOS DA TABELA EXPOSTA NO TERMO DE REFERÊNCIA, VISANDO ATENDER ÀS NECESSIDADES DA MARINHA DO BRASIL, CONFORME CONDIÇÕES, QUANTIDADES E EXIGÊNCIAS ESTABELECIDAS NO EDITAL E SEUS ANEXOS.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 28 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "787010",
+        "licitacao_numero": "90006/2025",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-05-23",
+        "data_publicacao": "2025-05-23",
+        "data_proposta_comercial": "2025-05-05",
+        "vigencia_inicio": "2025-05-23",
+        "vigencia_fim": "2026-05-23",
+        "valor_inicial": "126.320,02",
+        "valor_global": "126.320,02",
+        "num_parcelas": 1,
+        "valor_parcela": "126.320,02",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/558988/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/558988/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/558988/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/558988/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/558988/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/558988/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/558988/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/558988/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/558988/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/558988/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/558988/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/558988/arquivos"
+        }
+    },
+    {
+        "id": 566381,
+        "receita_despesa": "Despesa",
+        "numero": "00004/2025",
+        "contratante": {
+            "orgao_origem": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora_origem": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            },
+            "orgao": {
+                "codigo": "52131",
+                "nome": "CENTRO DE COMUNICACAO SOCIAL DA MARINHA",
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "CEIMBRA",
+                    "nome": "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA",
+                    "sisg": "Sim",
+                    "utiliza_siafi": "Sim",
+                    "utiliza_antecipagov": "Sim"
+                }
+            }
+        },
+        "fornecedor": {
+            "tipo": "JURIDICA",
+            "cnpj_cpf_idgener": "02.558.157/0001-62",
+            "nome": "TELEFONICA BRASIL S.A."
+        },
+        "codigo_tipo": "50",
+        "tipo": "Contrato",
+        "subtipo": null,
+        "prorrogavel": "Sim",
+        "situacao": "Ativo",
+        "justificativa_inativo": null,
+        "categoria": "Serviços",
+        "subcategoria": null,
+        "unidades_requisitantes": null,
+        "processo": "63402.000302/2025-31",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS COMUNS DE SERVIÇO MÓVEL PESSOAL (SMP), NAS CONDIÇÕES ESTABELECIDAS NO TERMO DE REFERÊNCIA.",
+        "amparo_legal": "LEI 14.133/2021 - Artigo: 28 - Inciso: I",
+        "informacao_complementar": "",
+        "codigo_modalidade": "05",
+        "modalidade": "Pregão",
+        "unidade_compra": "711100",
+        "licitacao_numero": "90010/2024",
+        "sistema_origem_licitacao": null,
+        "data_assinatura": "2025-05-30",
+        "data_publicacao": "2025-06-04",
+        "data_proposta_comercial": "2024-12-27",
+        "vigencia_inicio": "2025-05-30",
+        "vigencia_fim": "2030-05-30",
+        "valor_inicial": "22.638,00",
+        "valor_global": "22.638,00",
+        "num_parcelas": 1,
+        "valor_parcela": "22.638,00",
+        "valor_acumulado": "0,00",
+        "links": {
+            "historico": "https://contratos.comprasnet.gov.br/api/contrato/566381/historico",
+            "empenhos": "https://contratos.comprasnet.gov.br/api/contrato/566381/empenhos",
+            "cronograma": "https://contratos.comprasnet.gov.br/api/contrato/566381/cronograma",
+            "garantias": "https://contratos.comprasnet.gov.br/api/contrato/566381/garantias",
+            "itens": "https://contratos.comprasnet.gov.br/api/contrato/566381/itens",
+            "prepostos": "https://contratos.comprasnet.gov.br/api/contrato/566381/prepostos",
+            "responsaveis": "https://contratos.comprasnet.gov.br/api/contrato/566381/responsaveis",
+            "despesas_acessorias": "https://contratos.comprasnet.gov.br/api/contrato/566381/despesas_acessorias",
+            "faturas": "https://contratos.comprasnet.gov.br/api/contrato/566381/faturas",
+            "ocorrencias": "https://contratos.comprasnet.gov.br/api/contrato/566381/ocorrencias",
+            "terceirizados": "https://contratos.comprasnet.gov.br/api/contrato/566381/terceirizados",
+            "arquivos": "https://contratos.comprasnet.gov.br/api/contrato/566381/arquivos"
         }
     }
 ]

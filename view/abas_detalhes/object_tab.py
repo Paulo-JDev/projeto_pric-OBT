@@ -23,7 +23,11 @@ def get_pdf_url(self):
         if response.status_code == 200:
             data = response.json()  # Converte a resposta para uma lista de dicionários
             if isinstance(data, list) and len(data) > 0:  # Verifica se é uma lista e não está vazia
-                return data[0].get("path_arquivo", None)  # Pega o link real do PDF do primeiro item
+                # Idealmente, verificar o tipo de arquivo se a API puder retornar outros tipos
+                # Por agora, assume-se que o primeiro é o PDF principal.
+                if data[0].get("path_arquivo", "").lower().endswith(".pdf"):
+                    return data[0].get("path_arquivo", None)
+                print(f"Primeiro arquivo não é um PDF: {data[0].get('path_arquivo')}")
     except requests.exceptions.RequestException as e:
         print(f"Erro ao obter link do PDF: {e}")
     

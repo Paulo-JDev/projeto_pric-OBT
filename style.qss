@@ -15,7 +15,6 @@ QLabel {
 QLabel[title="true"] {
     font-weight: bold;
     font-size: 16px;
-    color: #ffffff;
 }
 
 /* Botões */
@@ -151,14 +150,6 @@ QLabel {
     font-size: 14px;
 }
 
-/* Botões de copiar */
-/*QPushButton {
-    background-color: #4c9bdb;
-    color: white;
-    border-radius: 5px;
-    padding: 4px;
-}*/
-
 QPushButton:hover {
     background-color: #005fa3;
 }
@@ -188,13 +179,6 @@ QPushButton#header_button:hover {
 
 QPushButton#header_button:pressed {
     background-color: #181928;
-}
-
-QPushButton#header_button::menu-indicator {
-    width: 18px;
-    height: 18px;
-    subcontrol-position: right center;
-    subcontrol-origin: padding;
 }
 
 

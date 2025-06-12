@@ -26,11 +26,6 @@ class UASGModel:
         print(f"📁 Diretório do banco de dados: {self.database_dir}")
 
     def load_saved_uasgs(self):
-        """Carrega as UASGs salvas e atualiza o menu."""
-        self.loaded_uasgs = self.model.load_saved_uasgs()
-        refresh_uasg_menu(self)  # Atualiza o menu após carregar as UASGs
-
-    def load_saved_uasgs(self):
         """Carrega todas as UASGs salvas e seus contratos no banco de dados."""
         uasgs = {}
 
@@ -80,7 +75,7 @@ class UASGModel:
                 if tentativa < tentativas_maximas:
                     time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
                 else:
-                    raise Exception(f"Falha após {tentativas_maximas} tentativas: {str(e)}")
+                    raise requests.exceptions.RequestException(f"Falha ao buscar dados da UASG {uasg} após {tentativas_maximas} tentativas: {str(e)}")
         
     def save_uasg_data(self, uasg, data):
         """Salva os dados da UASG em um arquivo JSON e no banco de dados SQLite."""

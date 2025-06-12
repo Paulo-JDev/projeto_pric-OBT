@@ -6,6 +6,8 @@ from datetime import datetime
 from model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
 
+SUCCESS_MSG_TIMEOUT_MS = 300
+
 def registro_def(parent, registro_list, status_dropdown):
     """Abre uma mini janela para adicionar um comentário com data, hora e status selecionado."""
     dialog = QDialog(parent)
@@ -122,7 +124,7 @@ def show_success_message(parent):
     msg_box.open()
     
     # Fechar a mensagem automaticamente depois de 300ms
-    QTimer.singleShot(300, msg_box.close)
+    QTimer.singleShot(SUCCESS_MSG_TIMEOUT_MS, msg_box.close)
 
 def load_status(data, status_dropdown, objeto_edit, radio_buttons, registro_list, comment_list):
     """Carrega os dados salvos no JSON"""
@@ -169,8 +171,12 @@ def load_status(data, status_dropdown, objeto_edit, radio_buttons, registro_list
                 registro_list.clearSelection()
         
         print(f"Status carregado de {status_file}")
+    except FileNotFoundError:
+        print(f"Arquivo de status não encontrado: {status_file}") # Não é necessariamente um erro se o arquivo ainda não foi criado
+    except json.JSONDecodeError as e:
+        print(f"Erro ao decodificar JSON do arquivo {status_file}: {e}")
     except Exception as e:
-        print(f"Erro ao carregar status: {e}")
+        print(f"Erro inesperado ao carregar status de {status_file} para contrato {id_contrato}, UASG {uasg}: {e}")
 
 def copy_to_clipboard(line_edit):
     """Copia o texto do campo para a área de transferência"""

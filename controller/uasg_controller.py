@@ -6,7 +6,7 @@ from controller.controller_table import populate_table, update_status_column
 from utils.icon_loader import icon_manager
 
 from PyQt6.QtWidgets import QMessageBox, QMenu
-import time
+import requests
 
 class UASGController:
     def __init__(self, base_dir):
@@ -40,45 +40,45 @@ class UASGController:
 
     def add_uasg_to_menu(self, uasg):
         """Adiciona uma UASG ao menu suspenso."""
-        action = self.view.menu_button.menu().addAction(f"UASG {uasg}")
-        action.triggered.connect(lambda: self.update_table(uasg)) # da juntar as coisa aqui pra nçao deixar o codigo grande sem necessidade
+        action = self.view.menu_button.menu().addAction(f"UASG {uasg}", lambda: self.update_table(uasg))
 
 
     def fetch_and_create_table(self):
         """Busca os dados da UASG e atualiza o banco de dados."""
         uasg = self.view.uasg_input.text().strip()
-        if not uasg:
-            self.view.label.setText("Por favor, insira um número UASG válido.")
+
+        # Verificação se a UASG está vazia ou contém caracteres não numéricos
+        if not uasg or not uasg.isdigit():
+            QMessageBox.warning(self.view, "Entrada Inválida", "Por favor, insira um número UASG válido.")
             return
 
         try:
-           # Inicializa dias_restantes com um valor padrão
-            dias_restantes = 0
             # Se a UASG já estiver carregada, atualizar os dados
             if uasg in self.loaded_uasgs:
                 added, removed = self.model.update_uasg_data(uasg)
                 self.view.label.setText(f"UASG {uasg} atualizada! {added} contratos adicionados, {removed} removidos.")
-                time.sleep(1)
-                self.view.uasg_input.clear()  # Limpa o campo de entrada após a atualização
+                # time.sleep(1) # Considere remover ou usar QStatusBar
+                self.view.uasg_input.clear()
             else:
                 # Se for nova, buscar e salvar
                 data = self.model.fetch_uasg_data(uasg)
                 if data is None:
-                    self.view.label.setText(f"Erro ao buscar dados da UASG {uasg}.")
+                    QMessageBox.critical(self.view, "Erro de API", f"Erro ao buscar dados da UASG {uasg}.")
                     return
 
-                self.model.save_uasg_data(uasg, data)  # Aqui o diretório database será criado, se necessário
+                self.model.save_uasg_data(uasg, data)
                 self.loaded_uasgs[uasg] = data
                 self.add_uasg_to_menu(uasg)
                 self.view.label.setText(f"UASG {uasg} carregada com sucesso!")
-                time.sleep(1)
-                self.view.uasg_input.clear()  # Limpa o campo de entrada após o carregamento
+                # time.sleep(1) # Considere remover ou usar QStatusBar
+                self.view.uasg_input.clear()
 
             self.update_table(uasg)
             self.view.tabs.setCurrentWidget(self.view.table_tab)
-
-        except Exception as e:
-            self.view.label.setText(f"Erro ao buscar UASG {uasg}: {str(e)}")
+        except requests.exceptions.RequestException as e: # Exceção mais específica
+            QMessageBox.critical(self.view, "Erro de Rede", f"Erro de rede ao buscar UASG {uasg}: {str(e)}")
+        except Exception as e: # Genérico para outros erros
+            QMessageBox.critical(self.view, "Erro Inesperado", f"Erro inesperado ao processar UASG {uasg}: {str(e)}")
 
     def delete_uasg_data(self):
         """Deleta os dados da UASG informada."""
@@ -197,6 +197,7 @@ class UASGController:
     
     def show_msg_dialog(self):
         """Exibe o diálogo de mensagens."""
-        msg_dialog = "Teste Paulo vitor"
-        print(msg_dialog)
-
+        # Implementação futura do diálogo de mensagens
+        QMessageBox.information(self.view, "Mensagens", "Funcionalidade de mensagens ainda não implementada.")
+        # msg_dialog = "Teste Paulo vitor"
+        # print(msg_dialog)
