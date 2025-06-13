@@ -6,7 +6,6 @@ import requests
 import sqlite3
 
 from pathlib import Path
-from utils.utils import refresh_uasg_menu
 
 # Adiciona o diretório do script ao sys.path (caminho absoluto)
 def resource_path(relative_path):

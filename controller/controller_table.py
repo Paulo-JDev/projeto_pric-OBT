@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import QHeaderView, QTableView
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
 from datetime import datetime, date
-from pathlib import Path
 import sqlite3 # Adicionado para buscar status do DB
 
 # from model.uasg_model import resource_path # Não é mais necessário para status_glob
