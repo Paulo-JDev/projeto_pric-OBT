@@ -3,9 +3,9 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
 from datetime import datetime, date
 from pathlib import Path
-import json
+import sqlite3 # Adicionado para buscar status do DB
 
-from model.uasg_model import resource_path
+# from model.uasg_model import resource_path # Não é mais necessário para status_glob
 from utils.icon_loader import icon_manager
 
 def populate_table(controller, data):
@@ -126,21 +126,29 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
         dias_item = _create_dias_item(dias_restantes)
         model.setItem(row_index, 0, dias_item)
         
-        # Buscar status salvo para o contrato atual
+        # Buscar status salvo para o contrato atual do banco de dados
+        status_text = "SEÇÃO CONTRATOS"  # Status padrão
+        contrato_id = contrato.get("id", "")
+        
         try:
-            uasg_codigo = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
-            contrato_id = contrato.get("id", "")
-            status_file = Path(resource_path("status_glob")) / str(uasg_codigo) / f"{contrato_id}.json"
-            
-            status_text = "SEÇÃO CONTRATOS"  # Status padrão
-            
-            if status_file.exists():
-                with status_file.open("r", encoding="utf-8") as file:
-                    status_data = json.load(file)
-                    status_text = status_data.get("status", "SEÇÃO CONTRATOS")
-        except Exception as e:
-            print(f"Erro ao carregar status para contrato {contrato_id}: {e}")
-            status_text = "Erro"
+            if contrato_id and hasattr(controller, 'model') and controller.model:
+                conn = controller.model._get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT status FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+                status_row = cursor.fetchone()
+                if status_row and status_row['status']:
+                    status_text = status_row['status']
+                conn.close()
+            else:
+                if not contrato_id:
+                    print(f"ID do contrato não encontrado para a linha {row_index} ao buscar status.")
+                if not (hasattr(controller, 'model') and controller.model):
+                    print("Instância do modelo não encontrada no controller ao buscar status.")
+                # Mantém status_text como "SEÇÃO CONTRATOS" se não puder buscar
+
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar status do DB para contrato {contrato_id}: {e}")
+            status_text = "Erro DB" # Indica um erro específico do banco de dados
 
         if repopulation:
             model.setItem(row_index, 1, create_centered_item(str(contrato.get("numero", ""))))

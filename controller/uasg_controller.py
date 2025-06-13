@@ -5,8 +5,9 @@ from view.details_dialog import DetailsDialog
 from controller.controller_table import populate_table, update_status_column
 from utils.icon_loader import icon_manager
 
-from PyQt6.QtWidgets import QMessageBox, QMenu
+from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog
 import requests
+import json
 
 class UASGController:
     def __init__(self, base_dir):
@@ -54,11 +55,14 @@ class UASGController:
 
         try:
             # Se a UASG já estiver carregada, atualizar os dados
-            if uasg in self.loaded_uasgs:
-                added, removed = self.model.update_uasg_data(uasg)
-                self.view.label.setText(f"UASG {uasg} atualizada! {added} contratos adicionados, {removed} removidos.")
-                # time.sleep(1) # Considere remover ou usar QStatusBar
+            # Vamos mudar a lógica aqui: se a UASG já existe, apenas carregamos da memória/DB
+            # A atualização explícita pode ser uma outra função/botão.
+            if uasg in self.loaded_uasgs and self.loaded_uasgs[uasg]: # Verifica se há dados carregados
+                self.view.label.setText(f"UASG {uasg} já carregada. Exibindo dados locais.")
                 self.view.uasg_input.clear()
+                # Não chama update_uasg_data aqui, apenas carrega o que já tem.
+                # A função update_table(uasg) já vai pegar os dados de self.loaded_uasgs
+                # que foram carregados do DB no __init__ ou após um save.
             else:
                 # Se for nova, buscar e salvar
                 data = self.model.fetch_uasg_data(uasg)
@@ -69,9 +73,13 @@ class UASGController:
                 self.model.save_uasg_data(uasg, data)
                 self.loaded_uasgs[uasg] = data
                 self.add_uasg_to_menu(uasg)
-                self.view.label.setText(f"UASG {uasg} carregada com sucesso!")
+                self.view.label.setText(f"UASG {uasg} carregada e salva com sucesso!")
                 # time.sleep(1) # Considere remover ou usar QStatusBar
                 self.view.uasg_input.clear()
+
+            # Garante que os dados mais recentes (do DB ou da API) estejam em self.loaded_uasgs
+            # antes de chamar update_table
+            self.loaded_uasgs = self.model.load_saved_uasgs()
 
             self.update_table(uasg)
             self.view.tabs.setCurrentWidget(self.view.table_tab)
@@ -164,13 +172,13 @@ class UASGController:
 
     def show_details_dialog(self, contrato):
         """Exibe o diálogo de detalhes do contrato."""
-        details_dialog = DetailsDialog(contrato, self.view)
+        details_dialog = DetailsDialog(contrato, self.model, self.view) # Passa self.model
         
         # Conectar o sinal data_saved ao método que atualiza a tabela
         details_dialog.data_saved.connect(self.update_table_from_details)
         
         details_dialog.exec()
-                
+
     def update_table_from_details(self):
         """Atualiza a tabela quando os dados são salvos na DetailsDialog."""
         # Identifica a UASG atual e o contrato selecionado
@@ -201,3 +209,53 @@ class UASGController:
         QMessageBox.information(self.view, "Mensagens", "Funcionalidade de mensagens ainda não implementada.")
         # msg_dialog = "Teste Paulo vitor"
         # print(msg_dialog)
+
+    def export_status_data(self):
+        """Exporta todos os dados de status para um arquivo JSON."""
+        all_status_data = self.model.get_all_status_data()
+        if not all_status_data:
+            QMessageBox.information(self.view, "Exportar Status", "Não há dados de status para exportar.")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view,
+            "Salvar Dados de Status",
+            "", # Diretório inicial
+            "JSON Files (*.json);;All Files (*)"
+        )
+
+        if file_path:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(all_status_data, f, ensure_ascii=False, indent=4)
+                QMessageBox.information(self.view, "Exportar Status", f"Dados de status exportados com sucesso para:\n{file_path}")
+            except Exception as e:
+                QMessageBox.critical(self.view, "Erro ao Exportar", f"Não foi possível salvar o arquivo: {e}")
+
+    def import_status_data(self):
+        """Importa dados de status de um arquivo JSON."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.view,
+            "Abrir Dados de Status",
+            "", # Diretório inicial
+            "JSON Files (*.json);;All Files (*)"
+        )
+
+        if file_path:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data_to_import = json.load(f)
+                
+                self.model.import_statuses(data_to_import)
+                QMessageBox.information(self.view, "Importar Status", "Dados de status importados com sucesso!\nA tabela será atualizada.")
+                self.load_saved_uasgs() # Recarrega UASGs e atualiza o menu
+                # Força a atualização da tabela visível, se houver alguma UASG carregada
+                current_uasg_text = self.view.uasg_info_label.text()
+                if "UASG: " in current_uasg_text and current_uasg_text.split(" ")[1] != "-":
+                    uasg_code = current_uasg_text.split(" ")[1]
+                    self.update_table(uasg_code) # Atualiza a tabela com a UASG atual
+
+            except json.JSONDecodeError:
+                QMessageBox.critical(self.view, "Erro de Importação", "Arquivo JSON inválido ou corrompido.")
+            except Exception as e:
+                QMessageBox.critical(self.view, "Erro ao Importar", f"Não foi possível importar os dados: {e}")

@@ -16,13 +16,14 @@ class DetailsDialog(QDialog):
     # Sinal que será emitido quando o botão de salvar for pressionado
     data_saved = pyqtSignal()
 
-    def __init__(self, data, parent=None):
+    def __init__(self, data, model, parent=None): # Adicionado 'model'
         super().__init__(parent)
         self.setWindowTitle("Detalhes do Contrato")
         self.setFixedSize(1100, 600)
         self.pdf_path = None
 
         self.load_styles()
+        self.model = model # Armazena a instância do UASGModel
 
         self.data = data
         self.main_layout = QVBoxLayout(self)
@@ -63,7 +64,7 @@ class DetailsDialog(QDialog):
         self.main_layout.addLayout(button_layout)
 
         # Carregar dados salvos
-        load_status(self.data, self.status_dropdown, self.objeto_edit, self.radio_buttons, self.registro_list, self.comment_list)
+        load_status(self.data, self.model, self.status_dropdown, self.objeto_edit, self.radio_buttons, self.registro_list, self.comment_list)
 
     def registro_def(self):
         """Abre uma mini janela para adicionar um comentário com data, hora e status selecionado."""
@@ -84,7 +85,7 @@ class DetailsDialog(QDialog):
     def func_save(self):
         """Salva o status e os comentários ao fechar a janela"""
         # Salvar os dados primeiro
-        save_status(self, self.data, self.status_dropdown, self.registro_list, self.comment_list, self.objeto_edit, self.radio_buttons)
+        save_status(self, self.data, self.model, self.status_dropdown, self.registro_list, self.comment_list, self.objeto_edit, self.radio_buttons)
         
         # Emitir o sinal ANTES de mostrar a mensagem para atualizar a tabela imediatamente
         self.data_saved.emit()

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QLineEdit, QPushButton,
-    QHeaderView, QGridLayout, QMenu, QTableView, QMessageBox
+    QHeaderView, QGridLayout, QMenu, QTableView, QMessageBox, QHBoxLayout
 )
 
 from PyQt6.QtCore import Qt
@@ -45,13 +45,30 @@ class MainWindow(QMainWindow):
         self.fetch_button.clicked.connect(self.controller.fetch_and_create_table)
         self.input_layout.addWidget(self.fetch_button)
 
+        # Layout para botões de gerenciamento de dados (Deletar, Exportar, Importar)
+        data_management_layout = QHBoxLayout()
+
         self.delete_button = QPushButton("Deletar Arquivo e Banco de Dados")
         self.delete_button.setIcon(icon_manager.get_icon("delete"))
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
-        self.input_layout.addWidget(self.delete_button)
+        data_management_layout.addWidget(self.delete_button)
+
+        self.export_status_button = QPushButton("Exportar Status")
+        self.export_status_button.setIcon(icon_manager.get_icon("exportar")) # Crie ou use um ícone apropriado
+        self.export_status_button.clicked.connect(self.controller.export_status_data)
+        data_management_layout.addWidget(self.export_status_button)
+
+        self.import_status_button = QPushButton("Importar Status")
+        self.import_status_button.setIcon(icon_manager.get_icon("importar")) # Crie ou use um ícone apropriado
+        self.import_status_button.clicked.connect(self.controller.import_status_data)
+        data_management_layout.addWidget(self.import_status_button)
+
+        self.input_layout.addLayout(data_management_layout)
+
+        self.input_layout.addStretch() # Adiciona um espaçador para empurrar os elementos para cima
 
         self.tabs.addTab(self.input_tab, icon_manager.get_icon("dash"), "Buscar UASG")
-
+        
         # Table Tab
         self.table_tab = QWidget()
         self.table_layout = QVBoxLayout(self.table_tab)
