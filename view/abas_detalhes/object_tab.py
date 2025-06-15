@@ -9,9 +9,13 @@ import webbrowser
 
 from utils.icon_loader import icon_manager
 
-def get_download_folder():
-    """Retorna o caminho da pasta Downloads do usuário."""
-    return os.path.join(os.path.expanduser("~"), "Downloads")
+def get_download_folder(model_instance): # Adicionado model_instance como argumento
+    """Retorna o caminho da pasta de download configurada ou a pasta Downloads padrão."""
+    if model_instance:
+        saved_path = model_instance.load_setting("pdf_download_path")
+        if saved_path and os.path.isdir(saved_path):
+            return saved_path
+    return os.path.join(os.path.expanduser("~"), "Downloads") # Padrão
 
 def get_pdf_url(self):
     """Obtém o link real do PDF a partir do JSON da API."""
@@ -33,17 +37,17 @@ def get_pdf_url(self):
     
     return None  # Retorna None se falhar
 
-def download_pdf(self, max_retries=5, wait_time=3):
+def download_pdf(self, model_instance, max_retries=5, wait_time=3): # Adicionado model_instance
     """
     Faz o download do PDF do contrato e salva na pasta Downloads/pdfs salvos.
     """
     pdf_url = get_pdf_url(self)
-    
+
     if not pdf_url:
         print("Não foi possível obter o link do PDF.")
         return None
 
-    download_folder = get_download_folder()
+    download_folder = get_download_folder(model_instance) # Passa model_instance
     pdfs_folder = os.path.join(download_folder, "pdfs salvos")
     os.makedirs(pdfs_folder, exist_ok=True)
 
@@ -89,7 +93,7 @@ def download_pdf(self, max_retries=5, wait_time=3):
 
 def open_pdf(self):
     """Baixa e abre o PDF no navegador."""
-    pdf_path = download_pdf(self)
+    pdf_path = download_pdf(self, self.model) # Passa self.model (que é model_instance)
     if pdf_path and os.path.exists(pdf_path):
         webbrowser.open(os.path.abspath(pdf_path))
 
@@ -166,7 +170,7 @@ def create_object_tab(self):
         ver_pdf_button.setIconSize(QSize(32, 32))
         layout.addWidget(ver_pdf_button)  # Adiciona o botão no topo da tela
 
-    pdf_path = download_pdf(self)
+    pdf_path = download_pdf(self, self.model) # Passa self.model (que é model_instance)
     if pdf_path and os.path.exists(pdf_path):
         pdf_viewer = PDFViewer(pdf_path)
         layout.addWidget(pdf_viewer)

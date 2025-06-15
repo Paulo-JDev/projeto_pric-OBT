@@ -7,7 +7,10 @@ from utils.icon_loader import icon_manager
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog
 import requests
+import sqlite3
 import json
+import csv
+import os # Adicionado para os.path.expanduser
 
 class UASGController:
     def __init__(self, base_dir):
@@ -259,3 +262,87 @@ class UASGController:
                 QMessageBox.critical(self.view, "Erro de Importação", "Arquivo JSON inválido ou corrompido.")
             except Exception as e:
                 QMessageBox.critical(self.view, "Erro ao Importar", f"Não foi possível importar os dados: {e}")
+
+    def export_table_to_csv(self):
+        if not self.current_data:
+            QMessageBox.information(self.view, "Exportar Tabela", "Não há dados na tabela para exportar.")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view,
+            "Salvar Tabela como CSV",
+            "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+
+        if file_path:
+            try:
+                # Obter cabeçalhos do modelo da tabela
+                model = self.view.table.model().sourceModel() # Usar o sourceModel se houver proxy
+                headers = [model.horizontalHeaderItem(i).text() for i in range(model.columnCount())]
+                
+                with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=';') # Usar ; como delimitador é comum no Brasil
+                    writer.writerow(headers)
+                    
+                    # Iterar sobre as linhas visíveis (ou self.current_data se não houver filtro complexo)
+                    # Para este exemplo, vamos usar self.current_data e mapear para as colunas
+                    # Isso precisa ser ajustado conforme a estrutura exata dos seus dados e colunas
+                    for row_data_dict in self.current_data:
+                        # Mapear os dados do dicionário para a ordem das colunas
+                        # Esta parte é um exemplo e precisa ser adaptada
+                        row_to_write = [
+                            # Exemplo para as primeiras colunas, você precisará mapear todas
+                            self._calculate_dias_restantes(row_data_dict.get("vigencia_fim", "")), # Para "Dias"
+                            row_data_dict.get("numero", ""),
+                            row_data_dict.get("licitacao_numero", ""),
+                            row_data_dict.get("fornecedor", {}).get("nome", ""),
+                            row_data_dict.get("processo", ""),
+                            row_data_dict.get("objeto", "Não informado"),
+                            row_data_dict.get("valor_global", "Não informado"),
+                            self._get_status_for_contrato(row_data_dict.get("id", "")) # Para "Status"
+                        ]
+                        writer.writerow(row_to_write)
+                        
+                QMessageBox.information(self.view, "Exportar Tabela", f"Tabela exportada com sucesso para:\n{file_path}")
+            except Exception as e:
+                QMessageBox.critical(self.view, "Erro ao Exportar", f"Não foi possível salvar o arquivo CSV: {e}")
+
+    # Funções auxiliares que você precisaria (ou adaptar das existentes em controller_table.py)
+    def _calculate_dias_restantes(self, vigencia_fim_str):
+        from datetime import date, datetime # Mover imports para o topo do arquivo
+        if vigencia_fim_str:
+            try:
+                vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
+                return (vigencia_fim - date.today()).days
+            except ValueError:
+                return "Erro Data"
+        return "Sem Data"
+
+    def _get_status_for_contrato(self, contrato_id):
+        # Lógica similar à de controller_table.py para buscar o status do DB
+        if contrato_id and self.model:
+            try:
+                conn = self.model._get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT status FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+                status_row = cursor.fetchone()
+                conn.close()
+                if status_row and status_row['status']:
+                    return status_row['status']
+            except sqlite3.Error:
+                return "Erro DB"
+        return "SEÇÃO CONTRATOS"
+
+    def set_pdf_download_folder(self):
+        """Permite ao usuário definir a pasta de download para PDFs."""
+        current_path = self.model.load_setting("pdf_download_path", os.path.join(os.path.expanduser("~"), "Downloads"))
+        
+        folder_path = QFileDialog.getExistingDirectory(
+            self.view,
+            "Selecionar Pasta para Salvar PDFs",
+            current_path
+        )
+        if folder_path:
+            self.model.save_setting("pdf_download_path", folder_path)
+            QMessageBox.information(self.view, "Pasta Definida", f"Os PDFs serão salvos em:\n{folder_path}")

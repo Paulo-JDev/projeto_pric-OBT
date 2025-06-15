@@ -24,6 +24,7 @@ class UASGModel:
         self.database_dir = self.base_dir / "database"
         self.database_dir.mkdir(parents=True, exist_ok=True)
         self.db_path = self.database_dir / "gerenciador_uasg.db"
+        self.config_path = self.base_dir / "config.json"
         print(f"📁 Caminho do banco de dados SQLite: {self.db_path}")
         self._create_tables()
 
@@ -341,3 +342,29 @@ class UASGModel:
             conn.rollback()
         finally:
             conn.close()
+
+    def save_setting(self, key, value):
+        """Salva uma configuração no arquivo config.json."""
+        config_data = {}
+        if self.config_path.exists():
+            try:
+                with open(self.config_path, 'r', encoding='utf-8') as f:
+                    config_data = json.load(f)
+            except json.JSONDecodeError:
+                print(f"Aviso: Arquivo de configuração {self.config_path} corrompido. Será sobrescrito.")
+        
+        config_data[key] = value
+        with open(self.config_path, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=4)
+
+    def load_setting(self, key, default_value=None):
+        """Carrega uma configuração do arquivo config.json."""
+        if self.config_path.exists():
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                try:
+                    config_data = json.load(f)
+                    return config_data.get(key, default_value)
+                except json.JSONDecodeError:
+                    print(f"Erro ao ler o arquivo de configuração {self.config_path}. Usando valor padrão.")
+                    return default_value
+        return default_value

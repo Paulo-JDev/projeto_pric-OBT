@@ -45,25 +45,41 @@ class MainWindow(QMainWindow):
         self.fetch_button.clicked.connect(self.controller.fetch_and_create_table)
         self.input_layout.addWidget(self.fetch_button)
 
-        # Layout para botões de gerenciamento de dados (Deletar, Exportar, Importar)
-        data_management_layout = QHBoxLayout()
+        # Layout para botões de Deletar e Exportar Tabela
+        delete_export_table_layout = QHBoxLayout()
 
         self.delete_button = QPushButton("Deletar Arquivo e Banco de Dados")
         self.delete_button.setIcon(icon_manager.get_icon("delete"))
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
-        data_management_layout.addWidget(self.delete_button)
+        delete_export_table_layout.addWidget(self.delete_button)
+
+        self.export_table_csv_button = QPushButton("Exportar Tabela para CSV")
+        self.export_table_csv_button.setIcon(icon_manager.get_icon("csv")) # Crie ou use um ícone apropriado (ex: csv.png)
+        self.export_table_csv_button.clicked.connect(self.controller.export_table_to_csv)
+        delete_export_table_layout.addWidget(self.export_table_csv_button)
+
+        self.input_layout.addLayout(delete_export_table_layout)
+
+        # Layout para botões de Exportar e Importar Status
+        status_import_export_layout = QHBoxLayout()
 
         self.export_status_button = QPushButton("Exportar Status")
         self.export_status_button.setIcon(icon_manager.get_icon("exportar")) # Crie ou use um ícone apropriado
         self.export_status_button.clicked.connect(self.controller.export_status_data)
-        data_management_layout.addWidget(self.export_status_button)
+        status_import_export_layout.addWidget(self.export_status_button)
 
         self.import_status_button = QPushButton("Importar Status")
         self.import_status_button.setIcon(icon_manager.get_icon("importar")) # Crie ou use um ícone apropriado
         self.import_status_button.clicked.connect(self.controller.import_status_data)
-        data_management_layout.addWidget(self.import_status_button)
+        status_import_export_layout.addWidget(self.import_status_button)
 
-        self.input_layout.addLayout(data_management_layout)
+        self.input_layout.addLayout(status_import_export_layout)
+
+        # Botão para definir pasta de PDFs
+        self.set_pdf_folder_button = QPushButton("Definir Pasta para Salvar PDFs")
+        self.set_pdf_folder_button.setIcon(icon_manager.get_icon("salvar_pasta")) # Crie um ícone apropriado (ex: folder_pdf.png)
+        self.set_pdf_folder_button.clicked.connect(self.controller.set_pdf_download_folder)
+        self.input_layout.addWidget(self.set_pdf_folder_button) # Adicionado abaixo dos outros e sozinho
 
         self.input_layout.addStretch() # Adiciona um espaçador para empurrar os elementos para cima
 

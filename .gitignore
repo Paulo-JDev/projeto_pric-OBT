@@ -25,6 +25,7 @@ database/
 *.db
 *.sqlite
 *.sqlite3
+config.json
 
 # Arquivos de configuração de IDEs
 .vscode/
