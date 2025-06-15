@@ -1,0 +1,39 @@
+# Arquivo .gitignore para projetos Python
+
+# Ambientes Virtuais
+# Ignora pastas de ambientes virtuais como 'venv', 'env', etc.
+/venv
+/env
+/virtual
+/.venv
+/.env
+
+
+# Arquivos de Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+
+# Arquivos de Banco de Dados Locais
+# MUITO IMPORTANTE para o seu projeto!
+database/
+*.db
+*.sqlite
+*.sqlite3
+
+# Arquivos de configuração de IDEs
+.vscode/
+.idea/
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# Arquivo principal da API que você quer ignorar
+app.py
+*.log
