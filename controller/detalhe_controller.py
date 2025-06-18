@@ -101,7 +101,8 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
                 (option for option, button in radio_buttons[title].items() if button.isChecked()),
                 "Não selecionado"
             ) for title in radio_buttons
-        }
+        },
+        "data_registro": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     }
     radio_options_json = json.dumps(radio_options_dict.get("radio_options"))
 
@@ -111,13 +112,14 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
     try:
         # Salvar/Atualizar status_contratos
         cursor.execute('''
-            INSERT OR REPLACE INTO status_contratos 
-            (contrato_id, uasg_code, status, objeto_editado, radio_options_json)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO status_contratos
+            (contrato_id, uasg_code, status, objeto_editado, radio_options_json, data_registro)
+            VALUES (?, ?, ?, ?, ?, ?)
         ''', (
             id_contrato, uasg, status_dropdown.currentText(),
             objeto_edit.text() if objeto_edit is not None else "",
-            radio_options_json
+            radio_options_json,
+            radio_options_dict.get("data_registro") # Adicionado o valor de data_registro
         ))
 
         # Salvar registros_status (deletar antigos e inserir novos)

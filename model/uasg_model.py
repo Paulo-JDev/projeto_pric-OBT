@@ -4,6 +4,7 @@ import json
 import time
 import requests
 import sqlite3
+from datetime import datetime # Adicionado para comparação de datas
 
 from pathlib import Path
 
@@ -73,6 +74,7 @@ class UASGModel:
                 status TEXT,
                 objeto_editado TEXT,
                 radio_options_json TEXT, -- Armazena o JSON das opções de rádio
+                data_registro TEXT,
                 FOREIGN KEY (contrato_id) REFERENCES contratos (id)
             )
         ''')
@@ -81,20 +83,28 @@ class UASGModel:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 uasg_code TEXT, -- Adicionado para referência direta
                 contrato_id TEXT NOT NULL,
-                texto TEXT,
+                texto TEXT UNIQUE,
                 FOREIGN KEY (uasg_code) REFERENCES uasgs (uasg_code), -- Opcional, mas bom para integridade
                 FOREIGN KEY (contrato_id) REFERENCES contratos (id)
             )
+        ''')
+        # Adiciona um índice na coluna contrato_id para otimizar buscas
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_registros_status_contrato_id ON registros_status (contrato_id)
         ''')
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS comentarios_status (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 uasg_code TEXT, -- Adicionado para referência direta
                 contrato_id TEXT NOT NULL,
-                texto TEXT,
+                texto TEXT UNIQUE,
                 FOREIGN KEY (uasg_code) REFERENCES uasgs (uasg_code), -- Opcional, mas bom para integridade
                 FOREIGN KEY (contrato_id) REFERENCES contratos (id)
             )
+        ''')
+        # Adiciona um índice na coluna contrato_id para otimizar buscas
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_comentarios_status_contrato_id ON comentarios_status (contrato_id)
         ''')
         conn.commit()
         conn.close()
@@ -145,6 +155,7 @@ class UASGModel:
                     time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
                 else:
                     raise requests.exceptions.RequestException(f"Falha ao buscar dados da UASG {uasg} após {tentativas_maximas} tentativas: {str(e)}")
+        
         
     def save_uasg_data(self, uasg, data):
         """Salva os dados da UASG no banco de dados SQLite."""
@@ -279,7 +290,7 @@ class UASGModel:
 
         try:
             # Buscar todos os status_contratos
-            cursor.execute("SELECT contrato_id, uasg_code, status, objeto_editado, radio_options_json FROM status_contratos")
+            cursor.execute("SELECT contrato_id, uasg_code, status, objeto_editado, radio_options_json, data_registro FROM status_contratos")
             status_rows = cursor.fetchall()
 
             for status_row in status_rows:
@@ -313,24 +324,64 @@ class UASGModel:
             for entry in data_to_import:
                 contrato_id = entry.get('contrato_id')
                 uasg_code = entry.get('uasg_code')
+                status_import = entry.get('status')
+                objeto_editado_import = entry.get('objeto_editado')
+                radio_options_json_import = entry.get('radio_options_json')
+                data_registro_import_str = entry.get('data_registro')
 
                 if not contrato_id or not uasg_code:
                     print(f"Aviso: Entrada de importação ignorada por falta de contrato_id ou uasg_code: {entry}")
                     continue
 
-                # Inserir ou substituir em status_contratos
-                cursor.execute("INSERT OR REPLACE INTO status_contratos (contrato_id, uasg_code, status, objeto_editado, radio_options_json) VALUES (?, ?, ?, ?, ?)",
-                               (contrato_id, uasg_code, entry.get('status'), entry.get('objeto_editado'), entry.get('radio_options_json')))
-                
-                # Deletar e inserir registros
-                cursor.execute("DELETE FROM registros_status WHERE contrato_id = ?", (contrato_id,))
-                for texto_reg in entry.get('registros', []):
-                    cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_reg))
+                # Lógica para status_contratos com verificação de data_registro
+                if data_registro_import_str:
+                    try:
+                        datetime_import = datetime.strptime(data_registro_import_str, "%d/%m/%Y %H:%M:%S")
+                    except ValueError:
+                        print(f"Aviso: Formato de data_registro inválido na importação para contrato {contrato_id}: '{data_registro_import_str}'. Pulando atualização de status_contratos.")
+                    else:
+                        cursor.execute("SELECT data_registro FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+                        existing_status_row = cursor.fetchone()
 
-                # Deletar e inserir comentários
-                cursor.execute("DELETE FROM comentarios_status WHERE contrato_id = ?", (contrato_id,))
+                        should_process_status = True
+                        if existing_status_row and existing_status_row['data_registro']:
+                            try:
+                                datetime_db = datetime.strptime(existing_status_row['data_registro'], "%d/%m/%Y %H:%M:%S")
+                                if datetime_db >= datetime_import:  # Se a data no DB for mais recente ou igual
+                                    should_process_status = False
+                                    print(f"Info: Status para contrato {contrato_id} no DB ({existing_status_row['data_registro']}) é mais recente ou igual ao da importação ({data_registro_import_str}). Não será atualizado.")
+                            except ValueError:
+                                print(f"Aviso: Formato de data_registro inválido no DB para contrato {contrato_id}: '{existing_status_row['data_registro']}'. Será considerado para atualização se a importação for válida.")
+                        
+                        if should_process_status:
+                            if existing_status_row:
+                                print(f"Info: Atualizando status_contratos para {contrato_id} com data de importação {data_registro_import_str}")
+                                cursor.execute('''
+                                    UPDATE status_contratos 
+                                    SET uasg_code = ?, status = ?, objeto_editado = ?, radio_options_json = ?, data_registro = ?
+                                    WHERE contrato_id = ?
+                                ''', (uasg_code, status_import, objeto_editado_import, radio_options_json_import, data_registro_import_str, contrato_id))
+                            else:
+                                print(f"Info: Inserindo novo status_contratos para {contrato_id} com data de importação {data_registro_import_str}")
+                                cursor.execute('''
+                                    INSERT INTO status_contratos 
+                                    (contrato_id, uasg_code, status, objeto_editado, radio_options_json, data_registro) 
+                                    VALUES (?, ?, ?, ?, ?, ?)
+                                ''', (contrato_id, uasg_code, status_import, objeto_editado_import, radio_options_json_import, data_registro_import_str))
+                else:
+                    # Se não houver data_registro na importação, não atualiza/insere o status_contratos,
+                    # pois a condição de atualização (data mais recente) não pode ser verificada.
+                    # Se a intenção fosse usar INSERT OR REPLACE sem data_registro, a lógica seria diferente.
+                    print(f"Aviso: data_registro não encontrada na entrada de importação para contrato {contrato_id}. Status, objeto e radio options não serão importados para este contrato.")
+
+                # Manter a lógica de INSERT OR IGNORE para registros e comentários,
+                # pois a pergunta não especificou condicioná-los à data_registro principal.
+                # Se eles também precisarem dessa lógica, teria que ser adaptado.
+                for texto_reg in entry.get('registros', []):
+                    cursor.execute("INSERT OR IGNORE INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_reg))
+
                 for texto_com in entry.get('comentarios', []):
-                    cursor.execute("INSERT INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_com))
+                    cursor.execute("INSERT OR IGNORE INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_com))
             
             conn.commit()
             print("Dados de status importados com sucesso para o banco de dados.")
