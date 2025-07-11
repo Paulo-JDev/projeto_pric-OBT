@@ -9,8 +9,12 @@ from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog
 import requests
 import sqlite3
 import json
-import csv
 import os # Adicionado para os.path.expanduser
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image
+from datetime import datetime
 
 class UASGController:
     def __init__(self, base_dir):
@@ -263,52 +267,159 @@ class UASGController:
             except Exception as e:
                 QMessageBox.critical(self.view, "Erro ao Importar", f"Não foi possível importar os dados: {e}")
 
-    def export_table_to_csv(self):
+    def export_table_to_excel(self):
+        """
+        Exporta os dados para um arquivo Excel (.xlsx) com formatação avançada,
+        incluindo fórmulas dinâmicas e quebra de linha nos cabeçalhos.
+        """
         if not self.current_data:
             QMessageBox.information(self.view, "Exportar Tabela", "Não há dados na tabela para exportar.")
             return
 
         file_path, _ = QFileDialog.getSaveFileName(
             self.view,
-            "Salvar Tabela como CSV",
-            "",
-            "CSV Files (*.csv);;All Files (*)"
+            "Salvar Planilha como...",
+            "Relatorio_Contratos.xlsx",
+            "Excel Files (*.xlsx);;All Files (*)"
         )
 
-        if file_path:
-            try:
-                # Obter cabeçalhos do modelo da tabela
-                model = self.view.table.model().sourceModel() # Usar o sourceModel se houver proxy
-                headers = [model.horizontalHeaderItem(i).text() for i in range(model.columnCount())]
-                
-                with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=';') # Usar ; como delimitador é comum no Brasil
-                    writer.writerow(headers)
-                    
-                    # Iterar sobre as linhas visíveis (ou self.current_data se não houver filtro complexo)
-                    # Para este exemplo, vamos usar self.current_data e mapear para as colunas
-                    # Isso precisa ser ajustado conforme a estrutura exata dos seus dados e colunas
-                    for row_data_dict in self.current_data:
-                        # Mapear os dados do dicionário para a ordem das colunas
-                        # Esta parte é um exemplo e precisa ser adaptada
-                        row_to_write = [
-                            # Exemplo para as primeiras colunas, você precisará mapear todas
-                            self._calculate_dias_restantes(row_data_dict.get("vigencia_fim", "")), # Para "Dias"
-                            row_data_dict.get("numero", ""),
-                            row_data_dict.get("licitacao_numero", ""),
-                            row_data_dict.get("fornecedor", {}).get("nome", ""),
-                            row_data_dict.get("processo", ""),
-                            row_data_dict.get("objeto", "Não informado"),
-                            row_data_dict.get("valor_global", "Não informado"),
-                            self._get_status_for_contrato(row_data_dict.get("id", "")) # Para "Status"
-                        ]
-                        writer.writerow(row_to_write)
-                        
-                QMessageBox.information(self.view, "Exportar Tabela", f"Tabela exportada com sucesso para:\n{file_path}")
-            except Exception as e:
-                QMessageBox.critical(self.view, "Erro ao Exportar", f"Não foi possível salvar o arquivo CSV: {e}")
+        if not file_path:
+            return
 
-    # Funções auxiliares que você precisaria (ou adaptar das existentes em controller_table.py)
+        try:
+            # --- PREPARAÇÃO DA PLANILHA ---
+            workbook = Workbook()
+            ws = workbook.active
+            ws.title = "Acordos Administrativos"
+            ano_atual = datetime.now().year
+            data_atual_str = datetime.now().strftime("%d/%m/%Y")
+
+            # --- LÓGICA PARA INSERIR OS ÍCONES ---
+            try:
+                # Carrega o ícone da esquerda ("icone.png")
+                path_icone = os.path.join('utils', 'icons', 'icone.ico')
+                if os.path.exists(path_icone):
+                    logo_esquerdo = Image(path_icone)
+                    # Ajusta o tamanho do logo para caber nas 3 linhas do cabeçalho
+                    logo_esquerdo.height = 70
+                    logo_esquerdo.width = 70
+                    # Adiciona a imagem na célula A1 (canto superior esquerdo)
+                    ws.add_image(logo_esquerdo, 'A1')
+                else:
+                    print(f"Aviso: Ícone não encontrado em {path_icone}")
+
+                # Carrega o ícone da direita ("acanto.png")
+                path_acanto = os.path.join('utils', 'icons', 'acanto.png')
+                if os.path.exists(path_acanto):
+                    logo_direito = Image(path_acanto)
+                    logo_direito.height = 70
+                    logo_direito.width = 70
+                    # Adiciona a imagem na célula L1 (canto superior direito)
+                    ws.add_image(logo_direito, 'L1')
+                else:
+                    print(f"Aviso: Ícone não encontrado em {path_acanto}")
+            
+            except Exception as img_error:
+                print(f"Ocorreu um erro ao carregar os logos: {img_error}")
+                QMessageBox.warning(self.view, "Aviso", "Não foi possível carregar os logos na planilha.")
+
+            # --- CABEÇALHO PRINCIPAL E TÍTULOS ---
+            # Mescla as células CENTRAIS para o texto, deixando as colunas A e L para os logos
+            ws.merge_cells('B1:K3')
+            ws['B1'].value = "CENTRO DE INTENDÊNCIA DA MARINHA EM BRASÍLIA\nDIVISÃO DE OBTENÇÃO"
+            ws['B1'].font = Font(bold=True, size=14)
+            ws['B1'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+            ws.merge_cells('A4:L4')
+            ws['A4'].value = f"ACORDOS ADMINISTRATIVOS EM VIGOR {ano_atual}"
+            ws['A4'].font = Font(bold=True, size=12)
+            ws['A4'].alignment = Alignment(horizontal='center', vertical='center')
+
+            # O restante do seu código permanece exatamente o mesmo
+            # --- DATA DE REFERÊNCIA DINÂMICA ---
+            ref_date_cell = 'L6'
+            ws[ref_date_cell] = f"Data: {data_atual_str}"
+            ws[ref_date_cell].font = Font(bold=True, italic=True)
+            ws[ref_date_cell].alignment = Alignment(horizontal='center')
+
+            # --- CABEÇALHOS DAS COLUNAS (com quebra de linha) ---
+            headers = [
+                "SETOR", "MODALIDADE", "N°/ANO", "EMPRESA", "CONTRATO\n- ATA PARECER", 
+                "OBJETO", "CELEBRAÇÃO", "TERMO\nADITIVO", "PORTARIA DE\nFISCALIZAÇÃO", 
+                "TÉRMINO", "DIAS P/\nVENCIMENTO", "OBS"
+            ]
+            ws.append(headers)
+            
+            header_row = ws[7]
+            header_font = Font(bold=True)
+            header_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+            header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+            for cell in header_row:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+
+            # --- DADOS E FÓRMULAS ---
+            center_alignment = Alignment(horizontal='center', vertical='center')
+            green_font = Font(color="00B050") # Tom de verde padrão do Excel
+
+            for row_idx, contrato in enumerate(self.current_data, start=8): # Começa na linha 8
+                data_termino_str = contrato.get("vigencia_fim", "")
+                data_termino_excel = None
+                if data_termino_str:
+                    try:
+                        data_termino_excel = datetime.strptime(data_termino_str, "%Y-%m-%d")
+                    except ValueError:
+                        data_termino_excel = "Data Inválida"
+
+                row_data = [
+                    contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "N/A"),
+                    contrato.get("modalidade", "N/A"),
+                    contrato.get("licitacao_numero", "N/A"),
+                    contrato.get("fornecedor", {}).get("nome", ""),
+                    contrato.get("numero", ""),
+                    contrato.get("objeto", ""),
+                    contrato.get("data_assinatura", "N/A"),
+                    "XXX",
+                    "XXX",
+                    data_termino_excel,
+                    f'=IF(ISBLANK(J{row_idx}), "N/A", J{row_idx}-TODAY())', # FÓRMULA DINÂMICA
+                    ""
+                ]
+                ws.append(row_data)
+
+                for col_idx in range(1, len(row_data) + 1):
+                    cell = ws.cell(row=row_idx, column=col_idx)
+                    cell.alignment = center_alignment
+                    
+                    if col_idx in [7, 10] and isinstance(cell.value, datetime):
+                        cell.number_format = 'DD/MM/YYYY'
+                    
+                    if col_idx == 11:
+                        cell.font = green_font
+                        cell.number_format = '0'
+
+            # --- AJUSTE FINAL DAS LARGURAS DAS COLUNAS ---
+            ws.column_dimensions['A'].width = 10
+            ws.column_dimensions['B'].width = 12
+            ws.column_dimensions['C'].width = 12
+            ws.column_dimensions['D'].width = 35
+            ws.column_dimensions['E'].width = 15
+            ws.column_dimensions['F'].width = 45
+            ws.column_dimensions['G'].width = 12
+            ws.column_dimensions['H'].width = 12
+            ws.column_dimensions['I'].width = 15
+            ws.column_dimensions['J'].width = 12
+            ws.column_dimensions['K'].width = 15
+            ws.column_dimensions['L'].width = 20
+
+            # --- SALVAR O ARQUIVO ---
+            workbook.save(file_path)
+            QMessageBox.information(self.view, "Exportação Concluída", f"Planilha salva com sucesso em:\n{file_path}")
+
+        except Exception as e:
+            QMessageBox.critical(self.view, "Erro ao Exportar", f"Ocorreu um erro ao gerar a planilha:\n{e}")  # Funções auxiliares que você precisaria (ou adaptar das existentes em controller_table.py)
     def _calculate_dias_restantes(self, vigencia_fim_str):
         from datetime import date, datetime # Mover imports para o topo do arquivo
         if vigencia_fim_str:

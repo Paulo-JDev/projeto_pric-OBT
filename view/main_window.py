@@ -53,9 +53,9 @@ class MainWindow(QMainWindow):
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
         delete_export_table_layout.addWidget(self.delete_button)
 
-        self.export_table_csv_button = QPushButton("Exportar Tabela para CSV")
-        self.export_table_csv_button.setIcon(icon_manager.get_icon("csv")) # Crie ou use um ícone apropriado (ex: csv.png)
-        self.export_table_csv_button.clicked.connect(self.controller.export_table_to_csv)
+        self.export_table_csv_button = QPushButton("Exportar Tabela para excel")
+        self.export_table_csv_button.setIcon(icon_manager.get_icon("excel_up")) # Crie ou use um ícone apropriado (ex: csv.png)
+        self.export_table_csv_button.clicked.connect(self.controller.export_table_to_excel)
         delete_export_table_layout.addWidget(self.export_table_csv_button)
 
         self.input_layout.addLayout(delete_export_table_layout)
