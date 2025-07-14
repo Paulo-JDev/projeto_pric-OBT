@@ -33,7 +33,6 @@ config.json
 .DS_Store
 Thumbs.db
 
-app.py
 *.log
 m_requirements.txt
 # I don't know about this past -> /config
