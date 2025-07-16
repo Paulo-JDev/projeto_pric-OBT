@@ -7,7 +7,7 @@ from model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
 
 from view.abas_detalhes.general_tab import create_general_tab
-from view.abas_detalhes.object_tab import create_object_tab
+#from view.abas_detalhes.object_tab import create_object_tab
 from view.abas_detalhes.status_tab import create_status_tab
 from view.abas_detalhes.termo_adt import aba_termo_adt
 from controller.detalhe_controller import *
@@ -42,7 +42,7 @@ class DetailsDialog(QDialog):
 
         # Criar abas
         self.tabs.addTab(create_general_tab(self), "Informações Gerais")
-        self.tabs.addTab(create_object_tab(self), "PDF do contrato")
+        #self.tabs.addTab(create_object_tab(self), "PDF do contrato")
         self.tabs.addTab(create_status_tab(self), "Status")
         self.tabs.addTab(aba_termo_adt(self), "Termo Aditivo")
 
