@@ -3,8 +3,6 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
 from datetime import datetime, date
 import sqlite3 # Adicionado para buscar status do DB
-
-# from model.uasg_model import resource_path # Não é mais necessário para status_glob
 from utils.icon_loader import icon_manager
 
 def populate_table(controller, data):
@@ -62,7 +60,7 @@ def _get_status_style(status_text):
     return status_styles.get(status_text, (Qt.GlobalColor.white, QFont.Weight.Normal))
 
 def _populate_or_update_table(controller, data_source, repopulation=True):
-    """Função auxiliar para popular ou atualizar a tabela."""
+    """Função auxiliar para popular(adicionar) ou atualizar a tabela."""
     today = date.today()
     model = controller.view.table.model().sourceModel()
 
@@ -83,9 +81,8 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
                     dias_restantes_calc = (vigencia_fim - today).days
                 except ValueError:
                     dias_restantes_calc = float('-inf')  # Se a data for inválida, coloca no final
-            else:
-                dias_restantes_calc = float('-inf')  # Se a data estiver vazia, coloca no final
-            contratos_ordenados.append((dias_restantes_calc, contrato_data))
+            if dias_restantes_calc >= -100:
+                contratos_ordenados.append((dias_restantes_calc, contrato_data))
 
         # Ordenar do maior tempo para o menor (negativos no final)
         contratos_ordenados.sort(reverse=True, key=lambda x: x[0])
