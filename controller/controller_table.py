@@ -126,6 +126,7 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
         # Lista para armazenar os contratos com os dias restantes calculados
         contratos_ordenados = []
         for contrato_data in data_source:
+            dias_restantes_calc = float('inf')
             vigencia_fim_str = contrato_data.get("vigencia_fim", "")
             if vigencia_fim_str:
                 try:
@@ -206,13 +207,6 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
             model.setItem(row_index, 5, create_centered_item(str(contrato.get("objeto", "Não informado"))))
             model.setItem(row_index, 6, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
             _update_row_content(controller, row_index, contrato)
-
-        # Adiciona o status à coluna "Status" com formatação condicional
-        '''status_item = create_centered_item(status_text)
-        color, weight = _get_status_style(status_text)
-        status_item.setForeground(QBrush(color) if isinstance(color, QColor) else color)
-        status_item.setFont(QFont("", -1, weight))
-        model.setItem(row_index, 7, status_item)'''
 
     if repopulation:
         print(f"✅ Tabela carregada com {len(controller.current_data)} contratos.")
