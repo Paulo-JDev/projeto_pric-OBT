@@ -14,7 +14,7 @@ from controller.detalhe_controller import *
 
 class DetailsDialog(QDialog):
     # Sinal que será emitido quando o botão de salvar for pressionado
-    data_saved = pyqtSignal()
+    data_saved = pyqtSignal(dict)
 
     def __init__(self, data, model, parent=None): # Adicionado 'model'
         super().__init__(parent)
@@ -87,10 +87,11 @@ class DetailsDialog(QDialog):
         # Salvar os dados primeiro
         save_status(self, self.data, self.model, self.status_dropdown, self.registro_list, self.comment_list, self.objeto_edit, self.radio_buttons)
         
-        # Emitir o sinal ANTES de mostrar a mensagem para atualizar a tabela imediatamente
-        self.data_saved.emit()
+        novo_status_info = {
+            'status': self.status_dropdown.currentText()
+        }
         
-        # Mostrar mensagem de sucesso
+        self.data_saved.emit(novo_status_info)
         show_success_message(self)
 
     def copy_to_clipboard(self, line_edit):

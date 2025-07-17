@@ -186,29 +186,9 @@ class UASGController:
         
         details_dialog.exec()
 
-    def update_table_from_details(self):
+    def update_table_from_details(self, novo_status_info):
         """Atualiza a tabela quando os dados são salvos na DetailsDialog."""
-        # Identifica a UASG atual e o contrato selecionado
-        uasg_atual = None
-        row_atual = -1
-        
-        # Obter índice da linha selecionada
-        selected_indexes = self.view.table.selectionModel().selectedIndexes()
-        if selected_indexes:
-            # Mapeia a seleção para o modelo base
-            source_index = self.view.table.model().mapToSource(selected_indexes[0])
-            row_atual = source_index.row()
-        
-        # Atualizar apenas a coluna de status (método mais rápido)
-        update_status_column(self)
-        
-        # Restaurar a seleção se existia antes
-        if row_atual >= 0 and row_atual < len(self.current_data):
-            new_index = self.view.table.model().sourceModel().index(row_atual, 0)
-            proxy_index = self.view.table.model().mapFromSource(new_index)
-            self.view.table.selectRow(proxy_index.row())
-        
-        return
+        update_status_column(self, novo_status_info)
     
     def show_msg_dialog(self):
         """Exibe o diálogo de mensagens."""

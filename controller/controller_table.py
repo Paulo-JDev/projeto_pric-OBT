@@ -9,12 +9,64 @@ def populate_table(controller, data):
     """Preenche a tabela com os dados fornecidos, ordenando do maior para o menor tempo de vigência."""
     _populate_or_update_table(controller, data, repopulation=True)
 
-def update_status_column(controller):
-    """Atualiza apenas a coluna de status da tabela sem recarregar todos os dados."""
-    if not controller.current_data:
+def update_status_column(controller, novo_status_info):
+    """Atualiza APENAS a linha selecionada com o novo status fornecido."""
+    table = controller.view.table
+    selected_row_index = table.selectionModel().currentIndex().row()
+
+    if selected_row_index < 0:
         return
-    _populate_or_update_table(controller, controller.current_data, repopulation=False)
-    print("✅ Colunas de status e dias atualizadas.")
+
+    if selected_row_index < len(controller.current_data):
+        contrato_data = controller.current_data[selected_row_index]
+        _update_row_content(controller, selected_row_index, contrato_data, novo_status_info['status'])
+        print(f"✅ Linha {selected_row_index} atualizada com o novo status.")
+
+def _update_row_content(controller, row_index, contrato, novo_status=None):
+    """Função auxiliar que preenche ou atualiza o conteúdo de UMA ÚNICA linha da tabela."""
+    model = controller.view.table.model().sourceModel()
+    today = date.today()
+
+    # --- Coluna 0: Dias ---
+    vigencia_fim_str = contrato.get("vigencia_fim", "")
+    dias_restantes = "Sem Data"
+    if vigencia_fim_str:
+        try:
+            vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
+            dias_restantes = (vigencia_fim - today).days
+        except ValueError:
+            dias_restantes = "Erro Data"
+    model.setItem(row_index, 0, _create_dias_item(dias_restantes))
+
+    # --- Coluna 7: Status ---
+    status_text = "SEÇÃO CONTRATOS"  # Padrão
+    
+    # **CORREÇÃO APLICADA AQUI**
+    # Se um novo status for passado diretamente (após salvar), usamos ele.
+    if novo_status:
+        status_text = novo_status
+    else:
+        # Se não, é um carregamento inicial, então consultamos o DB da forma original que funcionava.
+        contrato_id = contrato.get("id", "")
+        try:
+            if contrato_id and hasattr(controller, 'model') and controller.model:
+                conn = controller.model._get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT status FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+                status_row = cursor.fetchone()
+                if status_row and status_row['status']:
+                    status_text = status_row['status']
+                conn.close()
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar status do DB para contrato {contrato_id}: {e}")
+            status_text = "Erro DB"
+
+    status_item = QStandardItem(status_text)
+    status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+    color, weight = _get_status_style(status_text)
+    status_item.setForeground(QBrush(color) if isinstance(color, QColor) else color)
+    status_item.setFont(QFont("", -1, weight))
+    model.setItem(row_index, 7, status_item)
 
 def _create_dias_item(dias_restantes_valor):
     """Cria e formata um QStandardItem para a coluna 'Dias'."""
@@ -153,13 +205,14 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
             model.setItem(row_index, 4, create_centered_item(str(contrato.get("processo", ""))))
             model.setItem(row_index, 5, create_centered_item(str(contrato.get("objeto", "Não informado"))))
             model.setItem(row_index, 6, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
+            _update_row_content(controller, row_index, contrato)
 
         # Adiciona o status à coluna "Status" com formatação condicional
-        status_item = create_centered_item(status_text)
+        '''status_item = create_centered_item(status_text)
         color, weight = _get_status_style(status_text)
         status_item.setForeground(QBrush(color) if isinstance(color, QColor) else color)
         status_item.setFont(QFont("", -1, weight))
-        model.setItem(row_index, 7, status_item)
+        model.setItem(row_index, 7, status_item)'''
 
     if repopulation:
         print(f"✅ Tabela carregada com {len(controller.current_data)} contratos.")
