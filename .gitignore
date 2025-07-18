@@ -35,4 +35,5 @@ Thumbs.db
 
 *.log
 m_requirements.txt
+dist-linux/
 # I don't know about this past -> /config

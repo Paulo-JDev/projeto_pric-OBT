@@ -1,34 +1,56 @@
-# Use uma imagem base estável do Ubuntu.
-FROM ubuntu:22.04
+# Etapa 1 - Build
+FROM ubuntu:22.04 AS build
 
-# Define variáveis de ambiente para evitar prompts interativos durante a instalação
 ENV DEBIAN_FRONTEND=noninteractive
 ENV QT_X11_NO_MITSHM=1
 
-# Atualiza os pacotes e instala as dependências de sistema
-# - python3 e python3-pip são essenciais
-# - build-essential e qt6-base-dev fornecem as ferramentas e bibliotecas Qt
-#   que o pip usará para instalar o PyQt6 corretamente.
-# - libgl1-mesa-glx é para a renderização gráfica.
+# Instala pacotes do sistema
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     build-essential \
     qt6-base-dev \
     libgl1-mesa-glx \
+    libxkbcommon-x11-0 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copia o arquivo de dependências do Python primeiro para otimizar o cache do Docker
+# Copia os arquivos
 COPY requirements.txt .
-
-# Instala as dependências Python, incluindo o PyQt6
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copia todo o resto do código da sua aplicação
+# Instala o PyInstaller
+RUN pip3 install pyinstaller
+
+# Copia o restante da aplicação
 COPY . .
 
-# Define o comando que será executado quando o container iniciar
-CMD ["python3", "main.py"]
+# Gera o executável
+RUN pyinstaller --name "Contratos360" \
+    --console \
+    --icon="utils/icons/mn.ico" \
+    --add-data="utils/icons:utils/icons" \
+    --add-data="style.qss:." \
+    main.py
+
+# Etapa 2 - Runtime enxuto (opcional)
+FROM ubuntu:22.04
+
+# Instala só as libs mínimas pro binário funcionar
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libxkbcommon-x11-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copia o executável da build anterior
+COPY --from=build /app/dist/Contratos360/Contratos360 .
+
+# Permissão de execução
+RUN chmod +x /app/Contratos360
+
+# Comando padrão
+CMD ["./Contratos360"]
