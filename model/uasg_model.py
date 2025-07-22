@@ -205,18 +205,23 @@ class UASGModel:
         conn = self._get_db_connection()
         cursor = conn.cursor()
 
-        # Obter IDs dos contratos existentes para esta UASG
+        # Obter IDs dos contratos existentes (eles já são TEXTO/string no DB)
         cursor.execute("SELECT id FROM contratos WHERE uasg_code = ?", (uasg,))
         old_contract_ids = {row['id'] for row in cursor.fetchall()}
         
-        new_contract_ids = {c_data.get("id") for c_data in new_data}
+        # --- CORREÇÃO APLICADA AQUI ---
+        # Converte os IDs da API para string para a comparação funcionar corretamente
+        new_contract_ids = {str(c_data.get("id")) for c_data in new_data}
 
         contracts_to_add_count = 0
         contracts_to_remove_count = 0
 
         # Adicionar/Atualizar contratos
         for contrato_data in new_data:
-            contrato_id = contrato_data.get("id")
+            # --- CORREÇÃO APLICADA AQUI ---
+            # Usa o ID como string em todas as operações
+            contrato_id = str(contrato_data.get("id"))
+
             if contrato_id not in old_contract_ids:
                 contracts_to_add_count += 1
             
@@ -245,9 +250,10 @@ class UASGModel:
 
         # Remover contratos que não existem mais
         for old_id in old_contract_ids:
+            # A comparação agora funciona porque é string vs string
             if old_id not in new_contract_ids:
                 cursor.execute("DELETE FROM contratos WHERE id = ?", (old_id,))
-                # Opcionalmente, deletar de status_contratos, registros_status, comentarios_status
+                # Limpa também as tabelas relacionadas
                 cursor.execute("DELETE FROM status_contratos WHERE contrato_id = ?", (old_id,))
                 cursor.execute("DELETE FROM registros_status WHERE contrato_id = ?", (old_id,))
                 cursor.execute("DELETE FROM comentarios_status WHERE contrato_id = ?", (old_id,))
