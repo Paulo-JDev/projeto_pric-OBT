@@ -37,7 +37,8 @@ config.json
 .DS_Store
 Thumbs.db
 
+# I don't know about this past -> /config
 *.log
 m_requirements.txt
 dist-linux/
-# I don't know about this past -> /config
+teste.json
