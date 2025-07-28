@@ -1,11 +1,11 @@
 # Arquivo .gitignore para projetos Python
 
 # Ambientes Virtuais
-/venv
-/env
-/virtual
-/.venv
-/.env
+venv/
+env/
+virtual/
+.venv/
+.env/
 
 
 # Arquivos de Cache do Python
@@ -16,6 +16,10 @@ __pycache__/
 **/*.pyc
 **/*.pyo
 **/*.pyd
+__pycache__/
+*.py[cod]
+**/__pycache__/
+**/*.py[cod]
 
 
 # Arquivos de Banco de Dados Locais
