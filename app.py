@@ -41,7 +41,7 @@ print(f"API irá usar o banco de dados em: {DB_PATH}")
 
 
 # --- 3. Lógica de Acesso ao Banco de Dados ---
-# Esta parte permanece a mesma, mas agora usa o DB_PATH dinâmico
+# Usando sua lógica para o DB_PATH dinâmico
 
 def _get_db_connection():
     """Cria e retorna uma conexão com o banco de dados SQLite."""
@@ -76,8 +76,27 @@ def get_all_status_data_from_db():
         conn.close()
     return all_data
 
+def get_all_contratos_raw_from_db():
+    """Retorna todos os contratos com o JSON bruto (dados completos da API pública)."""
+    conn = _get_db_connection()
+    cursor = conn.cursor()
+    contratos = []
+    try:
+        cursor.execute("SELECT raw_json FROM contratos")
+        rows = cursor.fetchall()
+        for row in rows:
+            try:
+                contratos.append(json.loads(row['raw_json']))
+            except json.JSONDecodeError:
+                print("Erro ao decodificar JSON de um contrato.")
+    except sqlite3.Error as e:
+        print(f"Erro ao buscar contratos: {e}")
+        return None
+    finally:
+        conn.close()
+    return contratos
+
 # --- 4. Modelos de Dados Pydantic ---
-# (Sem alterações aqui)
 
 class StatusContrato(BaseModel):
     contrato_id: str
@@ -95,7 +114,6 @@ class StatusContratoUpdate(BaseModel):
     radio_options_json: Optional[str] = None
 
 # --- 5. Configuração do Servidor FastAPI ---
-# (Sem alterações aqui)
 
 app = FastAPI(
     title="API de Status de Contratos",
@@ -178,6 +196,20 @@ def delete_status_from_db(contrato_id: str) -> bool:
         return False
     finally:
         conn.close()
+# ------------------------------------------- Parte das Informaçoes do Contrato -----------------------------------------------------------
+@app.get("/api/contratos/raw",
+         response_model=List[dict],
+         tags=["Contratos"],
+         summary="Lista todos os contratos completos (dados crus da API pública)")
+def get_contratos_raw():
+    """
+    Retorna todos os contratos exatamente como foram recebidos da API pública,
+    a partir dos dados salvos localmente no campo raw_json.
+    """
+    data = get_all_contratos_raw_from_db()
+    if data is None:
+        raise HTTPException(status_code=500, detail="Erro ao buscar contratos no banco local.")
+    return data
 
 # --- 6. Ponto de Entrada para Executar o Servidor ---
 
@@ -188,6 +220,7 @@ if __name__ == '__main__':
 """
 Resumo
 Acesse http://127.0.0.1:8000/api/status para ver seus dados.
+Acesse http://127.0.0.1:8000/api/contratos/raw para ver seus dados.
 Acesse http://127.0.0.1:8000/docs para ver a documentação interativa e testar a API.
 O próximo passo para seu portfólio é aprender a publicar (fazer o deploy) essa API em um serviço como a AWS.
 
