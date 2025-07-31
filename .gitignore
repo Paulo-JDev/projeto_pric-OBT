@@ -39,6 +39,7 @@ Thumbs.db
 
 # I don't know about this past -> /config
 *.log
+app.py
 m_requirements.txt
 dist-linux/
 teste.json

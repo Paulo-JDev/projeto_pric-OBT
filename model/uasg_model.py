@@ -144,7 +144,7 @@ class UASGModel:
         # URL da API pública original
         url_publica = f"https://contratos.comprasnet.gov.br/api/contrato/ug/{uasg}"
 
-        tentativas_maximas = 5
+        tentativas_maximas = 3
 
         # ------------- 1️⃣ Tentar API Local -------------
         for tentativa in range(1, tentativas_maximas + 1):
