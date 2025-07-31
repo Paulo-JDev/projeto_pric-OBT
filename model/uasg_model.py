@@ -132,30 +132,53 @@ class UASGModel:
         conn.close()
         return uasgs
 
-    def fetch_uasg_data(self, uasg):
-        """Faz a requisição para a API e retorna os dados mais recentes."""
-        url_api = f"https://contratos.comprasnet.gov.br/api/contrato/ug/{uasg}"
-        tentativas_maximas = 10
+    def fetch_uasg_data(self, uasg, local_api_host="http://192.168.0.10:8000"):
+        """
+        Busca os dados de contratos de uma UASG.
+        1. Primeiro tenta usar a API local (sua API FastAPI).
+        2. Se a API local não responder ou não tiver dados, faz a requisição para a API pública.
+        """
 
+        # URL da sua API local
+        url_local = f"{local_api_host}/api/contratos/raw/{uasg}"
+        # URL da API pública original
+        url_publica = f"https://contratos.comprasnet.gov.br/api/contrato/ug/{uasg}"
+
+        tentativas_maximas = 5
+
+        # ------------- 1️⃣ Tentar API Local -------------
         for tentativa in range(1, tentativas_maximas + 1):
             try:
-                # Emitir progresso (se necessário)
-                print(f"Tentativa {tentativa}/{tentativas_maximas} - Consultando UASG: {uasg}")
-
-                # Fazer a requisição para obter os dados
-                response = requests.get(url_api, timeout=10)
-                response.raise_for_status()  # Levanta exceção para códigos de erro HTTP
-
-                # Retorna os dados em formato JSON
-                return response.json()
-
-            except requests.exceptions.RequestException as e:
-                print(f"⚠ Erro na tentativa {tentativa}/{tentativas_maximas} ao buscar dados da UASG {uasg}: {e}")
-                if tentativa < tentativas_maximas:
-                    time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
+                print(f"Tentativa {tentativa}/{tentativas_maximas} - Buscando dados da UASG {uasg} via API LOCAL...")
+                response = requests.get(url_local, timeout=5)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data:  # Se tiver dados no seu servidor local
+                        print("✅ Dados obtidos da API local com sucesso!")
+                        return data
+                    else:
+                        print("⚠ API local respondeu, mas sem dados para essa UASG.")
+                        break
                 else:
-                    raise requests.exceptions.RequestException(f"Falha ao buscar dados da UASG {uasg} após {tentativas_maximas} tentativas: {str(e)}")
-        
+                    print(f"⚠ API local retornou status {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                print(f"⚠ Falha ao conectar à API local: {e}")
+                time.sleep(2)
+
+        # ------------- 2️⃣ Se falhar, tentar API Pública -------------
+        for tentativa in range(1, tentativas_maximas + 1):
+            try:
+                print(f"Tentativa {tentativa}/{tentativas_maximas} - Buscando dados da UASG {uasg} via API PÚBLICA...")
+                response = requests.get(url_publica, timeout=10)
+                response.raise_for_status()
+                print("✅ Dados obtidos da API pública com sucesso!")
+                return response.json()
+            except requests.exceptions.RequestException as e:
+                print(f"⚠ Erro na tentativa {tentativa}/{tentativas_maximas} ao buscar dados da UASG {uasg} na API pública: {e}")
+                if tentativa < tentativas_maximas:
+                    time.sleep(2)
+                else:
+                    raise requests.exceptions.RequestException(f"Falha ao buscar dados da UASG {uasg} após {tentativas_maximas} tentativas.")
         
     def save_uasg_data(self, uasg, data):
         """Salva os dados da UASG no banco de dados SQLite."""
