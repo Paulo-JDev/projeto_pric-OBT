@@ -197,18 +197,37 @@ def delete_status_from_db(contrato_id: str) -> bool:
     finally:
         conn.close()
 # ------------------------------------------- Parte das Informaçoes do Contrato -----------------------------------------------------------
-@app.get("/api/contratos/raw",
-         response_model=List[dict],
+def get_contratos_raw_by_uasg_from_db(uasg_code: str):
+    """Retorna apenas os contratos de uma UASG específica, com JSON bruto completo."""
+    conn = _get_db_connection()
+    cursor = conn.cursor()
+    contratos = []
+    try:
+        cursor.execute("SELECT raw_json FROM contratos WHERE uasg_code = ?", (uasg_code,))
+        rows = cursor.fetchall()
+        for row in rows:
+            try:
+                contratos.append(json.loads(row['raw_json']))
+            except json.JSONDecodeError:
+                print(f"Erro ao decodificar JSON para UASG {uasg_code}")
+    except sqlite3.Error as e:
+        print(f"Erro ao buscar contratos da UASG {uasg_code}: {e}")
+        return None
+    finally:
+        conn.close()
+    return contratos
+
+@app.get("/api/contratos/raw/{uasg_code}",
          tags=["Contratos"],
-         summary="Lista todos os contratos completos (dados crus da API pública)")
-def get_contratos_raw():
+         summary="Lista contratos completos (raw_json) filtrados por código UASG")
+def get_contratos_raw_by_uasg(uasg_code: str):
     """
-    Retorna todos os contratos exatamente como foram recebidos da API pública,
+    Retorna apenas os contratos da UASG informada (dados crus da API pública),
     a partir dos dados salvos localmente no campo raw_json.
     """
-    data = get_all_contratos_raw_from_db()
-    if data is None:
-        raise HTTPException(status_code=500, detail="Erro ao buscar contratos no banco local.")
+    data = get_contratos_raw_by_uasg_from_db(uasg_code)
+    if data is None or len(data) == 0:
+        raise HTTPException(status_code=404, detail=f"Nenhum contrato encontrado para a UASG {uasg_code}")
     return data
 
 # --- 6. Ponto de Entrada para Executar o Servidor ---
@@ -220,7 +239,7 @@ if __name__ == '__main__':
 """
 Resumo
 Acesse http://127.0.0.1:8000/api/status para ver seus dados.
-Acesse http://127.0.0.1:8000/api/contratos/raw para ver seus dados.
+Acesse http://127.0.0.1:8000/api/contratos/raw/{uasg_code} para ver seus dados.
 Acesse http://127.0.0.1:8000/docs para ver a documentação interativa e testar a API.
 O próximo passo para seu portfólio é aprender a publicar (fazer o deploy) essa API em um serviço como a AWS.
 
