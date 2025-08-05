@@ -64,7 +64,7 @@ def create_status_tab(self):
     content_layout.addLayout(registros_section) # Adiciona seção de registros ao layout principal
 
     # ---- COLUNA DIREITA: COMENTÁRIOS ----
-    comentarios_section = QVBoxLayout()
+    '''comentarios_section = QVBoxLayout()
 
     # Frame para a lista de comentários
     comentarios_frame = QFrame()
@@ -91,7 +91,7 @@ def create_status_tab(self):
     comentario_buttons_layout.addWidget(self.delete_comment_button)
     comentarios_section.addLayout(comentario_buttons_layout) # Adiciona botões à seção
 
-    content_layout.addLayout(comentarios_section) # Adiciona seção de comentários ao layout principal
+    content_layout.addLayout(comentarios_section) # Adiciona seção de comentários ao layout principal'''
 
     # Adiciona o layout de conteúdo (com as duas colunas) ao layout da aba
     main_layout.addLayout(content_layout)
