@@ -146,7 +146,7 @@ class UASGModel:
 
         tentativas_maximas = 3
 
-        # ------------- 1️⃣ Tentar API Local -------------
+        """# ------------- 1️⃣ Tentar API Local -------------
         for tentativa in range(1, tentativas_maximas + 1):
             try:
                 print(f"Tentativa {tentativa}/{tentativas_maximas} - Buscando dados da UASG {uasg} via API LOCAL...")
@@ -163,7 +163,7 @@ class UASGModel:
                     print(f"⚠ API local retornou status {response.status_code}")
             except requests.exceptions.RequestException as e:
                 print(f"⚠ Falha ao conectar à API local: {e}")
-                time.sleep(2)
+                time.sleep(2)"""
 
         # ------------- 2️⃣ Se falhar, tentar API Pública -------------
         for tentativa in range(1, tentativas_maximas + 1):
