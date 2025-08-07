@@ -1,4 +1,4 @@
-Final de vigência de Contrato Administrativo - {{Objeto}}
+Final de vigência de Contrato Administrativo
 
 VTD proximidade de termo final da vigência do Contrato Administrativo n° {{Contrato/Ata}}, cujo objeto é {{material_servico}} {{objeto}}, CNS PSB:
 {{cnpj}}{{sequencial}}
@@ -14,3 +14,5 @@ TRÊS - CNPJ: {{cnpj_cpf_idgener}};
 QUATRO - Valor global: {{Valor}}; 
 CINCO - Término da Vigência: {{vigencia_final}}; e
 SEIS - Gestor (a) do contrato: {{gestor}} BT
+
+{{objeto}} {{situacao}} testetetetet

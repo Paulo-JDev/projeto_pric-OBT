@@ -4,6 +4,7 @@ from utils.utils import refresh_uasg_menu
 from view.details_dialog import DetailsDialog
 from controller.controller_table import populate_table, update_status_column
 from utils.icon_loader import icon_manager
+from controller.mensagem_controller import MensagemController
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog
 import requests
@@ -191,11 +192,26 @@ class UASGController:
         update_status_column(self, novo_status_info)
     
     def show_msg_dialog(self):
-        """Exibe o diálogo de mensagens."""
-        # Implementação futura do diálogo de mensagens
-        QMessageBox.information(self.view, "Mensagens", "Funcionalidade de mensagens ainda não implementada.")
-        # msg_dialog = "Teste Paulo vitor"
-        # print(msg_dialog)
+        """
+        Abre a janela de geração de mensagens para o contrato selecionado.
+        """
+        # Pega o índice da linha selecionada na tabela
+        selected_indexes = self.view.table.selectionModel().selectedIndexes()
+        
+        if not selected_indexes:
+            QMessageBox.warning(self.view, "Nenhum Contrato Selecionado", "Por favor, selecione um contrato na tabela antes de clicar em Mensagens.")
+            return
+
+        # Pega o índice real da fonte de dados
+        source_index = self.view.table.model().mapToSource(selected_indexes[0])
+        selected_row = source_index.row()
+        
+        # Pega os dados do contrato selecionado
+        contract_data = self.current_data[selected_row]
+        
+        # Cria e exibe a nova janela de mensagens
+        mensagem_controller = MensagemController(contract_data, parent=self.view)
+        mensagem_controller.show()
 
     def export_status_data(self):
         """Exporta todos os dados de status para um arquivo JSON."""
@@ -394,7 +410,6 @@ class UASGController:
             ws.column_dimensions['K'].width = 15
             ws.column_dimensions['L'].width = 20
 
-            # --- SALVAR O ARQUIVO ---
             workbook.save(file_path)
             QMessageBox.information(self.view, "Exportação Concluída", f"Planilha salva com sucesso em:\n{file_path}")
 
