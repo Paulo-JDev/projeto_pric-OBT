@@ -5,6 +5,7 @@ from view.details_dialog import DetailsDialog
 from controller.controller_table import populate_table, update_status_column
 from utils.icon_loader import icon_manager
 from controller.mensagem_controller import MensagemController
+from controller.settings_controller import SettingsController
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog
 import requests
@@ -21,6 +22,7 @@ class UASGController:
     def __init__(self, base_dir):
         self.model = UASGModel(base_dir)
         self.view = MainWindow(self)
+        self.view.settings_button.clicked.connect(self.show_settings_dialog)
 
         # Dados carregados
         self.loaded_uasgs = {}
@@ -212,6 +214,12 @@ class UASGController:
         # Cria e exibe a nova janela de mensagens
         mensagem_controller = MensagemController(contract_data, parent=self.view)
         mensagem_controller.show()
+
+    # Método para abrir a janela de configurações
+    def show_settings_dialog(self):
+        """Abre a janela de configurações."""
+        settings_controller = SettingsController(self.model, self.view)
+        settings_controller.show()
 
     def export_status_data(self):
         """Exporta todos os dados de status para um arquivo JSON."""

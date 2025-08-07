@@ -1,36 +1,17 @@
-import requests
-import json
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QScrollArea, QFrame, 
                              QHBoxLayout, QPushButton, QComboBox)
 from PyQt6.QtCore import Qt
 from utils.icon_loader import icon_manager
 from datetime import datetime
 
-def get_empenhos_data(contrato_id):
-    """Busca, retorna e ordena os dados de empenhos."""
-    if not contrato_id:
-        return None, "ID do contrato não fornecido."
-    api_url = f"https://contratos.comprasnet.gov.br/api/contrato/{contrato_id}/empenhos"
-    try:
-        response = requests.get(api_url, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            if isinstance(data, list):
-                data.sort(key=lambda x: datetime.strptime(x.get('data_emissao', '1900-01-01'), '%Y-%m-%d'), reverse=True)
-            return data, None
-        else:
-            return None, f"Erro na API: Status {response.status_code}"
-    except (requests.RequestException, json.JSONDecodeError) as e:
-        return None, f"Erro ao processar dados: {e}"
-
 def create_empenhos_tab(self):
     """
-    Cria a aba 'Empenhos' com um card para cada empenho, separados por uma única linha.
+    Cria a aba 'Empenhos' que busca dados através do Model (Online/Offline).
     """
     empenhos_tab = QWidget()
     main_layout = QVBoxLayout(empenhos_tab)
     
-    # --- Layout Superior com Botão de Busca e Filtro (sem alterações) ---
+    # --- Layout Superior (sem alterações) ---
     top_layout = QHBoxLayout()
     search_button = QPushButton("Buscar Empenhos")
     search_button.setIcon(icon_manager.get_icon("search"))
@@ -45,7 +26,7 @@ def create_empenhos_tab(self):
     top_layout.addWidget(year_combo_box)
     main_layout.addLayout(top_layout)
     
-    # --- Container para os resultados (sem alterações) ---
+    # --- Container de resultados (sem alterações) ---
     scroll_area = QScrollArea()
     scroll_area.setWidgetResizable(True)
     scroll_area.setVisible(False)
@@ -57,7 +38,7 @@ def create_empenhos_tab(self):
     all_empenhos = []
 
     def display_empenhos(empenhos_to_display):
-        """Função que exibe os empenhos, cada um em sua própria caixa (QFrame)."""
+        """Função que exibe os empenhos (sem alterações na lógica visual)."""
         while results_layout.count():
             child = results_layout.takeAt(0)
             if child.widget():
@@ -67,45 +48,32 @@ def create_empenhos_tab(self):
             results_layout.addWidget(QLabel("<b>Nenhum empenho encontrado para o ano selecionado.</b>"))
             return
 
-        # --- NOVA LÓGICA DE LAYOUT ---
         for index, empenho in enumerate(empenhos_to_display, 1):
-            # 1. Cria a "caixa" (QFrame) para cada empenho.
             empenho_frame = QFrame()
-            # O estilo define a borda da caixa, o espaçamento interno e a margem inferior que a separa da próxima.
             empenho_frame.setStyleSheet("border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 10px;")
-            
-            # Layout principal do card (Vertical)
             card_layout = QVBoxLayout(empenho_frame)
-            card_layout.setSpacing(8) # Espaço entre as linhas de texto
+            card_layout.setSpacing(8)
             
-            # Linha 1: Numerador, Nº do empenho e Data
             line1_layout = QHBoxLayout()
             line1_layout.addWidget(QLabel(f"<b>{index}.</b>"))
             line1_layout.addWidget(QLabel(f"<b>Nº do empenho:</b> {empenho.get('numero', 'N/A')}"))
             line1_layout.addWidget(QLabel(f"<b>Data da emissão:</b> {empenho.get('data_emissao', 'N/A')}"))
             line1_layout.addStretch()
             card_layout.addLayout(line1_layout)
-
-            # Linha 2: Plano Interno
             card_layout.addWidget(QLabel(f"<b>Plano interno:</b> {empenho.get('planointerno', 'N/A')}"))
-
-            # Linha 3: Natureza da Despesa
             card_layout.addWidget(QLabel(f"<b>Natureza Despesa:</b> {empenho.get('naturezadespesa', 'N/A')}"))
-
-            # Linha 4: Valores
             valores_layout = QHBoxLayout()
             valores_layout.addWidget(QLabel(f"<b>Empenhado:</b> R$ {empenho.get('empenhado', '0,00')}"))
             valores_layout.addWidget(QLabel(f"<b>Liquidado:</b> R$ {empenho.get('liquidado', '0,00')}"))
             valores_layout.addWidget(QLabel(f"<b>Pago:</b> R$ {empenho.get('pago', '0,00')}"))
             valores_layout.addStretch()
             card_layout.addLayout(valores_layout)
-
             results_layout.addWidget(empenho_frame)
         
-        results_layout.addStretch() # Mantém os cards no topo
+        results_layout.addStretch()
 
     def on_year_filter_changed(selected_year):
-        """Filtra os empenhos exibidos quando um ano é selecionado."""
+        """Filtra os empenhos (sem alterações)."""
         if selected_year == "Todos":
             display_empenhos(all_empenhos)
         else:
@@ -125,7 +93,11 @@ def create_empenhos_tab(self):
         search_button.setText("Buscando...")
 
         contrato_id = self.data.get("id")
-        empenhos, error_message = get_empenhos_data(contrato_id)
+
+        # --- ALTERAÇÃO PRINCIPAL AQUI ---
+        # A chamada de busca agora é feita através do model.
+        # O 'self' aqui é a instância de DetailsDialog, que tem acesso a 'self.model'.
+        empenhos, error_message = self.model.get_sub_data_for_contract(contrato_id, "empenhos")
         
         loading_label.deleteLater()
         

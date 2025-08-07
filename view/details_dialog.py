@@ -29,8 +29,9 @@ class DetailsDialog(QDialog):
         self.data = data
         self.main_layout = QVBoxLayout(self)
 
-        self.radio_groups = {}  # Adicione esta linha
-        self.radio_buttons = {}  # Adicione esta linha (se ainda não estiver presente)
+        self.json_cache = {}
+        self.radio_groups = {}  
+        self.radio_buttons = {}  
 
         self.objeto_edit = None
         self.status_dropdown = None

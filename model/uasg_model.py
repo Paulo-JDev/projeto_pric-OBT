@@ -27,11 +27,11 @@ class UASGModel:
         self.db_path = self.database_dir / "gerenciador_uasg.db"
         self.config_path = self.base_dir / "config.json"
         print(f"📁 Caminho do banco de dados SQLite: {self.db_path}")
-        self._create_tables()
+        self._create_tables()  # Cria as tabelas no banco de dados
 
     def _get_db_connection(self):
         conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row # Acessar colunas por nome
+        conn.row_factory = sqlite3.Row
         return conn
 
     def _create_tables(self):
@@ -138,6 +138,7 @@ class UASGModel:
         1. Primeiro tenta usar a API local (sua API FastAPI).
         2. Se a API local não responder ou não tiver dados, faz a requisição para a API pública.
         """
+        mode = self.load_setting("data_mode", "Online")
 
         # URL da sua API local
         url_local = f"{local_api_host}/api/contratos/raw/{uasg}"
@@ -166,19 +167,62 @@ class UASGModel:
                 time.sleep(2)"""
 
         # ------------- 2️⃣ Se falhar, tentar API Pública -------------
-        for tentativa in range(1, tentativas_maximas + 1):
+        if mode == "Offline":
+            print(f"🔄 Modo Offline: Carregando contratos da UASG {uasg} do banco de dados.")
+            conn = self._get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT raw_json FROM contratos WHERE uasg_code = ?", (uasg,))
+            contratos_raw = cursor.fetchall()
+            conn.close()
+            return [json.loads(row['raw_json']) for row in contratos_raw]
+        else:
+            print(f"☁️ Modo Online: Buscando contratos da UASG {uasg} via API.")
+            for tentativa in range(1, tentativas_maximas + 1):
+                try:
+                    print(f"Tentativa {tentativa}/{tentativas_maximas} - Buscando dados da UASG {uasg} via API PÚBLICA...")
+                    response = requests.get(url_publica, timeout=10)
+                    response.raise_for_status()
+                    print("✅ Dados obtidos da API pública com sucesso!")
+                    return response.json()
+                except requests.exceptions.RequestException as e:
+                    print(f"⚠ Erro na tentativa {tentativa}/{tentativas_maximas} ao buscar dados da UASG {uasg} na API pública: {e}")
+                    if tentativa < tentativas_maximas:
+                        time.sleep(2)
+                    else:
+                        raise requests.exceptions.RequestException(f"Falha ao buscar dados da UASG {uasg} após {tentativas_maximas} tentativas.")
+                    
+    def get_sub_data_for_contract(self, contrato_id, data_type):
+        """
+        Busca dados de sub-tabelas (ex: 'empenhos', 'arquivos').
+        'data_type' deve ser o nome da tabela no DB e o nome no link da API.
+        """
+        mode = self.load_setting("data_mode", "Online")
+        
+        if mode == "Offline":
+            print(f"🔄 Modo Offline: Carregando '{data_type}' do contrato {contrato_id} do DB.")
+            conn = self._get_db_connection()
+            cursor = conn.cursor()
             try:
-                print(f"Tentativa {tentativa}/{tentativas_maximas} - Buscando dados da UASG {uasg} via API PÚBLICA...")
-                response = requests.get(url_publica, timeout=10)
-                response.raise_for_status()
-                print("✅ Dados obtidos da API pública com sucesso!")
-                return response.json()
-            except requests.exceptions.RequestException as e:
-                print(f"⚠ Erro na tentativa {tentativa}/{tentativas_maximas} ao buscar dados da UASG {uasg} na API pública: {e}")
-                if tentativa < tentativas_maximas:
-                    time.sleep(2)
+                # O nome da tabela é o mesmo que o 'data_type'
+                cursor.execute(f"SELECT raw_json FROM {data_type} WHERE contrato_id = ?", (str(contrato_id),))
+                data_raw = cursor.fetchall()
+                conn.close()
+                return [json.loads(row['raw_json']) for row in data_raw], None
+            except sqlite3.Error as e:
+                print(f"❌ Erro ao consultar a tabela '{data_type}' no modo offline: {e}")
+                conn.close()
+                return None, f"Tabela '{data_type}' não encontrada ou erro no DB."
+        else:
+            print(f"☁️ Modo Online: Buscando '{data_type}' do contrato {contrato_id} via API.")
+            api_url = f"https://contratos.comprasnet.gov.br/api/contrato/{contrato_id}/{data_type}"
+            try:
+                response = requests.get(api_url, timeout=10)
+                if response.status_code == 200:
+                    return response.json(), None
                 else:
-                    raise requests.exceptions.RequestException(f"Falha ao buscar dados da UASG {uasg} após {tentativas_maximas} tentativas.")
+                    return None, f"Erro na API: Status {response.status_code}"
+            except requests.RequestException as e:
+                return None, f"Erro de rede: {e}"
         
     def save_uasg_data(self, uasg, data):
         """Salva os dados da UASG no banco de dados SQLite."""
@@ -430,8 +474,7 @@ class UASGModel:
             try:
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     config_data = json.load(f)
-            except json.JSONDecodeError:
-                print(f"Aviso: Arquivo de configuração {self.config_path} corrompido. Será sobrescrito.")
+            except json.JSONDecodeError: pass # Ignora se o arquivo estiver corrompido
         
         config_data[key] = value
         with open(self.config_path, 'w', encoding='utf-8') as f:
@@ -439,12 +482,11 @@ class UASGModel:
 
     def load_setting(self, key, default_value=None):
         """Carrega uma configuração do arquivo config.json."""
-        if self.config_path.exists():
+        if not self.config_path.exists():
+            return default_value
+        try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
-                try:
-                    config_data = json.load(f)
-                    return config_data.get(key, default_value)
-                except json.JSONDecodeError:
-                    print(f"Erro ao ler o arquivo de configuração {self.config_path}. Usando valor padrão.")
-                    return default_value
-        return default_value
+                config_data = json.load(f)
+            return config_data.get(key, default_value)
+        except (json.JSONDecodeError, IOError):
+            return default_value

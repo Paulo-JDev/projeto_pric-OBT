@@ -3,9 +3,9 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton, QHBoxLayout
 from PyQt6.QtCore import Qt
 from urllib.parse import quote
-import requests
-#import json
-from utils.icon_loader import icon_manager
+
+# As importações de 'requests' e 'json' não são mais necessárias aqui,
+# pois a lógica de busca foi movida para o UASGModel.
 
 def create_link_section(title, url, link_text):
     """Cria uma seção de link com título e URL clicável."""
@@ -26,25 +26,13 @@ def create_link_section(title, url, link_text):
     layout.addWidget(link_label)
     return frame
 
-def get_pdf_link(contrato_id):
-    """Busca o link direto do PDF na API de arquivos do contrato."""
-    if not contrato_id:
-        return None
-    
-    api_url = f"https://contratos.comprasnet.gov.br/api/contrato/{contrato_id}/arquivos"
-    try:
-        response = requests.get(api_url, timeout=10)
-        if response.status_code != 200:
-            return None
-        data = response.json()
-        if isinstance(data, list) and data and 'path_arquivo' in data[0]:
-            return data[0]['path_arquivo']
-    except Exception as e:
-        print(f"Erro ao buscar link do PDF: {e}")
-    return None
+# A função get_pdf_link foi removida daqui e sua lógica foi movida para o UASGModel.
 
 def create_object_tab(self):
-    """Cria a aba de links com um botão para carregar o link do PDF sob demanda."""
+    """
+    Cria a aba de links com um botão para carregar os links de arquivos
+    do contrato, funcionando nos modos Online e Offline.
+    """
     object_tab = QWidget()
     main_layout = QVBoxLayout(object_tab)
     main_layout.setSpacing(15)
@@ -76,54 +64,54 @@ def create_object_tab(self):
         )
         if pncp_section:
             links_container.addWidget(pncp_section)
-
-     # 4. Adicionar uma nota explicativa
-    if pncp_section:
-        explicacao = QLabel(
-        "<i>Nota: O link do PNCP realiza uma busca pelo número do processo. "
-         "Clique para ver os resultados no portal.</i>" )
-        explicacao.setWordWrap(True)
-        main_layout.addWidget(explicacao)
     
     main_layout.addStretch() # Empurra o botão para baixo
 
-    # --- Botão para buscar o link do PDF ---
-    pdf_button = QPushButton("Buscar link direto para o contrato")
-    pdf_button.setIcon(icon_manager.get_icon("download-pdf"))
-
-    # Layout para alinhar o botão à direita
+    # --- Botão para buscar os links de arquivos (PDF e outros) ---
+    files_button = QPushButton("Buscar Links de Arquivos (PDF, etc.)")
+    # Removido o ícone fixo para não confundir
+    
     button_hbox = QHBoxLayout()
-    button_hbox.addStretch() # Espaço à esquerda
-    button_hbox.addWidget(pdf_button) # Botão à direita
+    button_hbox.addStretch()
+    button_hbox.addWidget(files_button)
     main_layout.addLayout(button_hbox)
 
-    def fetch_pdf_link():
-        """Função chamada pelo clique do botão."""
-        pdf_button.setText("Buscando...")
-        pdf_button.setEnabled(False)
+    def fetch_and_display_file_links():
+        """Função chamada pelo clique do botão, que agora usa o Model."""
+        files_button.setText("Buscando...")
+        files_button.setEnabled(False)
 
-        pdf_url = get_pdf_link(contrato_id)
+        # --- A MÁGICA ACONTECE AQUI ---
+        # Pede os dados ao model, que sabe se está online ou offline
+        arquivos, error_message = self.model.get_sub_data_for_contract(contrato_id, "arquivos")
         
-        if pdf_url:
-            pdf_section = create_link_section(
-                "Link direto para o PDF do Contrato:", 
-                pdf_url, 
-                "Clique aqui para Baixar o PDF"
-            )
-            # Insere o link do PDF no topo do container de links
-            links_container.insertWidget(0, pdf_section)
-            pdf_button.setVisible(False) # Oculta o botão após o sucesso
-        else:
-            # Cria um frame para a mensagem de erro
+        if error_message or not arquivos:
+            msg = error_message if error_message else "Nenhum arquivo encontrado."
             error_frame = QFrame()
             error_frame.setFrameShape(QFrame.Shape.StyledPanel)
             error_layout = QVBoxLayout(error_frame)
-            error_label = QLabel("<b>Link direto para o PDF não encontrado.</b>")
+            error_label = QLabel(f"<b>{msg}</b>")
             error_layout.addWidget(error_label)
             links_container.insertWidget(0, error_frame)
-            pdf_button.setText("Tentar Novamente")
-            pdf_button.setEnabled(True)
+            files_button.setText("Tentar Novamente")
+            files_button.setEnabled(True)
+        else:
+            # Se encontrou arquivos, cria um link para cada um
+            for arquivo in reversed(arquivos): # reversed para inserir do último ao primeiro no topo
+                link_url = arquivo.get("path_arquivo")
+                # O texto do link será a descrição do arquivo, ou o tipo, ou um texto padrão
+                link_description = arquivo.get("descricao") or arquivo.get("tipo") or "Clique aqui para abrir"
+                
+                section = create_link_section(
+                    f"Link para '{arquivo.get('tipo', 'Arquivo')}':", 
+                    link_url, 
+                    link_description
+                )
+                if section:
+                    links_container.insertWidget(0, section) # Insere no topo
+            
+            files_button.setVisible(False) # Oculta o botão após o sucesso
 
-    pdf_button.clicked.connect(fetch_pdf_link)
+    files_button.clicked.connect(fetch_and_display_file_links)
     
     return object_tab
