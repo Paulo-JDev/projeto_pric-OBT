@@ -94,7 +94,7 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         "uasg": uasg,
         "status": status_dropdown.currentText(),
         "registros": [registro_list.item(i).text() for i in range(registro_list.count())],
-        "comments": [comment_list.item(i).text() for i in range(comment_list.count())],
+        "comments": [comment_list.item(i).text() for i in range(comment_list.count())] if comment_list else [],
         "objeto": objeto_edit.text() if objeto_edit is not None else "",
         "radio_options": {
             title: next(
@@ -130,9 +130,9 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
 
         # Salvar comentarios_status (deletar antigos e inserir novos)
         cursor.execute("DELETE FROM comentarios_status WHERE contrato_id = ?", (id_contrato,))
-        comentarios_texts = [comment_list.item(i).text() for i in range(comment_list.count())]
-        for texto in comentarios_texts:
-            cursor.execute("INSERT INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (id_contrato, uasg, texto))
+        comentarios_texts = [comment_list.item(i).text() for i in range(comment_list.count())] if comment_list else []
+        if comentarios_texts:
+            cursor.executemany("INSERT INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (id_contrato, uasg, texto))
 
         conn.commit()
         print(f"Status, registros e comentários para o contrato {id_contrato} (UASG: {uasg}) salvos no banco de dados.")
@@ -202,13 +202,13 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, radio_butt
 
         # Carregar comentarios_status
         if comment_list is not None:
-            comment_list.clear()
-            cursor.execute("SELECT texto FROM comentarios_status WHERE contrato_id = ?", (id_contrato,))
-            for row in cursor.fetchall():
-                item = QListWidgetItem(row['texto'])
-                item.setCheckState(Qt.CheckState.Unchecked)
-                comment_list.addItem(item)
-            comment_list.clearSelection()
+          comment_list.clear()
+          cursor.execute("SELECT texto FROM comentarios_status WHERE contrato_id = ?", (id_contrato,))
+          for row in cursor.fetchall():
+              item = QListWidgetItem(row['texto'])
+              item.setCheckState(Qt.CheckState.Unchecked)
+              comment_list.addItem(item)
+          comment_list.clearSelection()
         
         if status_row:
             print(f"Status, registros e comentários para o contrato {id_contrato} carregados do banco de dados.")

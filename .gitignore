@@ -43,3 +43,4 @@ app.py
 m_requirements.txt
 dist-linux/
 teste.json
+*.spec

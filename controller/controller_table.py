@@ -99,15 +99,15 @@ def _get_status_style(status_text):
     # Mapeamento de status para cores e fontes
     status_styles = {
         "SEÇÃO CONTRATOS": (Qt.GlobalColor.white, QFont.Weight.Bold),
-        "ATA GERADA": (QColor(144, 238, 144), QFont.Weight.Bold), # Verde claro menos saturado
+        "ATA GERADA": (QColor(230, 230, 150), QFont.Weight.Bold), # Amarelo menos saturado
         "EMPRESA": (QColor(230, 230, 150), QFont.Weight.Bold),    # Amarelo menos saturado
         "SIGDEM": (QColor(230, 180, 100), QFont.Weight.Bold),   # Laranja menos saturado
-        "ASSINADO": (QColor(144, 238, 144), QFont.Weight.Bold), # Verde claro
+        "ASSINADO": (QColor(230, 180, 100), QFont.Weight.Bold), # Laranja menos saturado
         "PUBLICADO": (QColor(135, 206, 250), QFont.Weight.Bold), # Azul claro
         "ALERTA PRAZO": (QColor(255, 160, 160), QFont.Weight.Bold), # Vermelho menos saturado
-        "NOTA TÉCNICA": (QColor(230, 230, 150), QFont.Weight.Bold), # Amarelo menos saturado
-        "AGU": (QColor(135, 206, 250), QFont.Weight.Bold),      # Azul claro
-        "PRORROGADO": (QColor(144, 238, 144), QFont.Weight.Bold) # Verde claro
+        "NOTA TÉCNICA": (QColor(255, 160, 160), QFont.Weight.Bold),  # Vermelho menos saturado
+        "AGU": (QColor(255, 160, 160), QFont.Weight.Bold),      # Vermelho menos saturado
+        "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold) # Azul claro
     }
     return status_styles.get(status_text, (Qt.GlobalColor.white, QFont.Weight.Normal))
 
