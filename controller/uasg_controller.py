@@ -1,9 +1,11 @@
 from view.main_window import MainWindow
 from model.uasg_model import UASGModel
 from utils.utils import refresh_uasg_menu
-from view.details_dialog import DetailsDialog
-from controller.controller_table import populate_table, update_status_column
 from utils.icon_loader import icon_manager
+
+from view.details_dialog import DetailsDialog
+
+from controller.controller_table import populate_table, update_status_column
 from controller.mensagem_controller import MensagemController
 from controller.settings_controller import SettingsController
 
@@ -448,7 +450,7 @@ class UASGController:
                 return "Erro DB"
         return "SEÇÃO CONTRATOS"
 
-    def set_pdf_download_folder(self):
+    '''def set_pdf_download_folder(self):
         """Permite ao usuário definir a pasta de download para PDFs."""
         current_path = self.model.load_setting("pdf_download_path", os.path.join(os.path.expanduser("~"), "Downloads"))
         
@@ -459,4 +461,4 @@ class UASGController:
         )
         if folder_path:
             self.model.save_setting("pdf_download_path", folder_path)
-            QMessageBox.information(self.view, "Pasta Definida", f"Os PDFs serão salvos em:\n{folder_path}")
+            QMessageBox.information(self.view, "Pasta Definida", f"Os PDFs serão salvos em:\n{folder_path}")'''

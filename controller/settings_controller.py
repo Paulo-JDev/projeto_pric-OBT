@@ -2,26 +2,38 @@
 from view.settings_dialog import SettingsDialog
 
 class SettingsController:
+    # O __init__ agora é mais simples
     def __init__(self, model, parent=None):
         self.model = model
         self.view = SettingsDialog(parent)
+
+        # Conecta apenas os botões que existem
         self.view.close_button.clicked.connect(self.view.close)
         self.view.mode_button.clicked.connect(self._toggle_data_mode)
+        
         self._load_initial_state()
 
     def show(self):
+        """Exibe a janela."""
         self.view.exec()
 
     def _load_initial_state(self):
+        """Lê o modo salvo e ajusta o botão."""
         self.current_mode = self.model.load_setting("data_mode", "Online")
         self._update_button_style()
 
     def _toggle_data_mode(self):
-        self.current_mode = "Offline" if self.current_mode == "Online" else "Online"
+        """Alterna entre os modos Online e Offline."""
+        if self.current_mode == "Online":
+            self.current_mode = "Offline"
+        else:
+            self.current_mode = "Online"
+        
         self.model.save_setting("data_mode", self.current_mode)
         self._update_button_style()
 
     def _update_button_style(self):
+        """Atualiza o texto e a cor do botão com base no modo."""
         if self.current_mode == "Online":
             self.view.mode_button.setText("Online")
             self.view.mode_button.setChecked(True)

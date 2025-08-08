@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
     QHeaderView, QGridLayout, QMenu, QTableView, QMessageBox, QHBoxLayout
 )
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QStandardItemModel
 import os
 
@@ -33,59 +33,64 @@ class MainWindow(QMainWindow):
         self.input_tab = QWidget()
         self.input_layout = QVBoxLayout(self.input_tab)
 
+        settings_hbox = QHBoxLayout()
+        settings_hbox.addStretch()
+        
+        self.settings_button = QPushButton()
+        self.settings_button.setIcon(icon_manager.get_icon("config"))
+        self.settings_button.setIconSize(QSize(40, 40))
+        self.settings_button.setFixedSize(70, 70)
+        self.settings_button.setObjectName("settings_icon_button")
+        settings_hbox.addWidget(self.settings_button)
+        
+        self.input_layout.addLayout(settings_hbox)
+
+        # O conteúdo agora é adicionado diretamente ao layout principal,
+        # fazendo com que ele se alinhe ao topo.
         self.label = QLabel("Digite o número do UASG:")
         self.input_layout.addWidget(self.label)
 
         self.uasg_input = QLineEdit()
         self.uasg_input.setPlaceholderText("Ex: 787010")
+        self.uasg_input.setFixedWidth(200)
         self.input_layout.addWidget(self.uasg_input)
-
+        
         self.fetch_button = QPushButton("Criação ou atualização da tabela")
         self.fetch_button.setIcon(icon_manager.get_icon("api"))
         self.fetch_button.clicked.connect(self.controller.fetch_and_create_table)
+        self.fetch_button.setFixedWidth(300)
         self.input_layout.addWidget(self.fetch_button)
 
-        # Layout para botões de Deletar e Exportar Tabela
         delete_export_table_layout = QHBoxLayout()
-
         self.delete_button = QPushButton("Deletar Arquivo e Banco de Dados")
         self.delete_button.setIcon(icon_manager.get_icon("delete"))
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
         delete_export_table_layout.addWidget(self.delete_button)
 
         self.export_table_csv_button = QPushButton("Exportar Tabela para excel")
-        self.export_table_csv_button.setIcon(icon_manager.get_icon("excel_up")) # Crie ou use um ícone apropriado (ex: csv.png)
+        self.export_table_csv_button.setIcon(icon_manager.get_icon("excel_up"))
         self.export_table_csv_button.clicked.connect(self.controller.export_table_to_excel)
         delete_export_table_layout.addWidget(self.export_table_csv_button)
-
         self.input_layout.addLayout(delete_export_table_layout)
 
-        # Layout para botões de Exportar e Importar Status
         status_import_export_layout = QHBoxLayout()
-
         self.export_status_button = QPushButton("Exportar Status")
-        self.export_status_button.setIcon(icon_manager.get_icon("exportar")) # Crie ou use um ícone apropriado
+        self.export_status_button.setIcon(icon_manager.get_icon("exportar"))
         self.export_status_button.clicked.connect(self.controller.export_status_data)
         status_import_export_layout.addWidget(self.export_status_button)
 
         self.import_status_button = QPushButton("Importar Status")
-        self.import_status_button.setIcon(icon_manager.get_icon("importar")) # Crie ou use um ícone apropriado
+        self.import_status_button.setIcon(icon_manager.get_icon("importar"))
         self.import_status_button.clicked.connect(self.controller.import_status_data)
         status_import_export_layout.addWidget(self.import_status_button)
-
         self.input_layout.addLayout(status_import_export_layout)
-
-        # Botão para definir pasta de PDFs
-        self.set_pdf_folder_button = QPushButton("Definir Pasta para Salvar PDFs")
-        self.set_pdf_folder_button.setIcon(icon_manager.get_icon("salvar_pasta")) # Crie um ícone apropriado (ex: folder_pdf.png)
-        self.set_pdf_folder_button.clicked.connect(self.controller.set_pdf_download_folder)
-        self.input_layout.addWidget(self.set_pdf_folder_button) # Adicionado abaixo dos outros e sozinho
-
-        self.input_layout.addStretch() # Adiciona um espaçador para empurrar os elementos para cima
+        
+        # Este espaçador flexível no final empurra todo o conteúdo para o topo
+        self.input_layout.addStretch()
 
         self.tabs.addTab(self.input_tab, icon_manager.get_icon("dash"), "Buscar UASG")
         
-        # Table Tab
+        # Table Tab =====================================================================
         self.table_tab = QWidget()
         self.table_layout = QVBoxLayout(self.table_tab)
         self.table_layout.setSpacing(5)  # Reduz o espaçamento entre elementos
@@ -119,27 +124,20 @@ class MainWindow(QMainWindow):
         self.clear_button.clicked.connect(self.controller.clear_table)
         self.clear_button.setObjectName("icon_button")  # Nome para CSS
         self.buttons_grid.addWidget(self.clear_button, 0, 2)
-
-        # --- BOTÃO DE CONFIGURAÇÕES ---
-        self.settings_button = QPushButton()
-        self.settings_button.setIcon(icon_manager.get_icon("config"))
-        self.settings_button.setFixedSize(32, 32)
-        self.settings_button.setObjectName("icon_button")
-        self.buttons_grid.addWidget(self.settings_button, 0, 3)
         
         # Label para UASG atual
         self.uasg_info_label = QLabel("UASG: -")
         self.uasg_info_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.uasg_info_label.setObjectName("uasg_info_label")  # Nome para CSS
-        self.buttons_grid.addWidget(self.uasg_info_label, 0, 5)
+        self.buttons_grid.addWidget(self.uasg_info_label, 0, 4)
         
         # Espaçador para empurrar o label para a direita
-        self.buttons_grid.setColumnStretch(4, 1)
+        self.buttons_grid.setColumnStretch(3, 1)
         # Remover stretch dos botões para que tenham tamanho uniforme
         self.buttons_grid.setColumnStretch(0, 0)
         self.buttons_grid.setColumnStretch(1, 0)
         self.buttons_grid.setColumnStretch(2, 0)
-        self.buttons_grid.setColumnStretch(3, 0)
+        #self.buttons_grid.setColumnStretch(3, 0)
 
         self.table_layout.addLayout(self.buttons_grid)
 

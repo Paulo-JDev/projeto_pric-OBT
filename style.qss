@@ -319,3 +319,14 @@ QPushButton#add_record_button:pressed, QPushButton#delete_registro_button:presse
 QPushButton#add_comment_button:pressed, QPushButton#delete_comment_button:pressed {
     background-color: #181928;
 }
+
+QPushButton#settings_icon_button {
+    border: none;
+    background-color: transparent;
+    padding: 0px;
+}
+
+QPushButton#settings_icon_button:hover {
+    border: 1px solid #8AB4F7; /* Opcional: Adiciona a borda ao passar o mouse */
+    background-color: rgba(138, 180, 247, 0.2); /* Opcional: Adiciona um fundo semi-transparente ao passar o mouse */
+}
