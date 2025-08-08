@@ -84,9 +84,15 @@ class MainWindow(QMainWindow):
         self.import_status_button.clicked.connect(self.controller.import_status_data)
         status_import_export_layout.addWidget(self.import_status_button)
         self.input_layout.addLayout(status_import_export_layout)
+        self.input_layout.addStretch() # Empurra tudo para cima
         
-        # Este espaçador flexível no final empurra todo o conteúdo para o topo
-        self.input_layout.addStretch()
+        # --- NOVO: Ícone de Status (Online/Offline) ---
+        status_hbox = QHBoxLayout()
+        self.status_icon_label = QLabel()
+        self.status_icon_label.setFixedSize(60, 60)
+        status_hbox.addWidget(self.status_icon_label)
+        status_hbox.addStretch() # Empurra o ícone para a esquerda
+        self.input_layout.addLayout(status_hbox)
 
         self.tabs.addTab(self.input_tab, icon_manager.get_icon("dash"), "Buscar UASG")
         
@@ -117,12 +123,10 @@ class MainWindow(QMainWindow):
         self.buttons_grid.addWidget(self.msg_button, 0, 1)
 
         # Botão Limpar
-        self.clear_button = QPushButton()
-        self.clear_button.setIcon(icon_manager.get_icon("limp-blue"))
-        self.clear_button.setFixedSize(32, 32)  # Tamanho compacto
-        #self.clear_button.setIconSize(QtCore.QSize(20, 20))  # Ícone menor
+        self.clear_button = QPushButton() 
+        self.clear_button.setFixedSize(32, 32)
         self.clear_button.clicked.connect(self.controller.clear_table)
-        self.clear_button.setObjectName("icon_button")  # Nome para CSS
+        self.clear_button.setObjectName("icon_button")
         self.buttons_grid.addWidget(self.clear_button, 0, 2)
         
         # Label para UASG atual
@@ -206,3 +210,21 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def update_status_icon(self, mode):
+        """Atualiza o ícone de status com base no modo recebido."""
+        if mode == "Online":
+            self.status_icon_label.setPixmap(icon_manager.get_icon("link").pixmap(60, 60))
+            self.status_icon_label.setToolTip("Modo Online: Buscando dados da API pública.")
+        else: # Offline
+            self.status_icon_label.setPixmap(icon_manager.get_icon("database").pixmap(60, 60))
+            self.status_icon_label.setToolTip("Modo Offline: Usando dados salvos localmente.")
+
+    def update_clear_button_icon(self, mode):
+        """Atualiza o ícone do botão de limpar com base no modo."""
+        if mode == "Online":
+            self.clear_button.setIcon(icon_manager.get_icon("link"))
+            self.clear_button.setToolTip("Limpar Tabela (Modo Online)")
+        else: # Offline
+            self.clear_button.setIcon(icon_manager.get_icon("database"))
+            self.clear_button.setToolTip("Limpar Tabela (Modo Offline)")

@@ -31,6 +31,10 @@ class UASGController:
         self.current_data = []
         self.filtered_data = []
 
+        initial_mode = self.model.load_setting("data_mode", "Online")
+        self.view.update_status_icon(initial_mode)
+        self.view.update_clear_button_icon(initial_mode)
+
         # Verifica se o diretório database existe
         if self.model.database_dir.exists():
             self.loaded_uasgs = self.model.load_saved_uasgs()
@@ -219,8 +223,10 @@ class UASGController:
 
     # Método para abrir a janela de configurações
     def show_settings_dialog(self):
-        """Abre a janela de configurações."""
+        """Abre a janela de configurações e conecta o sinal de mudança de modo."""
         settings_controller = SettingsController(self.model, self.view)
+        settings_controller.mode_changed.connect(self.view.update_status_icon)
+        settings_controller.mode_changed.connect(self.view.update_clear_button_icon)
         settings_controller.show()
 
     def export_status_data(self):
