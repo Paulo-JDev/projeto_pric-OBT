@@ -176,6 +176,24 @@ def create_general_tab(self):
     create_field_row("Órgão Responsável:", "contratante.orgao.unidade_gestora.nome_resumido", gestao_layout)
     create_field_row("Tipo:", "tipo", gestao_layout)
     create_field_row("Modalidade:", "modalidade", gestao_layout)
+
+    portaria_label = QLabel("Portaria:")
+    portaria_label.setStyleSheet("font-weight: bold; min-width: 140px;")
+    self.portaria_edit = QLineEdit()
+    self.portaria_edit.setText("")
+    self.portaria_edit.setMinimumWidth(320)  # Largura específica para o objeto
+    self.portaria_edit.setMaximumWidth(320)  # Fixa o tamanho
+    hbox = QHBoxLayout()
+    hbox.addWidget(self.portaria_edit, stretch=1)
+    copy_btn = QPushButton()
+    copy_btn.setIcon(icon_manager.get_icon("copy"))
+    copy_btn.setIconSize(QSize(16, 16))
+    copy_btn.setFixedSize(24, 24)
+    copy_btn.setToolTip("Copiar")
+    copy_btn.clicked.connect(lambda: self.copy_to_clipboard(self.portaria_edit))
+    hbox.addWidget(copy_btn, stretch=0)
+    gestao_layout.addRow(portaria_label, hbox)
+
     right_column.addWidget(gestao_group)
     right_column.addStretch()
 

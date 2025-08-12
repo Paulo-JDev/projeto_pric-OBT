@@ -34,6 +34,7 @@ class DetailsDialog(QDialog):
         self.radio_buttons = {}  
 
         self.objeto_edit = None
+        self.portaria_edit = None
         self.status_dropdown = None
         self.comment_list = None
         self.registro_list = None
@@ -67,7 +68,7 @@ class DetailsDialog(QDialog):
         self.main_layout.addLayout(button_layout)
 
         # Carregar dados salvos
-        load_status(self.data, self.model, self.status_dropdown, self.objeto_edit, self.radio_buttons, self.registro_list, self.comment_list)
+        load_status(self.data, self.model, self.status_dropdown, self.objeto_edit, self.portaria_edit, self.radio_buttons, self.registro_list, self.comment_list)
 
     def registro_def(self):
         """Abre uma mini janela para adicionar um comentário com data, hora e status selecionado."""
@@ -88,7 +89,7 @@ class DetailsDialog(QDialog):
     def func_save(self):
         """Salva o status e os comentários ao fechar a janela"""
         # Salvar os dados primeiro
-        save_status(self, self.data, self.model, self.status_dropdown, self.registro_list, self.comment_list, self.objeto_edit, self.radio_buttons)
+        save_status(self, self.data, self.model, self.status_dropdown, self.registro_list, self.comment_list, self.objeto_edit, self.portaria_edit, self.radio_buttons)
         
         novo_status_info = {
             'status': self.status_dropdown.currentText()

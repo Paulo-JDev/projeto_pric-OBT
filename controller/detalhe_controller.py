@@ -80,7 +80,7 @@ def delete_registro(registro_list):
         if item.checkState() == Qt.CheckState.Checked:
             registro_list.takeItem(i)
 
-def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, comment_list, objeto_edit, radio_buttons):
+def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, comment_list, objeto_edit,  portaria_edit, radio_buttons):
     """Salva o status, registros e comentários no banco de dados SQLite."""
     id_contrato = data.get("id", "")
     uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
@@ -113,11 +113,12 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         # Salvar/Atualizar status_contratos
         cursor.execute('''
             INSERT OR REPLACE INTO status_contratos
-            (contrato_id, uasg_code, status, objeto_editado, radio_options_json, data_registro)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (contrato_id, uasg_code, status, objeto_editado, portaria_edit, radio_options_json, data_registro)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (
             id_contrato, uasg, status_dropdown.currentText(),
             objeto_edit.text() if objeto_edit is not None else "",
+            portaria_edit.text() if portaria_edit is not None else "",
             radio_options_json,
             radio_options_dict.get("data_registro") # Adicionado o valor de data_registro
         ))
@@ -155,7 +156,7 @@ def show_success_message(parent):
     # Fechar a mensagem automaticamente depois de 300ms
     QTimer.singleShot(SUCCESS_MSG_TIMEOUT_MS, msg_box.close)
 
-def load_status(data, model: UASGModel, status_dropdown, objeto_edit, radio_buttons, registro_list, comment_list):
+def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_edit, radio_buttons, registro_list, comment_list):
     """Carrega os dados de status, registros e comentários do banco de dados SQLite."""
     id_contrato = data.get("id", "")
     uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
@@ -169,7 +170,7 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, radio_butt
 
     try:
         # Carregar status_contratos
-        cursor.execute("SELECT status, objeto_editado, radio_options_json FROM status_contratos WHERE contrato_id = ?", (id_contrato,))
+        cursor.execute("SELECT status, objeto_editado, portaria_edit, radio_options_json FROM status_contratos WHERE contrato_id = ?", (id_contrato,))
         status_row = cursor.fetchone()
 
         if status_row:
@@ -177,6 +178,9 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, radio_butt
             if objeto_edit is not None:
                 objeto_edit.setText(status_row['objeto_editado'] or data.get("objeto", "Não informado")) # Fallback para objeto original
             
+            if portaria_edit is not None:
+                portaria_edit.setText(status_row['portaria_edit'] or "")
+
             if status_row['radio_options_json']:
                 try:
                     radio_options = json.loads(status_row['radio_options_json'])
