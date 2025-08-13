@@ -7,10 +7,11 @@ from model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
 
 from view.abas_detalhes.general_tab import create_general_tab
-from view.abas_detalhes.object_tab import create_object_tab
+from view.abas_detalhes.pdfs_view import create_object_tab
 from view.abas_detalhes.status_tab import create_status_tab
 from view.abas_detalhes.termo_adt import aba_termo_adt
 from view.abas_detalhes.empenhos_tab import create_empenhos_tab
+from view.abas_detalhes.edit_object_dialog import EditObjectDialog
 from controller.detalhe_controller import *
 
 class DetailsDialog(QDialog):
@@ -97,6 +98,18 @@ class DetailsDialog(QDialog):
         
         self.data_saved.emit(novo_status_info)
         show_success_message(self)
+    
+    def open_object_editor(self):
+        """Abre a janela de edição para o campo Objeto."""
+        editor_dialog = EditObjectDialog(self.objeto_edit.text(), self)
+        # Conecta o sinal 'text_saved' do diálogo a um método para atualizar o campo
+        editor_dialog.text_saved.connect(self.update_object_text)
+        editor_dialog.exec()
+
+    def update_object_text(self, new_text):
+        """Atualiza o texto do QLineEdit 'objeto_edit'."""
+        self.objeto_edit.setText(new_text)
+        print("✅ Objeto atualizado na interface.")
 
     def copy_to_clipboard(self, line_edit):
         """Copia o texto do campo para a área de transferência"""

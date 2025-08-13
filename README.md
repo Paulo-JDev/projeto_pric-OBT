@@ -78,4 +78,4 @@ docker run -it --rm \
     projeto-pric
 
 # Fazer o Exe do projeto
-pyinstaller --name "Contratos360"  --icon="utils/icons/mn_png.png"  --add-data="utils/icons;utils/icons"  --add-data="style.qss;." main.py
+pyinstaller --name "Contratos360" --icon="utils/icons/mn_png.png" --add-data="utils/icons;utils/icons" --add-data="style.qss;." --add-data="utils/msg/contratos" main.py

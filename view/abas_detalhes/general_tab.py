@@ -6,6 +6,15 @@ from PyQt6.QtCore import Qt, QSize
 from datetime import datetime
 from utils.icon_loader import icon_manager
 
+class ClickableLineEdit(QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True) # Torna o campo não editável diretamente
+
+    def mousePressEvent(self, event):
+        # Emite o sinal 'clicked' da janela pai (DetailsDialog) quando clicado
+        self.parent().open_object_editor()
+
 def create_general_tab(self):
     """Cria a aba de Informações Gerais com layout lado a lado"""
     general_tab = QWidget()
@@ -112,12 +121,27 @@ def create_general_tab(self):
     # Campo "Objeto" editável
     objeto_label = QLabel("Objeto:")
     objeto_label.setStyleSheet("font-weight: bold; min-width: 140px;")
+    
+    # Use a nova classe ClickableLineEdit
     self.objeto_edit = QLineEdit()
+    self.objeto_edit.setReadOnly(True) # Apenas leitura, não é mais clicável
     self.objeto_edit.setText(self.data.get("objeto", ""))
-    self.objeto_edit.setMinimumWidth(320)  # Largura específica para o objeto
-    self.objeto_edit.setMaximumWidth(320)  # Fixa o tamanho
+    # Aumentamos o tamanho mínimo e removemos o máximo para que ele se expanda
+    self.objeto_edit.setMinimumWidth(300)
+    self.objeto_edit.setMaximumWidth(300) 
+
     hbox = QHBoxLayout()
     hbox.addWidget(self.objeto_edit, stretch=1)
+    
+    # Adiciona um ícone de edição para indicar que é clicável
+    edit_obj_btn = QPushButton()
+    edit_obj_btn.setIcon(icon_manager.get_icon("edit"))
+    edit_obj_btn.setIconSize(QSize(16, 16))
+    edit_obj_btn.setFixedSize(24, 24)
+    edit_obj_btn.setToolTip("Editar Objeto")
+    edit_obj_btn.clicked.connect(self.open_object_editor) # O botão também abre o editor
+    hbox.addWidget(edit_obj_btn, stretch=0)
+    
     copy_btn = QPushButton()
     copy_btn.setIcon(icon_manager.get_icon("copy"))
     copy_btn.setIconSize(QSize(16, 16))
@@ -125,8 +149,8 @@ def create_general_tab(self):
     copy_btn.setToolTip("Copiar")
     copy_btn.clicked.connect(lambda: self.copy_to_clipboard(self.objeto_edit))
     hbox.addWidget(copy_btn, stretch=0)
+    
     info_layout.addRow(objeto_label, hbox)
-
     left_column.addWidget(info_group)
     
     # Coluna direita - Opções e Gestão
