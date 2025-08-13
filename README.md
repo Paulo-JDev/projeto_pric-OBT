@@ -76,3 +76,6 @@ docker run -it --rm \
     --env="DISPLAY" \
     --volume="./database:/app/database" \
     projeto-pric
+
+# Fazer o Exe do projeto
+pyinstaller --name "Contratos360"  --icon="utils/icons/mn_png.png"  --add-data="utils/icons;utils/icons"  --add-data="style.qss;." main.py

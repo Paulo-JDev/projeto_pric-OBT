@@ -73,6 +73,7 @@ class UASGModel:
                 uasg_code TEXT, -- Adicionado para facilitar a busca de status por UASG
                 status TEXT,
                 objeto_editado TEXT,
+                portaria_edit TEXT,
                 radio_options_json TEXT, -- Armazena o JSON das opções de rádio
                 data_registro TEXT,
                 FOREIGN KEY (contrato_id) REFERENCES contratos (id)
@@ -106,6 +107,12 @@ class UASGModel:
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_comentarios_status_contrato_id ON comentarios_status (contrato_id)
         ''')
+        try:
+            cursor.execute("SELECT portaria_edit FROM status_contratos LIMIT 1")
+        except sqlite3.OperationalError:
+            print("Atualizando schema: Adicionando coluna 'portaria_edit' à tabela 'status_contratos'.")
+            cursor.execute("ALTER TABLE status_contratos ADD COLUMN portaria_edit TEXT")
+
         conn.commit()
         conn.close()
 
@@ -363,7 +370,7 @@ class UASGModel:
 
         try:
             # Buscar todos os status_contratos
-            cursor.execute("SELECT contrato_id, uasg_code, status, objeto_editado, radio_options_json, data_registro FROM status_contratos")
+            cursor.execute("SELECT contrato_id, uasg_code, status, objeto_editado, portaria_edit, radio_options_json, data_registro FROM status_contratos")
             status_rows = cursor.fetchall()
 
             for status_row in status_rows:
@@ -389,7 +396,6 @@ class UASGModel:
         return all_data
 
     def import_statuses(self, data_to_import):
-        """Importa uma lista de dados de status para o banco de dados."""
         conn = self._get_db_connection()
         cursor = conn.cursor()
 
@@ -397,72 +403,64 @@ class UASGModel:
             for entry in data_to_import:
                 contrato_id = entry.get('contrato_id')
                 uasg_code = entry.get('uasg_code')
-                status_import = entry.get('status')
-                objeto_editado_import = entry.get('objeto_editado')
-                radio_options_json_import = entry.get('radio_options_json')
-                data_registro_import_str = entry.get('data_registro')
 
                 if not contrato_id or not uasg_code:
-                    print(f"Aviso: Entrada de importação ignorada por falta de contrato_id ou uasg_code: {entry}")
+                    print(f"Aviso: Entrada ignorada por falta de 'contrato_id' ou 'uasg_code': {entry}")
                     continue
 
-                # Lógica para status_contratos com verificação de data_registro
-                if data_registro_import_str:
+                data_registro_import_str = entry.get('data_registro')
+                if not data_registro_import_str:
+                    print(f"Aviso: 'data_registro' não encontrada para o contrato {contrato_id}. A entrada de status será ignorada.")
+                    continue
+
+                # --- LÓGICA DE COMPARAÇÃO DE DATAS ---
+                cursor.execute("SELECT data_registro FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+                existing_row = cursor.fetchone()
+
+                should_update = True
+                if existing_row and existing_row['data_registro']:
                     try:
+                        datetime_db = datetime.strptime(existing_row['data_registro'], "%d/%m/%Y %H:%M:%S")
                         datetime_import = datetime.strptime(data_registro_import_str, "%d/%m/%Y %H:%M:%S")
-                    except ValueError:
-                        print(f"Aviso: Formato de data_registro inválido na importação para contrato {contrato_id}: '{data_registro_import_str}'. Pulando atualização de status_contratos.")
-                    else:
-                        cursor.execute("SELECT data_registro FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
-                        existing_status_row = cursor.fetchone()
+                        if datetime_db >= datetime_import:
+                            should_update = False
+                            print(f"Info: Dados para o contrato {contrato_id} no banco de dados são mais recentes. Importação ignorada.")
+                    except (ValueError, TypeError):
+                        pass # Se as datas forem inválidas, permite a atualização para corrigir o dado.
+                
+                if should_update:
+                    # Prepara um dicionário com todos os dados, usando valores padrão para campos que podem não existir no JSON
+                    status_data = {
+                        "contrato_id": contrato_id,
+                        "uasg_code": uasg_code,
+                        "status": entry.get('status'),
+                        "objeto_editado": entry.get('objeto_editado'),
+                        "portaria_edit": entry.get('portaria_edit', ''), # <<< PONTO CHAVE: Usa '' se 'portaria_edit' não existir
+                        "radio_options_json": entry.get('radio_options_json'),
+                        "data_registro": data_registro_import_str
+                    }
 
-                        should_process_status = True
-                        if existing_status_row and existing_status_row['data_registro']:
-                            try:
-                                datetime_db = datetime.strptime(existing_status_row['data_registro'], "%d/%m/%Y %H:%M:%S")
-                                if datetime_db >= datetime_import:  # Se a data no DB for mais recente ou igual
-                                    should_process_status = False
-                                    print(f"Info: Status para contrato {contrato_id} no DB ({existing_status_row['data_registro']}) é mais recente ou igual ao da importação ({data_registro_import_str}). Não será atualizado.")
-                            except ValueError:
-                                print(f"Aviso: Formato de data_registro inválido no DB para contrato {contrato_id}: '{existing_status_row['data_registro']}'. Será considerado para atualização se a importação for válida.")
-                        
-                        if should_process_status:
-                            if existing_status_row:
-                                print(f"Info: Atualizando status_contratos para {contrato_id} com data de importação {data_registro_import_str}")
-                                cursor.execute('''
-                                    UPDATE status_contratos 
-                                    SET uasg_code = ?, status = ?, objeto_editado = ?, radio_options_json = ?, data_registro = ?
-                                    WHERE contrato_id = ?
-                                ''', (uasg_code, status_import, objeto_editado_import, radio_options_json_import, data_registro_import_str, contrato_id))
-                            else:
-                                print(f"Info: Inserindo novo status_contratos para {contrato_id} com data de importação {data_registro_import_str}")
-                                cursor.execute('''
-                                    INSERT INTO status_contratos 
-                                    (contrato_id, uasg_code, status, objeto_editado, radio_options_json, data_registro) 
-                                    VALUES (?, ?, ?, ?, ?, ?)
-                                ''', (contrato_id, uasg_code, status_import, objeto_editado_import, radio_options_json_import, data_registro_import_str))
-                else:
-                    # Se não houver data_registro na importação, não atualiza/insere o status_contratos,
-                    # pois a condição de atualização (data mais recente) não pode ser verificada.
-                    # Se a intenção fosse usar INSERT OR REPLACE sem data_registro, a lógica seria diferente.
-                    print(f"Aviso: data_registro não encontrada na entrada de importação para contrato {contrato_id}. Status, objeto e radio options não serão importados para este contrato.")
+                    # Usa INSERT OR REPLACE para inserir ou atualizar o registro de uma só vez
+                    cursor.execute('''
+                        INSERT OR REPLACE INTO status_contratos 
+                        (contrato_id, uasg_code, status, objeto_editado, portaria_edit, radio_options_json, data_registro) 
+                        VALUES (:contrato_id, :uasg_code, :status, :objeto_editado, :portaria_edit, :radio_options_json, :data_registro)
+                    ''', status_data)
+                    print(f"Info: Dados do contrato {contrato_id} foram inseridos/atualizados.")
 
-                # Manter a lógica de INSERT OR IGNORE para registros e comentários,
-                # pois a pergunta não especificou condicioná-los à data_registro principal.
-                # Se eles também precisarem dessa lógica, teria que ser adaptado.
+                # A lógica para registros e comentários permanece, pois é independente da atualização do status
+                # Deleta os antigos para evitar duplicatas
                 for texto_reg in entry.get('registros', []):
-                    cursor.execute("INSERT OR IGNORE INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_reg))
+                    cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_reg))
 
+                cursor.execute("DELETE FROM comentarios_status WHERE contrato_id = ?", (contrato_id,))
                 for texto_com in entry.get('comentarios', []):
-                    cursor.execute("INSERT OR IGNORE INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_com))
+                    cursor.execute("INSERT INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_com))
             
             conn.commit()
-            print("Dados de status importados com sucesso para o banco de dados.")
+            print("Importação de dados de status concluída com sucesso.")
         except sqlite3.Error as e:
             print(f"Erro ao importar dados de status para o banco de dados: {e}")
-            conn.rollback()
-        except Exception as ex_gen: # Captura outras exceções inesperadas
-            print(f"Erro geral durante a importação de status: {ex_gen}")
             conn.rollback()
         finally:
             conn.close()
