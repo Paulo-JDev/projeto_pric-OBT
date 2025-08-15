@@ -11,7 +11,10 @@ from view.abas_detalhes.pdfs_view import create_object_tab
 from view.abas_detalhes.status_tab import create_status_tab
 from view.abas_detalhes.termo_adt import aba_termo_adt
 from view.abas_detalhes.empenhos_tab import create_empenhos_tab
+
 from view.abas_detalhes.edit_object_dialog import EditObjectDialog
+
+from controller.empenhos_controller import EmpenhoController
 from controller.detalhe_controller import *
 
 class DetailsDialog(QDialog):
@@ -125,3 +128,13 @@ class DetailsDialog(QDialog):
                 self.setStyleSheet(f.read())
         else:
             print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
+
+    def generate_empenho_report_to_excel(self):
+        """
+        Instancia o EmpenhoController e delega a ele a criação do relatório.
+        """
+        # Cria uma instância do novo controlador, passando o modelo e a própria janela como pai
+        empenho_controller = EmpenhoController(self.model, self)
+        
+        # Chama o método que faz todo o trabalho, passando os dados do contrato atual
+        empenho_controller.generate_report_to_excel(self.data)

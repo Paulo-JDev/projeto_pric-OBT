@@ -28,7 +28,7 @@ database/
 *.sqlite
 *.sqlite3
 config.json
-testes-status/
+testes-locais/
 
 # Arquivos de configuração de IDEs
 .vscode/

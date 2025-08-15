@@ -17,6 +17,14 @@ def create_empenhos_tab(self):
     search_button.setIcon(icon_manager.get_icon("search"))
     search_button.setFixedHeight(40)
     top_layout.addWidget(search_button)
+
+    self.report_button = QPushButton("Gerar Relatório de Empenhos (XLSX)")
+    self.report_button.setIcon(icon_manager.get_icon("relatoria"))
+    self.report_button.setFixedHeight(40)
+    self.report_button.setVisible(False)
+    self.report_button.clicked.connect(self.generate_empenho_report_to_excel)
+    top_layout.addWidget(self.report_button)
+
     top_layout.addStretch()
     year_filter_label = QLabel("Filtrar por Ano:")
     top_layout.addWidget(year_filter_label)
@@ -108,6 +116,7 @@ def create_empenhos_tab(self):
             year_combo_box.setVisible(False)
         else:
             all_empenhos = empenhos
+            self.report_button.setVisible(True)
             year_combo_box.blockSignals(True)
             year_combo_box.clear()
             years = sorted(list(set(e.get("data_emissao", "")[:4] for e in all_empenhos if e.get("data_emissao"))), reverse=True)
