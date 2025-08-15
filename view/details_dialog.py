@@ -92,11 +92,12 @@ class DetailsDialog(QDialog):
         # Salvar os dados primeiro
         save_status(self, self.data, self.model, self.status_dropdown, self.registro_list, self.comment_list, self.objeto_edit, self.portaria_edit, self.radio_buttons)
         
-        novo_status_info = {
-            'status': self.status_dropdown.currentText()
+        details_info = {
+            'status': self.status_dropdown.currentText(),
+            'objeto': self.objeto_edit.text()
         }
         
-        self.data_saved.emit(novo_status_info)
+        self.data_saved.emit(details_info)
         show_success_message(self)
     
     def open_object_editor(self):

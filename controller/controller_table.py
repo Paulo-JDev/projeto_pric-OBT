@@ -9,23 +9,37 @@ def populate_table(controller, data):
     """Preenche a tabela com os dados fornecidos, ordenando do maior para o menor tempo de vigência."""
     _populate_or_update_table(controller, data, repopulation=True)
 
-def update_status_column(controller, novo_status_info):
-    """Atualiza APENAS a linha selecionada com o novo status fornecido."""
+def update_row_from_details(controller, details_info):
+    """
+    Atualiza APENAS a linha selecionada com as novas informações (status, objeto, etc.)
+    fornecidas pelo diálogo de detalhes.
+    """
     table = controller.view.table
-    selected_row_index = table.selectionModel().currentIndex().row()
-
-    if selected_row_index < 0:
+    # Precisamos obter o índice do modelo fonte, não do proxy
+    proxy_index = table.selectionModel().currentIndex()
+    if not proxy_index.isValid():
         return
+        
+    source_index = table.model().mapToSource(proxy_index)
+    selected_row_index = source_index.row()
 
-    if selected_row_index < len(controller.current_data):
+    if selected_row_index >= 0 and selected_row_index < len(controller.current_data):
         contrato_data = controller.current_data[selected_row_index]
-        _update_row_content(controller, selected_row_index, contrato_data, novo_status_info['status'])
-        print(f"✅ Linha {selected_row_index} atualizada com o novo status.")
+        
+        # Atualiza os dados locais para refletir a mudança imediatamente
+        contrato_data['objeto'] = details_info.get('objeto', contrato_data.get('objeto'))
 
-def _update_row_content(controller, row_index, contrato, novo_status=None):
-    """Função auxiliar que preenche ou atualiza o conteúdo de UMA ÚNICA linha da tabela."""
+        _update_row_content(controller, selected_row_index, contrato_data, new_status=details_info.get('status'))
+        print(f"✅ Linha {selected_row_index} atualizada com os novos detalhes.")
+
+def _update_row_content(controller, row_index, contrato, new_status=None):
+    """
+    Função centralizada que preenche ou atualiza o conteúdo de UMA ÚNICA linha da tabela,
+    buscando dados do banco de dados quando necessário.
+    """
     model = controller.view.table.model().sourceModel()
     today = date.today()
+    contrato_id = contrato.get("id", "")
 
     # --- Coluna 0: Dias ---
     vigencia_fim_str = contrato.get("vigencia_fim", "")
@@ -38,29 +52,42 @@ def _update_row_content(controller, row_index, contrato, novo_status=None):
             dias_restantes = "Erro Data"
     model.setItem(row_index, 0, _create_dias_item(dias_restantes))
 
-    # --- Coluna 7: Status ---
-    status_text = "SEÇÃO CONTRATOS"  # Padrão
-    
-    # **CORREÇÃO APLICADA AQUI**
-    # Se um novo status for passado diretamente (após salvar), usamos ele.
-    if novo_status:
-        status_text = novo_status
-    else:
-        # Se não, é um carregamento inicial, então consultamos o DB da forma original que funcionava.
-        contrato_id = contrato.get("id", "")
-        try:
-            if contrato_id and hasattr(controller, 'model') and controller.model:
-                conn = controller.model._get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("SELECT status FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
-                status_row = cursor.fetchone()
-                if status_row and status_row['status']:
-                    status_text = status_row['status']
-                conn.close()
-        except sqlite3.Error as e:
-            print(f"Erro ao buscar status do DB para contrato {contrato_id}: {e}")
-            status_text = "Erro DB"
+    # --- Colunas de Dados (1 a 6) ---
+    def create_centered_item(text):
+        item = QStandardItem(str(text))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        return item
 
+    # Busca o objeto e o status do DB para garantir a persistência
+    status_text = "SEÇÃO CONTRATOS"
+    objeto_text = contrato.get("objeto", "Não informado")
+    
+    try:
+        if contrato_id and hasattr(controller, 'model') and controller.model:
+            conn = controller.model._get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT status, objeto_editado FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+            saved_data = cursor.fetchone()
+            if saved_data:
+                status_text = saved_data['status'] or status_text
+                objeto_text = saved_data['objeto_editado'] or objeto_text
+            conn.close()
+    except sqlite3.Error as e:
+        print(f"Erro ao buscar dados salvos para o contrato {contrato_id}: {e}")
+
+    # Se um novo status foi passado (após salvar), ele tem prioridade
+    if new_status:
+        status_text = new_status
+        
+    model.setItem(row_index, 1, create_centered_item(contrato.get("numero", "")))
+    model.setItem(row_index, 2, create_centered_item(contrato.get("licitacao_numero", "")))
+    model.setItem(row_index, 3, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
+    model.setItem(row_index, 4, create_centered_item(contrato.get("processo", "")))
+    # --- LÓGICA DO OBJETO ATUALIZADA AQUI ---
+    model.setItem(row_index, 5, create_centered_item(objeto_text))
+    model.setItem(row_index, 6, create_centered_item(contrato.get("valor_global", "Não informado")))
+
+    # --- Coluna 7: Status ---
     status_item = QStandardItem(status_text)
     status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
     color, weight = _get_status_style(status_text)

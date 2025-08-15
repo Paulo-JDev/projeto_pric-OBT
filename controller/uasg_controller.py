@@ -5,7 +5,7 @@ from utils.icon_loader import icon_manager
 
 from view.details_dialog import DetailsDialog
 
-from controller.controller_table import populate_table, update_status_column
+from controller.controller_table import populate_table, update_row_from_details
 from controller.mensagem_controller import MensagemController
 from controller.settings_controller import SettingsController
 
@@ -105,21 +105,46 @@ class UASGController:
             QMessageBox.critical(self.view, "Erro Inesperado", f"Erro inesperado ao processar UASG {uasg}: {str(e)}")
 
     def delete_uasg_data(self):
-        """Deleta os dados da UASG informada."""
-        uasg = self.view.uasg_input.text()
-        if not uasg:
-            QMessageBox.warning(self.view, "Erro", "Por favor, insira um número UASG válido para deletar.")
+        """Deleta os dados da UASG informada e limpa a tabela se ela estiver em uso."""
+        uasg_para_deletar = self.view.uasg_input.text().strip()
+        if not uasg_para_deletar:
+            QMessageBox.warning(self.view, "Entrada Inválida", "Por favor, insira um número UASG para deletar.")
             return
 
-        if uasg not in self.loaded_uasgs:
-            QMessageBox.warning(self.view, "Erro", f"Nenhum dado encontrado para a UASG {uasg}.")
+        if uasg_para_deletar not in self.loaded_uasgs:
+            QMessageBox.warning(self.view, "Erro", f"Nenhum dado encontrado para a UASG {uasg_para_deletar}.")
             return
 
-        # Deletar os dados localmente
-        self.model.delete_uasg_data(uasg)
-        self.loaded_uasgs.pop(uasg, None)
+        # --- LÓGICA DE VERIFICAÇÃO ADICIONADA AQUI ---
+        # Pega o texto do label de informação, ex: "UASG: 787010 - CEIMBRA"
+        info_label_text = self.view.uasg_info_label.text()
+        
+        # Extrai o código da UASG que está sendo exibida na tabela
+        uasg_sendo_exibida = ""
+        if "UASG: " in info_label_text:
+            # Pega a parte depois de "UASG: " e antes do primeiro espaço
+            partes = info_label_text.split(" ")
+            if len(partes) > 1:
+                uasg_sendo_exibida = partes[1]
+
+        # Compara a UASG a ser deletada com a que está na tela
+        if uasg_para_deletar == uasg_sendo_exibida:
+            self.view.search_bar.clear()
+            model = self.view.table.model()
+            model.removeRows(0, model.rowCount())
+            self.view.uasg_info_label.setText("UASG: -")
+            print(f"Limpando a tabela, pois a UASG {uasg_para_deletar} está sendo visualizada.")
+            
+        
+        # Procede com a deleção dos dados do banco de dados
+        self.model.delete_uasg_data(uasg_para_deletar)
+        self.loaded_uasgs.pop(uasg_para_deletar, None)
+        
+        # Atualiza o menu de UASGs e limpa o campo de input
         self.load_saved_uasgs()
-        QMessageBox.information(self.view, "Sucesso", f"UASG {uasg} deletada com sucesso.")
+        self.view.uasg_input.clear()
+        
+        QMessageBox.information(self.view, "Sucesso", f"UASG {uasg_para_deletar} deletada com sucesso.")
 
     def update_table(self, uasg):
         """Atualiza a tabela com os dados da UASG selecionada."""
@@ -163,7 +188,7 @@ class UASGController:
         self.view.uasg_info_label.setText("UASG: -")
         
         QMessageBox.information(self.view, "Limpeza", "A tabela foi limpa com sucesso!")
-        
+
     def show_context_menu(self, position):
         """Exibe o menu de contexto ao clicar com o botão direito na tabela."""
         index = self.view.table.indexAt(position)
@@ -195,9 +220,9 @@ class UASGController:
         
         details_dialog.exec()
 
-    def update_table_from_details(self, novo_status_info):
+    def update_table_from_details(self, details_info):
         """Atualiza a tabela quando os dados são salvos na DetailsDialog."""
-        update_status_column(self, novo_status_info)
+        update_row_from_details(self, details_info)
     
     def show_msg_dialog(self):
         """
