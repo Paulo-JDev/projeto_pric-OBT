@@ -142,12 +142,45 @@ class EmpenhoController:
             sheet_title = re.sub(r'[\\/*?:\[\]]', '', periodo_data['titulo'])[:31]
             ws_detalhe = workbook.create_sheet(title=sheet_title)
 
+            # --- LÓGICA ADICIONADA PARA A SEÇÃO "BASE" ---
+            # Estilos para a nova seção
+            base_header_font = Font(bold=True, color="FFFFFF")
+            base_header_fill = PatternFill(start_color="1F497D", end_color="1F497D", fill_type="solid")
+            base_label_font = Font(bold=True)
+            
+            # Título da Seção
+            ws_detalhe.merge_cells('A1:C1')
+            base_title_cell = ws_detalhe['A1']
+            base_title_cell.value = "INFORMAÇÕES DE BASE DO PERÍODO"
+            base_title_cell.font = base_header_font
+            base_title_cell.fill = base_header_fill
+            base_title_cell.alignment = Alignment(horizontal='center')
+
+            # Campo Período de Vigência
+            ws_detalhe['A2'] = "Período de Vigência:"
+            ws_detalhe['A2'].font = base_label_font
+            ws_detalhe['B2'] = f"{periodo_data['inicio']} a {periodo_data['fim']}"
+            
+            # Campo Valor Global
+            ws_detalhe['A3'] = "Valor Global do Período:"
+            ws_detalhe['A3'].font = base_label_font
+            ws_detalhe['B3'] = periodo_data['valor_global']
+            ws_detalhe['B3'].number_format = '"R$" #,##0.00'
+            # --- FIM DA LÓGICA DA SEÇÃO "BASE" ---
+
+
+            # Cabeçalhos da tabela de empenhos (agora começam na linha 5)
             headers_detalhe = [
                 "Número Empenho", "Data Emissão", "Credor", "Natureza da Despesa",
                 "Valor Empenhado", "Valor a Liquidar", "Valor Pago", "Documento de Pagamento"
             ]
-            ws_detalhe.append(headers_detalhe)
-            for cell in ws_detalhe[1]:
+            ws_detalhe.append(headers_detalhe) # Isso vai adicionar na próxima linha vazia (linha 5)
+            
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+            center_align = Alignment(horizontal='center', vertical='center')
+
+            for cell in ws_detalhe[5]: # Aplica estilo na linha 5
                 cell.font = header_font
                 cell.fill = header_fill
                 cell.alignment = center_align
@@ -169,7 +202,7 @@ class EmpenhoController:
                 ws_detalhe.append(row_to_append)
 
             # Formata as células da aba de detalhe
-            for row in ws_detalhe.iter_rows(min_row=2, max_row=ws_detalhe.max_row):
+            for row in ws_detalhe.iter_rows(min_row=6, max_row=ws_detalhe.max_row):
                 row[0].alignment = center_align
                 row[1].alignment = center_align
                 row[1].number_format = 'DD/MM/YYYY'
