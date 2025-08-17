@@ -25,6 +25,13 @@ def create_empenhos_tab(self):
     self.report_button.clicked.connect(self.generate_empenho_report_to_excel)
     top_layout.addWidget(self.report_button)
 
+    self.email_button = QPushButton("Disparar XLSX por E-mail")
+    self.email_button.setIcon(icon_manager.get_icon("icon_send"))
+    self.email_button.setFixedHeight(40)
+    # Conecta a um novo método que será criado na DetailsDialog
+    self.email_button.clicked.connect(self.open_email_dialog) 
+    top_layout.addWidget(self.email_button)
+
     top_layout.addStretch()
     year_filter_label = QLabel("Filtrar por Ano:")
     top_layout.addWidget(year_filter_label)
@@ -102,9 +109,6 @@ def create_empenhos_tab(self):
 
         contrato_id = self.data.get("id")
 
-        # --- ALTERAÇÃO PRINCIPAL AQUI ---
-        # A chamada de busca agora é feita através do model.
-        # O 'self' aqui é a instância de DetailsDialog, que tem acesso a 'self.model'.
         empenhos, error_message = self.model.get_sub_data_for_contract(contrato_id, "empenhos")
         
         loading_label.deleteLater()

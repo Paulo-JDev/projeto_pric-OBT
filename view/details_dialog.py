@@ -13,8 +13,10 @@ from view.abas_detalhes.termo_adt import aba_termo_adt
 from view.abas_detalhes.empenhos_tab import create_empenhos_tab
 
 from view.abas_detalhes.edit_object_dialog import EditObjectDialog
+from view.abas_detalhes.email_dialog import EmailDialog
 
 from controller.empenhos_controller import EmpenhoController
+from controller.email_controller import EmailController
 from controller.detalhe_controller import *
 
 class DetailsDialog(QDialog):
@@ -130,11 +132,59 @@ class DetailsDialog(QDialog):
             print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
 
     def generate_empenho_report_to_excel(self):
-        """
-        Instancia o EmpenhoController e delega a ele a criação do relatório.
-        """
-        # Cria uma instância do novo controlador, passando o modelo e a própria janela como pai
+        """ Instancia o EmpenhoController e delega a ele a criação do relatório. """
         empenho_controller = EmpenhoController(self.model, self)
-        
-        # Chama o método que faz todo o trabalho, passando os dados do contrato atual
         empenho_controller.generate_report_to_excel(self.data)
+
+    def open_email_dialog(self):
+        """
+        Abre e gerencia a janela de envio de e-mail, permitindo correções
+        sem fechar a janela desnecessariamente.
+        """
+        email_dialog = EmailDialog(self)
+        while True:
+            if not email_dialog.exec():
+                # O usuário clicou em "Cancelar" na janela de e-mail, então encerramos o processo.
+                return
+
+            # Se chegou aqui, o usuário clicou em "Enviar". Agora validamos os dados.
+            email_data = email_dialog.get_data()
+            recipient = email_data['recipient_email']
+            file_path = email_data['file_path']
+
+            if not recipient or not file_path:
+                QMessageBox.warning(self, "Dados Incompletos", "Por favor, preencha o e-mail e selecione um arquivo.")
+                continue
+
+            # Se os dados são válidos, mostramos a confirmação final.
+            contrato_numero = self.data.get('numero', 'N/A')
+            
+            reply = QMessageBox.question(
+                self,
+                "Confirmar Envio",
+                f"O e-mail será enviado com as informações do contrato <b>{contrato_numero}</b>.\n\n"
+                "Verifique se a planilha e o contrato selecionado estão corretos antes de continuar.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel
+            )
+
+            if reply != QMessageBox.StandardButton.Yes:
+                continue
+            
+            # Se todas as validações e confirmações passaram, enviamos o e-mail.
+            licitacao_numero = self.data.get('licitacao_numero', 'N/A')
+            nome_resumido = self.data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "N/A")
+
+            subject = f"Relatório de Empenhos do Contrato {contrato_numero}"
+            body = (f"Segue em anexo o relatório de execução de empenhos para o contrato nº {contrato_numero} "
+                    f"referente ao Processo nº {licitacao_numero} do órgão {nome_resumido}.")
+            
+            email_controller = EmailController(self)
+            success, message = email_controller.send_email(recipient, subject, body, file_path)
+
+            if success:
+                QMessageBox.information(self, "Sucesso", message)
+            else:
+                QMessageBox.critical(self, "Falha no Envio", message)
+
+            break

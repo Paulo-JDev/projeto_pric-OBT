@@ -6,6 +6,7 @@ env/
 virtual/
 .venv/
 .env/
+.env
 
 
 # Arquivos de Cache do Python
