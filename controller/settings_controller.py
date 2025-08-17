@@ -1,20 +1,22 @@
-# controller/settings_controller.py
 from PyQt6.QtCore import pyqtSignal, QObject
+from PyQt6.QtWidgets import QMessageBox
 from view.settings_dialog import SettingsDialog
+from controller.offline_db_controller import OfflineDBController
 
 class SettingsController(QObject):
     mode_changed = pyqtSignal(str)
 
     def __init__(self, model, parent=None):
-        # --- CORREÇÃO AQUI ---
-        # Adicione esta linha para inicializar o QObject
         super().__init__(parent)
-        
         self.model = model
         self.view = SettingsDialog(parent)
 
+        self.offline_db_controller = OfflineDBController(parent_view=self.view)
+
         self.view.close_button.clicked.connect(self.view.close)
         self.view.mode_button.clicked.connect(self._toggle_data_mode)
+        self.view.create_db_button.clicked.connect(self.run_create_offline_db)
+        self.view.delete_db_button.clicked.connect(self.run_delete_offline_db)
         
         self._load_initial_state()
 
@@ -49,3 +51,34 @@ class SettingsController(QObject):
             self.view.mode_button.setText("Offline")
             self.view.mode_button.setChecked(False)
             self.view.mode_button.setStyleSheet("background-color: #E74C3C; color: white; font-weight: bold;")
+
+    def run_create_offline_db(self):
+        """Inicia o processo de criação/atualização do banco de dados offline."""
+        uasg = self.view.offline_uasg_input.text().strip()
+        if not uasg.isdigit():
+            QMessageBox.warning(self.view, "Entrada Inválida", "Por favor, insira um número de UASG válido.")
+            return
+        
+        reply = QMessageBox.question(self.view, "Confirmação", 
+            f"Isso buscará todos os dados da UASG {uasg} pela internet e os salvará localmente. "
+            f"O processo pode demorar vários minutos e irá sobrescrever os dados existentes para esta UASG.\n\nDeseja continuar?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.offline_db_controller.process_and_save_all_data(uasg)
+            QMessageBox.information(self.view, "Concluído", f"A base de dados para a UASG {uasg} foi criada/atualizada com sucesso.")
+
+    def run_delete_offline_db(self):
+        """Inicia o processo de exclusão de uma UASG do banco de dados offline."""
+        uasg = self.view.offline_uasg_input.text().strip()
+        if not uasg.isdigit():
+            QMessageBox.warning(self.view, "Entrada Inválida", "Por favor, insira um número de UASG válido.")
+            return
+
+        reply = QMessageBox.question(self.view, "Confirmação de Exclusão", 
+            f"Tem certeza que deseja apagar TODOS os dados da UASG {uasg} do banco de dados offline?\n\nEsta ação não pode ser desfeita.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.offline_db_controller.delete_uasg_from_db(uasg)
+            QMessageBox.information(self.view, "Concluído", f"Os dados da UASG {uasg} foram removidos.")

@@ -43,7 +43,7 @@ def setup_application():
         # Se estiver rodando como script
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    print(f"📦 Versão do APP V1.4.4")
+    print(f"📦 Versão do APP V1.5.4")
     print(f"📁 Diretório base: {base_dir}")
     setup_logging(base_dir) # Configura o logging
 
