@@ -1,7 +1,7 @@
 from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QMessageBox
 from view.settings_dialog import SettingsDialog
-from controller.offline_db_controller import OfflineDBController
+from model.offline_db_model import OfflineDBController
 
 class SettingsController(QObject):
     mode_changed = pyqtSignal(str)
@@ -11,7 +11,7 @@ class SettingsController(QObject):
         self.model = model
         self.view = SettingsDialog(parent)
 
-        self.offline_db_controller = OfflineDBController(parent_view=self.view)
+        self.offline_db_model = OfflineDBController(parent_view=self.view)
 
         self.view.close_button.clicked.connect(self.view.close)
         self.view.mode_button.clicked.connect(self._toggle_data_mode)
@@ -65,7 +65,7 @@ class SettingsController(QObject):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.offline_db_controller.process_and_save_all_data(uasg)
+            self.offline_db_model.process_and_save_all_data(uasg)
             QMessageBox.information(self.view, "Concluído", f"A base de dados para a UASG {uasg} foi criada/atualizada com sucesso.")
 
     def run_delete_offline_db(self):
@@ -80,5 +80,5 @@ class SettingsController(QObject):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.offline_db_controller.delete_uasg_from_db(uasg)
+            self.offline_db_model.delete_uasg_from_db(uasg)
             QMessageBox.information(self.view, "Concluído", f"Os dados da UASG {uasg} foram removidos.")
