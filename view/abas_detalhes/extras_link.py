@@ -43,8 +43,8 @@ class JsonHighlighter(QSyntaxHighlighter):
                 length = match.end() - start
                 self.setFormat(start, length, format)
 
-def aba_termo_adt(self):
-    """Cria a aba de 'Termo Aditivo' com visual aprimorado e carregamento por clique."""
+def aba_extras_link(self):
+    """Cria a aba de 'Extras' com visual aprimorado e carregamento por clique."""
     termo_adt = QWidget()
     main_layout = QHBoxLayout(termo_adt)
     

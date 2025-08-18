@@ -9,11 +9,13 @@ from utils.icon_loader import icon_manager
 from view.abas_detalhes.general_tab import create_general_tab
 from view.abas_detalhes.pdfs_view import create_object_tab
 from view.abas_detalhes.status_tab import create_status_tab
-from view.abas_detalhes.termo_adt import aba_termo_adt
+from view.abas_detalhes.extras_link import aba_extras_link
 from view.abas_detalhes.empenhos_tab import create_empenhos_tab
+from view.abas_detalhes.itens_tab import create_itens_tab
 
 from view.abas_detalhes.edit_object_dialog import EditObjectDialog
 from view.abas_detalhes.email_dialog import EmailDialog
+from controller.itens_controller import ItensController
 
 from controller.empenhos_controller import EmpenhoController
 from controller.email_controller import EmailController
@@ -53,8 +55,10 @@ class DetailsDialog(QDialog):
         self.tabs.addTab(create_general_tab(self), "Informações Gerais")
         self.tabs.addTab(create_object_tab(self), "PDF do contrato")
         self.tabs.addTab(create_status_tab(self), "Status")
-        self.tabs.addTab(aba_termo_adt(self), "Termo Aditivo")
         self.tabs.addTab(create_empenhos_tab(self), "Empenhos")
+        self.tabs.addTab(create_itens_tab(self), "Itens")
+        self.tabs.addTab(aba_extras_link(self), "Extras")
+        
 
         # Layout dos botões de salvar e cancelar
         button_layout = QHBoxLayout()
@@ -136,11 +140,13 @@ class DetailsDialog(QDialog):
         empenho_controller = EmpenhoController(self.model, self)
         empenho_controller.generate_report_to_excel(self.data)
 
+    def generate_itens_report_to_excel(self):
+        itens_controller = ItensController(self.model, self)
+        itens_controller.generate_report_to_excel(self.data)
+
     def open_email_dialog(self):
-        """
-        Abre e gerencia a janela de envio de e-mail, permitindo correções
-        sem fechar a janela desnecessariamente.
-        """
+        """ Abre e gerencia a janela de envio de e-mail, permitindo correções
+        sem fechar a janela desnecessariamente. """
         email_dialog = EmailDialog(self)
         while True:
             if not email_dialog.exec():
