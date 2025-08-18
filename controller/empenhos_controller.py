@@ -2,7 +2,7 @@
 
 from PyQt6.QtWidgets import QMessageBox, QFileDialog
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime
 import re
@@ -103,14 +103,25 @@ class EmpenhoController:
         """Cria e formata o arquivo .xlsx com a aba de resumo e as abas detalhadas."""
         workbook = Workbook()
         
-        # --- 1. CRIAÇÃO DA ABA DE RESUMO ---
-        ws_resumo = workbook.active
-        ws_resumo.title = "Resumo Geral"
-        
-        # Estilos
+        # --- ESTILOS GERAIS ---
         header_font = Font(bold=True, color="FFFFFF")
         header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
         center_align = Alignment(horizontal='center', vertical='center')
+        
+        # Estilos para o corpo da tabela (dark mode)
+        body_font = Font(color="FFFFFF")
+        body_fill = PatternFill(start_color="262626", end_color="262626", fill_type="solid")
+        
+        # Estilos para a seção BASE
+        base_header_font = Font(bold=True, color="FFFFFF")
+        base_header_fill = PatternFill(start_color="1F497D", end_color="1F497D", fill_type="solid")
+        base_label_font = Font(bold=True, color="FFFFFF") # Letra branca para os labels da base
+
+        separator_border = Border(bottom=Side(style='thick', color="4F81BD"))
+
+        # --- 1. ABA DE RESUMO GERAL ---
+        ws_resumo = workbook.active
+        ws_resumo.title = "Resumo Geral"
         
         headers_resumo = ["Período", "Vigência", "Valor Global", "Total Empenhado", "Total Pago", "OBS"]
         ws_resumo.append(headers_resumo)
@@ -127,6 +138,10 @@ class EmpenhoController:
             ])
 
         for row in ws_resumo.iter_rows(min_row=2, max_row=ws_resumo.max_row):
+            for cell in row:
+                cell.font = body_font
+                cell.fill = body_fill
+            
             row[0].alignment, row[1].alignment, row[5].alignment = center_align, center_align, center_align
             row[2].number_format = '"R$" #,##0.00'
             row[3].number_format = '"R$" #,##0.00'
@@ -134,21 +149,15 @@ class EmpenhoController:
             if row[5].value == "Sera??":
                 row[5].font = Font(bold=True, color="FF0000")
 
-        for i, column_letter in enumerate(get_column_letter(c+1) for c in range(ws_resumo.max_column)):
-            ws_resumo.column_dimensions[column_letter].auto_size = True
+        for i, col in enumerate(ws_resumo.columns):
+            ws_resumo.column_dimensions[get_column_letter(i + 1)].auto_size = True
 
-        # --- 2. CRIAÇÃO DAS ABAS DETALHADAS PARA CADA PERÍODO ---
+        # --- 2. ABAS DETALHADAS PARA CADA PERÍODO ---
         for periodo_data in report_data:
             sheet_title = re.sub(r'[\\/*?:\[\]]', '', periodo_data['titulo'])[:31]
             ws_detalhe = workbook.create_sheet(title=sheet_title)
 
-            # --- LÓGICA ADICIONADA PARA A SEÇÃO "BASE" ---
-            # Estilos para a nova seção
-            base_header_font = Font(bold=True, color="FFFFFF")
-            base_header_fill = PatternFill(start_color="1F497D", end_color="1F497D", fill_type="solid")
-            base_label_font = Font(bold=True)
-            
-            # Título da Seção
+            # --- SEÇÃO "BASE" ---
             ws_detalhe.merge_cells('A1:C1')
             base_title_cell = ws_detalhe['A1']
             base_title_cell.value = "INFORMAÇÕES DE BASE DO PERÍODO"
@@ -156,35 +165,48 @@ class EmpenhoController:
             base_title_cell.fill = base_header_fill
             base_title_cell.alignment = Alignment(horizontal='center')
 
-            # Campo Período de Vigência
+            for row_num in range(2, 5):
+                for col_num in range(1, 4):
+                    cell = ws_detalhe.cell(row=row_num, column=col_num)
+                    cell.font = body_font
+                    cell.fill = body_fill
+            
             ws_detalhe['A2'] = "Período de Vigência:"
             ws_detalhe['A2'].font = base_label_font
             ws_detalhe['B2'] = f"{periodo_data['inicio']} a {periodo_data['fim']}"
             
-            # Campo Valor Global
             ws_detalhe['A3'] = "Valor Global do Período:"
             ws_detalhe['A3'].font = base_label_font
             ws_detalhe['B3'] = periodo_data['valor_global']
             ws_detalhe['B3'].number_format = '"R$" #,##0.00'
-            # --- FIM DA LÓGICA DA SEÇÃO "BASE" ---
-
-
-            # Cabeçalhos da tabela de empenhos (agora começam na linha 5)
-            headers_detalhe = [
-                "Número Empenho", "Data Emissão", "Credor", "Natureza da Despesa",
-                "Valor Empenhado", "Valor a Liquidar", "Valor Pago", "Documento de Pagamento"
-            ]
-            ws_detalhe.append(headers_detalhe) # Isso vai adicionar na próxima linha vazia (linha 5)
             
-            header_font = Font(bold=True, color="FFFFFF")
-            header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
-            center_align = Alignment(horizontal='center', vertical='center')
+            ws_detalhe['A4'] = "Natureza da Despesa:"
+            ws_detalhe['A4'].font = base_label_font
+            natureza_despesa = "N/A"
+            if periodo_data['empenhos_detalhados']:
+                natureza_despesa = periodo_data['empenhos_detalhados'][0].get('naturezadespesa', 'N/A')
+            ws_detalhe['B4'] = natureza_despesa
+            ws_detalhe.merge_cells('B4:C4')
 
-            for cell in ws_detalhe[5]: # Aplica estilo na linha 5
-                cell.font = header_font
-                cell.fill = header_fill
+            for col_num in range(1, 9):
+                 ws_detalhe.cell(row=4, column=col_num).border = separator_border
+            
+            # --- CABEÇALHOS DA TABELA DE EMPENHOS (LINHA 6) ---
+            headers_detalhe = [
+                "Número Empenho", "Data Emissão", "Valor Empenhado", 
+                "Valor a Liquidar", "Valor Pago", "Documento de Pagamento"
+            ]
+            # Adiciona os cabeçalhos na linha 6 (a próxima linha vazia após a linha 5 de espaço)
+            ws_detalhe.append(headers_detalhe)
+            
+            # --- CORREÇÃO APLICADA AQUI ---
+            # O loop agora aplica o estilo na linha correta (linha 6)
+            for cell in ws_detalhe[6]:
+                cell.font = base_header_font # Fonte branca e negrito
+                cell.fill = base_header_fill   # Fundo azul escuro (igual ao título)
                 cell.alignment = center_align
 
+            # Preenche com os empenhos detalhados
             for empenho in periodo_data['empenhos_detalhados']:
                 doc_pagamento_url = empenho.get("links", {}).get("documento_pagamento")
                 numero_empenho = empenho.get('numero', 'N/A')
@@ -192,28 +214,31 @@ class EmpenhoController:
                 row_to_append = [
                     numero_empenho,
                     datetime.strptime(empenho.get('data_emissao'), "%Y-%m-%d").date() if empenho.get('data_emissao') else "N/A",
-                    empenho.get('credor', 'N/A'),
-                    empenho.get('naturezadespesa', 'N/A'),
-                    self._to_float(empenho.get('empenhado', '0,00')), # <<< CORRIGIDO
-                    self._to_float(empenho.get('aliquidar', '0,00')), # <<< CORRIGIDO
-                    self._to_float(empenho.get('pago', '0,00')),      # <<< CORRIGIDO
+                    self._to_float(empenho.get('empenhado', '0,00')),
+                    self._to_float(empenho.get('aliquidar', '0,00')),
+                    self._to_float(empenho.get('pago', '0,00')),
                     f'=HYPERLINK("{doc_pagamento_url}", "{numero_empenho}_linkdoc")' if doc_pagamento_url else "Sem link"
                 ]
                 ws_detalhe.append(row_to_append)
 
-            # Formata as células da aba de detalhe
-            for row in ws_detalhe.iter_rows(min_row=6, max_row=ws_detalhe.max_row):
+            # Formata as células da tabela (começando da linha 7)
+            for row in ws_detalhe.iter_rows(min_row=7, max_row=ws_detalhe.max_row):
+                for cell in row:
+                    cell.font = body_font
+                    cell.fill = body_fill
+                
                 row[0].alignment = center_align
                 row[1].alignment = center_align
                 row[1].number_format = 'DD/MM/YYYY'
+                row[2].number_format = '"R$" #,##0.00'
+                row[3].number_format = '"R$" #,##0.00'
                 row[4].number_format = '"R$" #,##0.00'
-                row[5].number_format = '"R$" #,##0.00'
-                row[6].number_format = '"R$" #,##0.00'
-                if row[7].value != "Sem link":
-                    row[7].font = Font(color="0563C1", underline="single")
-                    row[7].alignment = center_align
+                
+                if row[5].value != "Sem link":
+                    row[5].font = Font(color="5999FF", underline="single")
+                    row[5].alignment = center_align
 
-            for i, column_letter in enumerate(get_column_letter(c+1) for c in range(ws_detalhe.max_column)):
-                ws_detalhe.column_dimensions[column_letter].auto_size = True
+            for i, col in enumerate(ws_detalhe.columns):
+                ws_detalhe.column_dimensions[get_column_letter(i + 1)].auto_size = True
         
         workbook.save(file_path)
