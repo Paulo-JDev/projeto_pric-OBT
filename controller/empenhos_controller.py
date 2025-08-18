@@ -199,9 +199,8 @@ class EmpenhoController:
             # Adiciona os cabeçalhos na linha 6 (a próxima linha vazia após a linha 5 de espaço)
             ws_detalhe.append(headers_detalhe)
             
-            # --- CORREÇÃO APLICADA AQUI ---
-            # O loop agora aplica o estilo na linha correta (linha 6)
-            for cell in ws_detalhe[6]:
+            header_row = ws_detalhe.max_row
+            for cell in ws_detalhe[header_row]:
                 cell.font = base_header_font # Fonte branca e negrito
                 cell.fill = base_header_fill   # Fundo azul escuro (igual ao título)
                 cell.alignment = center_align
@@ -222,7 +221,7 @@ class EmpenhoController:
                 ws_detalhe.append(row_to_append)
 
             # Formata as células da tabela (começando da linha 7)
-            for row in ws_detalhe.iter_rows(min_row=7, max_row=ws_detalhe.max_row):
+            for row in ws_detalhe.iter_rows(min_row=header_row + 1, max_row=ws_detalhe.max_row):
                 for cell in row:
                     cell.font = body_font
                     cell.fill = body_fill
