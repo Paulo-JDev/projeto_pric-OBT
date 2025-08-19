@@ -9,7 +9,7 @@ class MensagemDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Gerador de Mensagem de Alerta")
-        self.setMinimumSize(900, 650)
+        self.setMinimumSize(1100, 650)
 
         main_layout = QVBoxLayout(self)
         

@@ -10,6 +10,7 @@ import os
 from utils.utils import setup_search_bar, MultiColumnFilterProxyModel
 from model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
+from view.dashboard_tab import create_dashboard_tab
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -177,6 +178,13 @@ class MainWindow(QMainWindow):
         self.table_layout.addWidget(self.table)
 
         self.tabs.addTab(self.table_tab, icon_manager.get_icon("table"), "Visualizar Tabelas")
+
+        # Dashboard Tab =================================================================
+        self.dashboard_tab = create_dashboard_tab(self)
+        self.tabs.addTab(self.dashboard_tab, icon_manager.get_icon("dashboard"), "Dashboard")
+
+        self.tabs.setCurrentIndex(0)
+
 
     def load_styles(self):
         """Carrega os estilos do arquivo style.qss."""

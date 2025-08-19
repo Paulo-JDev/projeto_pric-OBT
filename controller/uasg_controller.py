@@ -22,8 +22,11 @@ from datetime import datetime
 
 class UASGController:
     def __init__(self, base_dir):
+        from controller.dashboard_controller import DashboardController
+
         self.model = UASGModel(base_dir)
         self.view = MainWindow(self)
+        self.dashboard_controller = DashboardController(self.model, self.view)
         self.view.settings_button.clicked.connect(self.show_settings_dialog)
 
         # Dados carregados
@@ -167,15 +170,16 @@ class UASGController:
                 
                 # Popula a tabela com os dados usando a função do módulo controller_table
                 populate_table(self, self.current_data)
+                self.dashboard_controller.update_dashboard(self.current_data)
                 print(f"✅ Tabela atualizada com os dados da UASG {uasg}.")
             else:
                 # Limpa o label se não houver dados
                 self.view.uasg_info_label.setText(f"UASG: -")
-                print(f"⚠ UASG {uasg} não encontrada nos dados recarregados.")
+                print(f"⚠ UASG {uasg} não encontrada nos dados recarregados(especifico).")
         else:
             # Limpa o label se a UASG não for encontrada
             self.view.uasg_info_label.setText(f"UASG: -")
-            print(f"⚠ UASG {uasg} não encontrada nos dados carregados.")
+            print(f"⚠ UASG {uasg} não encontrada nos dados carregados(geral).")
         self.load_saved_uasgs()
 
     def clear_table(self):
@@ -186,6 +190,9 @@ class UASGController:
         
         # Limpa o rótulo da UASG
         self.view.uasg_info_label.setText("UASG: -")
+        
+        # Limpa o dashboard
+        self.dashboard_controller.clear_dashboard()
         
         QMessageBox.information(self.view, "Limpeza", "A tabela foi limpa com sucesso!")
 
