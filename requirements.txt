@@ -1,5 +1,5 @@
-PyQt6==6.9.1
-openpyxl==3.1.2
+PyQt6==6.7.0
+openpyxl==3.1.5
 python-docx==1.2.0
 requests==2.32.4
 fastapi==0.100.0

@@ -2,6 +2,8 @@
 
 from datetime import datetime
 import sqlite3
+from PyQt6.QtGui import QColor
+from PyQt6.QtCore import Qt
 
 class DashboardController:
     def __init__(self, model, view):
@@ -9,6 +11,19 @@ class DashboardController:
         self.view = view
         # Conecta o botão de atualizar à função de atualização
         self.view.refresh_dashboard_button.clicked.connect(self.refresh_data)
+
+        self.status_color_map = {
+            "SEÇÃO CONTRATOS": QColor("#FFFFFF"),
+            "ATA GERADA": QColor(230, 230, 150),
+            "EMPRESA": QColor(230, 230, 150),
+            "SIGDEM": QColor(230, 180, 100),
+            "ASSINADO": QColor(230, 180, 100),
+            "PUBLICADO": QColor(135, 206, 250),
+            "ALERTA PRAZO": QColor(255, 160, 160),
+            "NOTA TÉCNICA": QColor(255, 160, 160),
+            "AGU": QColor(255, 160, 160),
+            "PRORROGADO": QColor(135, 206, 250)
+        }
 
     def _get_status_for_contrato(self, contrato_id):
         """
@@ -56,6 +71,17 @@ class DashboardController:
             
         # --- Cálculos das Métricas ---
         total_contratos = len(data)
+        status_counts = {}
+        for status_name in self.status_color_map.keys():
+            status_counts[status_name] = 0 # Inicializa todos os status com 0
+
+        for contrato in data:
+            status = self._get_status_for_contrato(contrato.get('id'))
+            if status in status_counts:
+                status_counts[status] += 1
+            else: # Caso encontre um status não mapeado
+                status_counts[status] = 1
+
         valor_total = sum(float(c.get("valor_global", "0,00").replace('.', '').replace(',', '.')) for c in data if c.get("valor_global"))
         
         hoje = datetime.now().date()
@@ -113,6 +139,8 @@ class DashboardController:
         widgets['value_label']['valor_total'].setText(f"R$ {valor_total:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
         widgets['value_label']['ativos'].setText(str(contratos_ativos))
         widgets['value_label']['expirando'].setText(str(len(expirando_90_dias_list)))
+
+        widgets['status_chart'].update_chart(status_counts, self.status_color_map)
 
         # Aplica o tooltip gerado ao card "Expirando em 90 dias"
         widgets['card']['expirando'].setToolTip(tooltip_html)

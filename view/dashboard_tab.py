@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from utils.icon_loader import icon_manager
+from .abas_detalhes.status_chart import StatusChartWidget
 
 def create_dashboard_tab(main_window):
     """
@@ -40,6 +41,8 @@ def create_dashboard_tab(main_window):
         'card': {},
         'value_label': {}
     }
+
+
 
     def create_kpi_card(title, icon_name):
         """Função auxiliar para criar um card de KPI padronizado."""
@@ -88,25 +91,23 @@ def create_dashboard_tab(main_window):
 
     # --- Placeholder para Gráficos (sem alterações) ---
     charts_layout = QHBoxLayout()
-    
-    chart1_frame = QFrame()
-    chart1_layout = QVBoxLayout(chart1_frame)
-    chart1_label = QLabel("Gráfico de Status (Implementação Futura)")
-    chart1_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    chart1_frame.setStyleSheet("border: 1px dashed #555; border-radius: 8px;")
-    chart1_layout.addWidget(chart1_label)
-    
+
+    # Gráfico de Status (Widget Real)
+    status_chart = StatusChartWidget()
+    main_window.dashboard_widgets['status_chart'] = status_chart # Armazena a referência para o controller
+
+    # Placeholder Gráfico 2
     chart2_frame = QFrame()
     chart2_layout = QVBoxLayout(chart2_frame)
     chart2_label = QLabel("Gráfico de Valores por Ano (Implementação Futura)")
     chart2_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     chart2_frame.setStyleSheet("border: 1px dashed #555; border-radius: 8px;")
     chart2_layout.addWidget(chart2_label)
-    
-    charts_layout.addWidget(chart1_frame)
+
+    charts_layout.addWidget(status_chart) # Adiciona o novo widget de gráfico
     charts_layout.addWidget(chart2_frame)
     main_layout.addLayout(charts_layout)
-    
+        
     main_layout.addStretch()
     
     return dashboard_tab
