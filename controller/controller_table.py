@@ -147,6 +147,7 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
     def create_centered_item(text):
         item = QStandardItem(str(text))
         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        header.setMaximumSectionSize(350)
         return item
     
     if repopulation:

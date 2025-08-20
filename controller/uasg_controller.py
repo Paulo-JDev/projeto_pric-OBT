@@ -75,15 +75,9 @@ class UASGController:
             return
 
         try:
-            # Se a UASG já estiver carregada, atualizar os dados
-            # Vamos mudar a lógica aqui: se a UASG já existe, apenas carregamos da memória/DB
-            # A atualização explícita pode ser uma outra função/botão.
             if uasg in self.loaded_uasgs and self.loaded_uasgs[uasg]: # Verifica se há dados carregados
-                self.view.label.setText(f"UASG {uasg} já carregada. Exibindo dados locais.")
+                QMessageBox.information(self.view, "Sucesso", f"UASG {uasg} carregada e salva com sucesso!")
                 self.view.uasg_input.clear()
-                # Não chama update_uasg_data aqui, apenas carrega o que já tem.
-                # A função update_table(uasg) já vai pegar os dados de self.loaded_uasgs
-                # que foram carregados do DB no __init__ ou após um save.
             else:
                 # Se for nova, buscar e salvar
                 data = self.model.fetch_uasg_data(uasg)
@@ -94,14 +88,13 @@ class UASGController:
                 self.model.save_uasg_data(uasg, data)
                 self.loaded_uasgs[uasg] = data
                 self.add_uasg_to_menu(uasg)
+                #QMessageBox.information(self.view, "Sucesso", f"UASG {uasg} carregada e salva com sucesso!")
                 self.view.tabs.setCurrentWidget(self.view.table_tab)
                 self.populate_previsualization_table()
-                self.view.label.setText(f"UASG {uasg} carregada e salva com sucesso!")
+                
                 # time.sleep(1) # Considere remover ou usar QStatusBar
                 self.view.uasg_input.clear()
 
-            # Garante que os dados mais recentes (do DB ou da API) estejam em self.loaded_uasgs
-            # antes de chamar update_table
             self.loaded_uasgs = self.model.load_saved_uasgs()
 
             self.update_table(uasg)
@@ -122,8 +115,6 @@ class UASGController:
             QMessageBox.warning(self.view, "Erro", f"Nenhum dado encontrado para a UASG {uasg_para_deletar}.")
             return
 
-        # --- LÓGICA DE VERIFICAÇÃO ADICIONADA AQUI ---
-        # Pega o texto do label de informação, ex: "UASG: 787010 - CEIMBRA"
         info_label_text = self.view.uasg_info_label.text()
         
         # Extrai o código da UASG que está sendo exibida na tabela
