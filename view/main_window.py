@@ -4,13 +4,15 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem
-from datetime import datetime
+from datetime import datetime, date
 import os
 
 from utils.utils import setup_search_bar, MultiColumnFilterProxyModel
 from model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
 from view.dashboard_tab import create_dashboard_tab
+
+from view.preview_table import *
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -30,7 +32,9 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.layout.addWidget(self.tabs)
 
-        # Input Tab
+       # =========================================================================================
+        # Novo layout para a aba de Entrada (Buscar UASG)
+        # =========================================================================================
         self.input_tab = QWidget()
         self.input_layout = QHBoxLayout(self.input_tab)
 
@@ -91,23 +95,7 @@ class MainWindow(QMainWindow):
         right_frame = QFrame()
         right_layout = QVBoxLayout(right_frame)
         
-        right_layout.addWidget(QLabel("<b>Contratos em andamento</b>"))
-        self.refresh_preview_button = QPushButton("Atualizar Pré-visualização")
-        self.refresh_preview_button.setIcon(icon_manager.get_icon("refresh"))
-        self.refresh_preview_button.clicked.connect(self.controller.populate_previsualization_table)
-        right_layout.addWidget(self.refresh_preview_button)
-
-        self.preview_table = QTableView()
-        self.preview_model = QStandardItemModel()
-        self.preview_proxy_model = MultiColumnFilterProxyModel()
-        self.preview_proxy_model.setSourceModel(self.preview_model)
-        self.preview_table.setModel(self.preview_proxy_model)
-        self.preview_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.preview_table.verticalHeader().setVisible(False)
-        self.preview_table.setEditTriggers(QTableView.EditTrigger.NoEditTriggers)
-        self.preview_table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
-        right_layout.addWidget(self.preview_table)
-        
+        right_frame, self.preview_table, self.preview_model = create_preview_table_widget(self.controller)
         self.input_layout.addWidget(right_frame)
 
         self.tabs.addTab(self.input_tab, icon_manager.get_icon("dash"), "Buscar UASG")
@@ -253,45 +241,7 @@ class MainWindow(QMainWindow):
             self.clear_button.setToolTip("Limpar Tabela (Modo Offline)")
 
     def populate_preview_table(self, data):
-        """Popula a tabela de pré-visualização com dados filtrados."""
-        self.preview_model.clear()
-        self.preview_model.setHorizontalHeaderLabels(["UASG", "Dias", "Contrato/Ata", "Processo", "Fornecedor", "Status"])
-
-        for row_data in data:
-            row_items = []
-
-            # 1. UASG
-            uasg_code = row_data.get("uasg_code", "N/A")
-            row_items.append(QStandardItem(str(uasg_code)))
-
-            # 2. Dias
-            vigencia_fim_str = row_data.get("vigencia_fim", "")
-            dias_restantes = "Sem Data"
-            if vigencia_fim_str:
-                try:
-                    vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
-                    dias_restantes = (vigencia_fim - data.today()).days
-                except ValueError:
-                    dias_restantes = "Erro Data"
-            dias_item = QStandardItem(str(dias_restantes))
-            row_items.append(dias_item)
-            
-            # 3. Contrato/Ata
-            contrato_numero = row_data.get("numero", "N/A")
-            row_items.append(QStandardItem(str(contrato_numero)))
-
-            # 4. Processo
-            processo_numero = row_data.get("processo", "N/A")
-            row_items.append(QStandardItem(str(processo_numero)))
-
-            # 5. Fornecedor
-            fornecedor_nome = row_data.get("fornecedor_nome", "N/A")
-            row_items.append(QStandardItem(str(fornecedor_nome)))
-
-            # 6. Status
-            status_text = row_data.get("status", "N/A")
-            row_items.append(QStandardItem(str(status_text)))
-
-            self.preview_model.appendRow(row_items)
-
+        """Delega a população da tabela para a função importada."""
+        populate_preview_table(self.preview_model, data)
+        # Ajusta as colunas após popular
         self.preview_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)

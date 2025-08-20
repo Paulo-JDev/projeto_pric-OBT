@@ -504,7 +504,7 @@ class UASGModel:
                 SELECT 
                     c.uasg_code,
                     c.numero,
-                    c.processo,
+                    c.licitacao_numero,
                     c.fornecedor_nome,
                     sc.status,
                     c.vigencia_fim
@@ -518,7 +518,7 @@ class UASGModel:
                 contracts_data.append({
                     "uasg_code": row['uasg_code'],
                     "numero": row['numero'],
-                    "processo": row['processo'],
+                    "processo": row['licitacao_numero'],
                     "fornecedor_nome": row['fornecedor_nome'],
                     "status": row['status'],
                     "vigencia_fim": row['vigencia_fim']
@@ -530,5 +530,3 @@ class UASGModel:
             conn.close()
 
         return contracts_data
-
-

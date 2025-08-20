@@ -65,7 +65,6 @@ class UASGController:
         """Adiciona uma UASG ao menu suspenso."""
         action = self.view.menu_button.menu().addAction(f"UASG {uasg}", lambda: self.update_table(uasg))
 
-
     def fetch_and_create_table(self):
         """Busca os dados da UASG e atualiza o banco de dados."""
         uasg = self.view.uasg_input.text().strip()
@@ -95,6 +94,8 @@ class UASGController:
                 self.model.save_uasg_data(uasg, data)
                 self.loaded_uasgs[uasg] = data
                 self.add_uasg_to_menu(uasg)
+                self.view.tabs.setCurrentWidget(self.view.table_tab)
+                self.populate_previsualization_table()
                 self.view.label.setText(f"UASG {uasg} carregada e salva com sucesso!")
                 # time.sleep(1) # Considere remover ou usar QStatusBar
                 self.view.uasg_input.clear()
@@ -233,6 +234,7 @@ class UASGController:
     def update_table_from_details(self, details_info):
         """Atualiza a tabela quando os dados são salvos na DetailsDialog."""
         update_row_from_details(self, details_info)
+        self.populate_previsualization_table()
     
     def show_msg_dialog(self):
         """
@@ -308,7 +310,7 @@ class UASGController:
                 if "UASG: " in current_uasg_text and current_uasg_text.split(" ")[1] != "-":
                     uasg_code = current_uasg_text.split(" ")[1]
                     self.update_table(uasg_code) # Atualiza a tabela com a UASG atual
-
+                self.populate_previsualization_table()
             except json.JSONDecodeError:
                 QMessageBox.critical(self.view, "Erro de Importação", "Arquivo JSON inválido ou corrompido.")
             except Exception as e:
