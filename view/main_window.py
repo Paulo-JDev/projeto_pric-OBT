@@ -1,10 +1,10 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QLineEdit, QPushButton,
-    QHeaderView, QGridLayout, QMenu, QTableView, QMessageBox, QHBoxLayout
+    QHeaderView, QGridLayout, QMenu, QTableView, QMessageBox, QHBoxLayout, QFrame, QSizePolicy
 )
-
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon, QStandardItemModel
+from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem
+from datetime import datetime
 import os
 
 from utils.utils import setup_search_bar, MultiColumnFilterProxyModel
@@ -32,68 +32,83 @@ class MainWindow(QMainWindow):
 
         # Input Tab
         self.input_tab = QWidget()
-        self.input_layout = QVBoxLayout(self.input_tab)
+        self.input_layout = QHBoxLayout(self.input_tab)
 
+        # Frame da Esquerda - Botões de Ação
+        left_frame = QFrame()
+        left_layout = QVBoxLayout(left_frame)
+        left_frame.setFixedWidth(300)
+        
+        # O botão de configurações permanece no mesmo lugar
         settings_hbox = QHBoxLayout()
         settings_hbox.addStretch()
-        
         self.settings_button = QPushButton()
         self.settings_button.setIcon(icon_manager.get_icon("config"))
         self.settings_button.setIconSize(QSize(40, 40))
         self.settings_button.setFixedSize(70, 70)
         self.settings_button.setObjectName("settings_icon_button")
         settings_hbox.addWidget(self.settings_button)
+        left_layout.addLayout(settings_hbox)
         
-        self.input_layout.addLayout(settings_hbox)
-
-        # O conteúdo agora é adicionado diretamente ao layout principal,
-        # fazendo com que ele se alinhe ao topo.
-        self.label = QLabel("Digite o número do UASG:")
-        self.input_layout.addWidget(self.label)
-
+        left_layout.addWidget(QLabel("Digite o número do UASG:"))
         self.uasg_input = QLineEdit()
         self.uasg_input.setPlaceholderText("Ex: 787010")
         self.uasg_input.setFixedWidth(200)
-        self.input_layout.addWidget(self.uasg_input)
+        left_layout.addWidget(self.uasg_input)
         
         self.fetch_button = QPushButton("Criação ou atualização da tabela")
         self.fetch_button.setIcon(icon_manager.get_icon("api"))
         self.fetch_button.clicked.connect(self.controller.fetch_and_create_table)
-        self.fetch_button.setFixedWidth(300)
-        self.input_layout.addWidget(self.fetch_button)
-
-        delete_export_table_layout = QHBoxLayout()
+        left_layout.addWidget(self.fetch_button)
+        
         self.delete_button = QPushButton("Deletar Arquivo e Banco de Dados")
         self.delete_button.setIcon(icon_manager.get_icon("delete"))
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
-        delete_export_table_layout.addWidget(self.delete_button)
-
-        self.export_table_csv_button = QPushButton("Exportar Tabela para excel")
-        self.export_table_csv_button.setIcon(icon_manager.get_icon("excel_up"))
-        self.export_table_csv_button.clicked.connect(self.controller.export_table_to_excel)
-        delete_export_table_layout.addWidget(self.export_table_csv_button)
-        self.input_layout.addLayout(delete_export_table_layout)
-
-        status_import_export_layout = QHBoxLayout()
+        left_layout.addWidget(self.delete_button)
+        
         self.export_status_button = QPushButton("Exportar Status")
         self.export_status_button.setIcon(icon_manager.get_icon("exportar"))
         self.export_status_button.clicked.connect(self.controller.export_status_data)
-        status_import_export_layout.addWidget(self.export_status_button)
-
+        left_layout.addWidget(self.export_status_button)
+        
         self.import_status_button = QPushButton("Importar Status")
         self.import_status_button.setIcon(icon_manager.get_icon("importar"))
         self.import_status_button.clicked.connect(self.controller.import_status_data)
-        status_import_export_layout.addWidget(self.import_status_button)
-        self.input_layout.addLayout(status_import_export_layout)
-        self.input_layout.addStretch() # Empurra tudo para cima
+        left_layout.addWidget(self.import_status_button)
         
-        # --- NOVO: Ícone de Status (Online/Offline) ---
+        left_layout.addStretch() # Empurra tudo para cima
+        
         status_hbox = QHBoxLayout()
         self.status_icon_label = QLabel()
         self.status_icon_label.setFixedSize(60, 60)
         status_hbox.addWidget(self.status_icon_label)
-        status_hbox.addStretch() # Empurra o ícone para a esquerda
-        self.input_layout.addLayout(status_hbox)
+        status_hbox.addStretch()
+        left_layout.addLayout(status_hbox)
+
+        self.input_layout.addWidget(left_frame)
+
+        # Frame da Direita - Pré-visualização
+        right_frame = QFrame()
+        right_layout = QVBoxLayout(right_frame)
+        
+        right_layout.addWidget(QLabel("<b>Contratos em andamento</b>"))
+        self.refresh_preview_button = QPushButton("Atualizar Pré-visualização")
+        self.refresh_preview_button.setIcon(icon_manager.get_icon("refresh"))
+        self.refresh_preview_button.clicked.connect(self.controller.populate_previsualization_table)
+        right_layout.addWidget(self.refresh_preview_button)
+
+        self.preview_table = QTableView()
+        self.preview_model = QStandardItemModel()
+        self.preview_proxy_model = MultiColumnFilterProxyModel()
+        self.preview_proxy_model.setSourceModel(self.preview_model)
+        self.preview_table.setModel(self.preview_proxy_model)
+        self.preview_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.preview_table.verticalHeader().setVisible(False)
+        self.preview_table.setEditTriggers(QTableView.EditTrigger.NoEditTriggers)
+        self.preview_table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        right_layout.addWidget(self.preview_table)
+        
+        self.input_layout.addWidget(right_frame)
 
         self.tabs.addTab(self.input_tab, icon_manager.get_icon("dash"), "Buscar UASG")
         
@@ -236,3 +251,47 @@ class MainWindow(QMainWindow):
         else: # Offline
             self.clear_button.setIcon(icon_manager.get_icon("database"))
             self.clear_button.setToolTip("Limpar Tabela (Modo Offline)")
+
+    def populate_preview_table(self, data):
+        """Popula a tabela de pré-visualização com dados filtrados."""
+        self.preview_model.clear()
+        self.preview_model.setHorizontalHeaderLabels(["UASG", "Dias", "Contrato/Ata", "Processo", "Fornecedor", "Status"])
+
+        for row_data in data:
+            row_items = []
+
+            # 1. UASG
+            uasg_code = row_data.get("uasg_code", "N/A")
+            row_items.append(QStandardItem(str(uasg_code)))
+
+            # 2. Dias
+            vigencia_fim_str = row_data.get("vigencia_fim", "")
+            dias_restantes = "Sem Data"
+            if vigencia_fim_str:
+                try:
+                    vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
+                    dias_restantes = (vigencia_fim - data.today()).days
+                except ValueError:
+                    dias_restantes = "Erro Data"
+            dias_item = QStandardItem(str(dias_restantes))
+            row_items.append(dias_item)
+            
+            # 3. Contrato/Ata
+            contrato_numero = row_data.get("numero", "N/A")
+            row_items.append(QStandardItem(str(contrato_numero)))
+
+            # 4. Processo
+            processo_numero = row_data.get("processo", "N/A")
+            row_items.append(QStandardItem(str(processo_numero)))
+
+            # 5. Fornecedor
+            fornecedor_nome = row_data.get("fornecedor_nome", "N/A")
+            row_items.append(QStandardItem(str(fornecedor_nome)))
+
+            # 6. Status
+            status_text = row_data.get("status", "N/A")
+            row_items.append(QStandardItem(str(status_text)))
+
+            self.preview_model.appendRow(row_items)
+
+        self.preview_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)

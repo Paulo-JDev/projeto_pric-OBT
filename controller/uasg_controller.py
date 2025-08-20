@@ -9,7 +9,9 @@ from controller.controller_table import populate_table, update_row_from_details
 from controller.mensagem_controller import MensagemController
 from controller.settings_controller import SettingsController
 
-from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog
+from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog, QApplication, QHeaderView
+from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
+from PyQt6.QtCore import Qt, QSortFilterProxyModel, QRegularExpression
 import requests
 import sqlite3
 import json
@@ -47,6 +49,7 @@ class UASGController:
 
         # Carrega as UASGs salvas e atualiza o menu
         self.load_saved_uasgs()
+        self.populate_previsualization_table()
 
 
     def run(self):
@@ -500,3 +503,8 @@ class UASGController:
         if folder_path:
             self.model.save_setting("pdf_download_path", folder_path)
             QMessageBox.information(self.view, "Pasta Definida", f"Os PDFs serão salvos em:\n{folder_path}")'''
+    
+    def populate_previsualization_table(self):
+        """Busca os contratos com status diferente de 'SEÇÃO CONTRATOS' e popula a tabela de pré-visualização."""
+        data = self.model.get_contracts_with_status_not_default()
+        self.view.populate_preview_table(data)

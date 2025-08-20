@@ -488,3 +488,47 @@ class UASGModel:
             return config_data.get(key, default_value)
         except (json.JSONDecodeError, IOError):
             return default_value
+        
+    def get_contracts_with_status_not_default(self):
+        """
+        Busca todos os contratos do banco de dados que possuem um status definido
+        e que não seja 'SEÇÃO CONTRATOS'.
+        """
+        conn = self._get_db_connection()
+        cursor = conn.cursor()
+        contracts_data = []
+
+        try:
+            # Consulta contratos que têm status diferente de "SEÇÃO CONTRATOS"
+            cursor.execute('''
+                SELECT 
+                    c.uasg_code,
+                    c.numero,
+                    c.processo,
+                    c.fornecedor_nome,
+                    sc.status,
+                    c.vigencia_fim
+                FROM contratos c
+                JOIN status_contratos sc ON c.id = sc.contrato_id
+                WHERE sc.status <> 'SEÇÃO CONTRATOS'
+            ''')
+            rows = cursor.fetchall()
+
+            for row in rows:
+                contracts_data.append({
+                    "uasg_code": row['uasg_code'],
+                    "numero": row['numero'],
+                    "processo": row['processo'],
+                    "fornecedor_nome": row['fornecedor_nome'],
+                    "status": row['status'],
+                    "vigencia_fim": row['vigencia_fim']
+                })
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar contratos com status personalizado: {e}")
+            return []
+        finally:
+            conn.close()
+
+        return contracts_data
+
+
