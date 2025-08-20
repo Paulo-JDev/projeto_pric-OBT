@@ -153,12 +153,18 @@ def populate_preview_table(preview_model, data):
         font.setWeight(weight)
         status_item.setFont(font)
         
+        uasg_item = _create_centered_item(row_data.get("uasg_code", "N/A"))
+        contrato_id = row_data.get("id")
+        if contrato_id:
+            # Guarda o ID no item sem exibi-lo na tela
+            uasg_item.setData(contrato_id, Qt.ItemDataRole.UserRole)
+
         row_items = [
-            _create_centered_item(row_data.get("uasg_code", "N/A")),
+            uasg_item,
             dias_item,
             _create_centered_item(row_data.get("numero", "N/A")),
             _create_centered_item(row_data.get("processo", "N/A")),
             _create_centered_item(row_data.get("fornecedor_nome", "N/A")),
-            status_item  # Usa o item de status estilizado
+            status_item
         ]
         preview_model.appendRow(row_items)

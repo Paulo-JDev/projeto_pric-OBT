@@ -283,8 +283,6 @@ class UASGModel:
         cursor.execute("SELECT id FROM contratos WHERE uasg_code = ?", (uasg,))
         old_contract_ids = {row['id'] for row in cursor.fetchall()}
         
-        # --- CORREÇÃO APLICADA AQUI ---
-        # Converte os IDs da API para string para a comparação funcionar corretamente
         new_contract_ids = {str(c_data.get("id")) for c_data in new_data}
 
         contracts_to_add_count = 0
@@ -292,8 +290,6 @@ class UASGModel:
 
         # Adicionar/Atualizar contratos
         for contrato_data in new_data:
-            # --- CORREÇÃO APLICADA AQUI ---
-            # Usa o ID como string em todas as operações
             contrato_id = str(contrato_data.get("id"))
 
             if contrato_id not in old_contract_ids:
@@ -502,9 +498,10 @@ class UASGModel:
             # Consulta contratos que têm status diferente de "SEÇÃO CONTRATOS"
             cursor.execute('''
                 SELECT 
+                    c.id,
                     c.uasg_code,
                     c.numero,
-                    c.licitacao_numero,
+                    c.processo,
                     c.fornecedor_nome,
                     sc.status,
                     c.vigencia_fim
@@ -516,9 +513,10 @@ class UASGModel:
 
             for row in rows:
                 contracts_data.append({
+                    "id": row['id'],
                     "uasg_code": row['uasg_code'],
                     "numero": row['numero'],
-                    "processo": row['licitacao_numero'],
+                    "processo": row['processo'],
                     "fornecedor_nome": row['fornecedor_nome'],
                     "status": row['status'],
                     "vigencia_fim": row['vigencia_fim']

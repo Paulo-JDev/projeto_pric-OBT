@@ -8,6 +8,7 @@ from view.details_dialog import DetailsDialog
 from controller.controller_table import populate_table, update_row_from_details
 from controller.mensagem_controller import MensagemController
 from controller.settings_controller import SettingsController
+from view.record_popup import RecordPopup
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog, QApplication, QHeaderView
 from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
@@ -30,6 +31,7 @@ class UASGController:
         self.view = MainWindow(self)
         self.dashboard_controller = DashboardController(self.model, self.view)
         self.view.settings_button.clicked.connect(self.show_settings_dialog)
+        self.view.preview_table.clicked.connect(self.show_records_popup)
 
         # Dados carregados
         self.loaded_uasgs = {}
@@ -227,6 +229,7 @@ class UASGController:
         update_row_from_details(self, details_info)
         self.populate_previsualization_table()
     
+    # =========================================== Método para abrir a janela de mensagens =================================================
     def show_msg_dialog(self):
         """
         Abre a janela de geração de mensagens para o contrato selecionado.
@@ -249,7 +252,7 @@ class UASGController:
         mensagem_controller = MensagemController(contract_data, parent=self.view)
         mensagem_controller.show()
 
-    # Método para abrir a janela de configurações
+    # =========================================== Método para abrir a janela de configurações =================================================
     def show_settings_dialog(self):
         """Abre a janela de configurações e conecta o sinal de mudança de modo."""
         settings_controller = SettingsController(self.model, self.view)
@@ -257,6 +260,7 @@ class UASGController:
         settings_controller.mode_changed.connect(self.view.update_clear_button_icon)
         settings_controller.show()
 
+    # =========================================== Método para exportar e importar dados de status =================================================
     def export_status_data(self):
         """Exporta todos os dados de status para um arquivo JSON."""
         all_status_data = self.model.get_all_status_data()
@@ -497,7 +501,42 @@ class UASGController:
             self.model.save_setting("pdf_download_path", folder_path)
             QMessageBox.information(self.view, "Pasta Definida", f"Os PDFs serão salvos em:\n{folder_path}")'''
     
+    # Funções da Tabela-de-Pré-Visualização ==============================================================
     def populate_previsualization_table(self):
         """Busca os contratos com status diferente de 'SEÇÃO CONTRATOS' e popula a tabela de pré-visualização."""
         data = self.model.get_contracts_with_status_not_default()
         self.view.populate_preview_table(data)
+
+    def show_records_popup(self, index):
+        """Busca os registros de um contrato e os exibe em uma janela popup."""
+        if not index.isValid():
+            return
+
+        # Pega o ID diretamente do item da tabela
+        proxy_model = self.view.preview_table.model()
+        source_index = proxy_model.mapToSource(index)
+        
+        first_item = proxy_model.sourceModel().item(source_index.row(), 0)
+        contrato_id = first_item.data(Qt.ItemDataRole.UserRole) if first_item else None
+
+        if not contrato_id:
+            # Este aviso só deve aparecer se houver um erro de programação
+            print(f"Aviso: Não foi possível obter o ID do contrato para a linha {source_index.row()}.")
+            return
+
+        # Busca os registros usando o ID direto
+        registros = []
+        try:
+            conn = self.model._get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT texto FROM registros_status WHERE contrato_id = ?", (contrato_id,))
+            registros = [row['texto'] for row in cursor.fetchall()]
+            conn.close()
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar registros do DB: {e}")
+            registros = ["Erro ao buscar registros."]
+
+        # Cria e exibe o popup
+        popup = RecordPopup(registros, self.view)
+        popup.move(self.view.cursor().pos())
+        popup.exec()
