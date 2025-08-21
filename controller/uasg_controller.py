@@ -501,7 +501,7 @@ class UASGController:
             self.model.save_setting("pdf_download_path", folder_path)
             QMessageBox.information(self.view, "Pasta Definida", f"Os PDFs serão salvos em:\n{folder_path}")'''
     
-    # Funções da Tabela-de-Pré-Visualização ==============================================================
+    # ======================================== Funções da Tabela-de-Pré-Visualização ==============================================================
     def populate_previsualization_table(self):
         """Busca os contratos com status diferente de 'SEÇÃO CONTRATOS' e popula a tabela de pré-visualização."""
         data = self.model.get_contracts_with_status_not_default()
@@ -512,7 +512,6 @@ class UASGController:
         if not index.isValid():
             return
 
-        # Pega o ID diretamente do item da tabela
         proxy_model = self.view.preview_table.model()
         source_index = proxy_model.mapToSource(index)
         
@@ -520,11 +519,9 @@ class UASGController:
         contrato_id = first_item.data(Qt.ItemDataRole.UserRole) if first_item else None
 
         if not contrato_id:
-            # Este aviso só deve aparecer se houver um erro de programação
             print(f"Aviso: Não foi possível obter o ID do contrato para a linha {source_index.row()}.")
             return
 
-        # Busca os registros usando o ID direto
         registros = []
         try:
             conn = self.model._get_db_connection()
@@ -536,7 +533,30 @@ class UASGController:
             print(f"Erro ao buscar registros do DB: {e}")
             registros = ["Erro ao buscar registros."]
 
-        # Cria e exibe o popup
-        popup = RecordPopup(registros, self.view)
+        # Passa o contrato_id para o popup e conecta o sinal ao novo método
+        popup = RecordPopup(registros, contrato_id, self.view)
+        popup.details_requested.connect(self.open_details_by_id)
+        
         popup.move(self.view.cursor().pos())
         popup.exec()
+
+    def open_details_by_id(self, contrato_id):
+        """
+        Encontra um contrato pelo seu ID em todas as UASGs carregadas
+        e abre a janela de detalhes para ele.
+        """
+        contract_data_found = None
+        # Procura o contrato em todos os dados carregados na aplicação
+        for uasg_code, contracts_list in self.loaded_uasgs.items():
+            for contract in contracts_list:
+                # Compara o ID como string para garantir a correspondência
+                if str(contract.get('id')) == contrato_id:
+                    contract_data_found = contract
+                    break
+            if contract_data_found:
+                break
+
+        if contract_data_found:
+            self.show_details_dialog(contract_data_found)
+        else:
+            QMessageBox.warning(self.view, "Erro", f"Não foi possível encontrar os dados completos para o contrato ID: {contrato_id}")

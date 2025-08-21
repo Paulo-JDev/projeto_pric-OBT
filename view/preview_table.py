@@ -70,7 +70,7 @@ def create_preview_table_widget(controller):
 
     # --- NOVO BOTÃO PARA AJUSTAR COLUNAS ---
     resize_button = QPushButton("Ajustar Colunas")
-    resize_button.setIcon(icon_manager.get_icon("grid")) 
+    resize_button.setIcon(icon_manager.get_icon("stats")) 
     button_layout.addWidget(resize_button)
 
     right_layout.addLayout(button_layout)
@@ -101,7 +101,7 @@ def create_preview_table_widget(controller):
         header.resizeSection(0, 80)    # Coluna "UASG"
         header.resizeSection(1, 80)    # Coluna "Dias"
         header.resizeSection(2, 110)   # Coluna "Contrato/Ata"
-        header.resizeSection(3, 115)   # Coluna "Processo"
+        header.resizeSection(3, 160)   # Coluna "Processo"
         
         # Permite que as colunas de Fornecedor e Status se estiquem para preencher o espaço
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) # Fornecedor

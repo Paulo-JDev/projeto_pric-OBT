@@ -79,6 +79,11 @@ class MainWindow(QMainWindow):
         self.import_status_button.setIcon(icon_manager.get_icon("importar"))
         self.import_status_button.clicked.connect(self.controller.import_status_data)
         left_layout.addWidget(self.import_status_button)
+
+        self.export_button = QPushButton("Exportar Tabela")
+        self.export_button.setIcon(icon_manager.get_icon("excel_down"))
+        self.export_button.clicked.connect(self.controller.export_table_to_excel)
+        left_layout.addWidget(self.export_button)
         
         left_layout.addStretch() # Empurra tudo para cima
         
