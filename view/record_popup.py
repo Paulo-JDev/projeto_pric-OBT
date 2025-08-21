@@ -2,6 +2,7 @@
 
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem, QPushButton, QHBoxLayout
 from PyQt6.QtCore import Qt, pyqtSignal
+from utils.icon_loader import icon_manager
 
 class RecordPopup(QDialog):
     """
@@ -41,9 +42,10 @@ class RecordPopup(QDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch() # Empurra o botão para a direita
         
-        details_button = QPushButton("Mais informações")
-        details_button.clicked.connect(self.request_details) # Conecta ao método
-        button_layout.addWidget(details_button)
+        self.details_button = QPushButton("Mais informações")
+        self.details_button.setIcon(icon_manager.get_icon("init"))
+        self.details_button.clicked.connect(self.request_details) # Conecta ao método
+        button_layout.addWidget(self.details_button)
 
         main_layout.addLayout(button_layout)
 
@@ -51,7 +53,7 @@ class RecordPopup(QDialog):
         if parent and parent.styleSheet():
             self.setStyleSheet(parent.styleSheet())
             list_widget.setStyleSheet("QListWidget { border: none; background-color: #2E2E2E; }")
-            details_button.setStyleSheet("QPushButton { min-width: 120px; }")
+            self.details_button.setStyleSheet("QPushButton { min-width: 120px; }")
 
     def request_details(self):
         """ Emite o sinal com o ID do contrato e fecha o popup. """

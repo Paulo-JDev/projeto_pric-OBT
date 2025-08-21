@@ -27,6 +27,13 @@ def create_itens_tab(self):
     self.itens_report_button.clicked.connect(self.generate_itens_report_to_excel) # Conecta a novo método
     top_layout.addWidget(self.itens_report_button)
 
+    self.email_button = QPushButton("Disparar XLSX por E-mail")
+    self.email_button.setIcon(icon_manager.get_icon("icon_send"))
+    self.email_button.setFixedHeight(40)
+    # Conecta a um novo método que será criado na DetailsDialog
+    self.email_button.clicked.connect(self.open_email_dialog) 
+    top_layout.addWidget(self.email_button)
+
     top_layout.addStretch()
     main_layout.addLayout(top_layout)
     
