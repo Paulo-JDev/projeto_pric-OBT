@@ -47,3 +47,4 @@ m_requirements.txt
 dist-linux/
 teste.json
 *.spec
+LICENSE.txt

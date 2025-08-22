@@ -5,8 +5,10 @@ import time
 import requests
 import sqlite3
 from datetime import datetime # Adicionado para comparação de datas
-
 from pathlib import Path
+
+from .database import init_database
+from .models import Base, Contrato, StatusContrato, RegistroStatus, ComentarioStatus
 
 # Adiciona o diretório do script ao sys.path (caminho absoluto)
 def resource_path(relative_path):
@@ -32,117 +34,41 @@ class UASGModel:
         self.database_dir.mkdir(parents=True, exist_ok=True)
         self.db_path = self.database_dir / "gerenciador_uasg.db"
 
+        init_database(self.db_path)
+
         print(f"📁 Caminho do banco de dados SQLite: {self.db_path}")
-        self._create_tables()  # Cria as tabelas no banco de dados
+        #self._create_tables()  # Cria as tabelas no banco de dados
 
     def _get_db_connection(self):
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
-
-    def _create_tables(self):
-        conn = self._get_db_connection()
-        cursor = conn.cursor()
-        # Tabela para UASGs (apenas para referência, os contratos são o foco)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS uasgs (
-                uasg_code TEXT PRIMARY KEY,
-                nome_resumido TEXT
-            )
-        ''')
-        # Tabela para Contratos
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS contratos (
-                id TEXT PRIMARY KEY,
-                uasg_code TEXT NOT NULL,
-                numero TEXT,
-                licitacao_numero TEXT,
-                processo TEXT,
-                fornecedor_nome TEXT,
-                fornecedor_cnpj TEXT,
-                objeto TEXT,
-                valor_global TEXT,
-                vigencia_inicio TEXT,
-                vigencia_fim TEXT,
-                tipo TEXT,
-                modalidade TEXT,
-                contratante_orgao_unidade_gestora_codigo TEXT, -- Para buscar o status
-                contratante_orgao_unidade_gestora_nome_resumido TEXT,
-                raw_json TEXT, -- Armazena o JSON completo do contrato
-                FOREIGN KEY (uasg_code) REFERENCES uasgs (uasg_code)
-            )
-        ''')
-        # Tabela para Status, Registros e Comentários (anteriormente em status_glob)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS status_contratos (
-                contrato_id TEXT PRIMARY KEY,
-                uasg_code TEXT, -- Adicionado para facilitar a busca de status por UASG
-                status TEXT,
-                objeto_editado TEXT,
-                portaria_edit TEXT,
-                radio_options_json TEXT, -- Armazena o JSON das opções de rádio
-                data_registro TEXT,
-                FOREIGN KEY (contrato_id) REFERENCES contratos (id)
-            )
-        ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS registros_status (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                uasg_code TEXT, -- Adicionado para referência direta
-                contrato_id TEXT NOT NULL,
-                texto TEXT UNIQUE,
-                FOREIGN KEY (uasg_code) REFERENCES uasgs (uasg_code), -- Opcional, mas bom para integridade
-                FOREIGN KEY (contrato_id) REFERENCES contratos (id)
-            )
-        ''')
-        # Adiciona um índice na coluna contrato_id para otimizar buscas
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_registros_status_contrato_id ON registros_status (contrato_id)
-        ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS comentarios_status (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                uasg_code TEXT, -- Adicionado para referência direta
-                contrato_id TEXT NOT NULL,
-                texto TEXT UNIQUE,
-                FOREIGN KEY (uasg_code) REFERENCES uasgs (uasg_code), -- Opcional, mas bom para integridade
-                FOREIGN KEY (contrato_id) REFERENCES contratos (id)
-            )
-        ''')
-        # Adiciona um índice na coluna contrato_id para otimizar buscas
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_comentarios_status_contrato_id ON comentarios_status (contrato_id)
-        ''')
-        try:
-            cursor.execute("SELECT portaria_edit FROM status_contratos LIMIT 1")
-        except sqlite3.OperationalError:
-            print("Atualizando schema: Adicionando coluna 'portaria_edit' à tabela 'status_contratos'.")
-            cursor.execute("ALTER TABLE status_contratos ADD COLUMN portaria_edit TEXT")
-
-        conn.commit()
-        conn.close()
+    
+    def _get_db_session(self):
+        from .database import SessionLocal
+        return SessionLocal()
 
     def load_saved_uasgs(self):
-        """Carrega todas as UASGs salvas e seus contratos no banco de dados."""
+        """
+        REFATORADO: Carrega todas as UASGs e seus contratos usando SQLAlchemy.
+        """
+        db = self._get_db_session()
         uasgs = {}
-        conn = self._get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT DISTINCT uasg_code FROM contratos")
-        uasg_codes = [row['uasg_code'] for row in cursor.fetchall()]
+        try:
+            # 1. Pega todos os códigos de UASG distintos
+            uasg_codes_result = db.query(Contrato.uasg_code).distinct().all()
+            uasg_codes = [code for (code,) in uasg_codes_result]
 
-        for uasg_code in uasg_codes:
-            cursor.execute("SELECT raw_json FROM contratos WHERE uasg_code = ?", (uasg_code,))
-            contratos_raw = cursor.fetchall()
-            contratos_list = []
-            for contrato_row in contratos_raw:
-                try:
-                    contratos_list.append(json.loads(contrato_row['raw_json']))
-                except json.JSONDecodeError as e:
-                    print(f"Erro ao decodificar raw_json para contrato na UASG {uasg_code}: {e}")
-            uasgs[uasg_code] = contratos_list
-        
-        conn.close()
+            # 2. Para cada UASG, busca todos os seus contratos
+            for uasg_code in uasg_codes:
+                contratos = db.query(Contrato).filter(Contrato.uasg_code == uasg_code).all()
+                # Converte os objetos Contrato de volta para dicionários (JSON)
+                contratos_list = [json.loads(c.raw_json) for c in contratos]
+                uasgs[uasg_code] = contratos_list
+        except Exception as e:
+            print(f"❌ Erro ao carregar UASGs salvas com SQLAlchemy: {e}")
+        finally:
+            db.close()
         return uasgs
 
     def fetch_uasg_data(self, uasg, local_api_host="http://192.168.0.10:8000"):
@@ -238,41 +164,39 @@ class UASGModel:
                 return None, f"Erro de rede: {e}"
         
     def save_uasg_data(self, uasg, data):
-        """Salva os dados da UASG no banco de dados SQLite."""
-        conn = self._get_db_connection()
-        cursor = conn.cursor()
-
-        # Adiciona ou atualiza a UASG na tabela uasgs (opcional, mas bom para referência)
-        nome_resumido_uasg = ""
-        if data and len(data) > 0:
-            nome_resumido_uasg = data[0].get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")
-        cursor.execute("INSERT OR IGNORE INTO uasgs (uasg_code, nome_resumido) VALUES (?, ?)", (uasg, nome_resumido_uasg))
-
-        for contrato_data in data:
-            cursor.execute('''
-                INSERT OR REPLACE INTO contratos (
-                    id, uasg_code, numero, licitacao_numero, processo, 
-                    fornecedor_nome, fornecedor_cnpj, objeto, valor_global, 
-                    vigencia_inicio, vigencia_fim, tipo, modalidade,
-                    contratante_orgao_unidade_gestora_codigo,
-                    contratante_orgao_unidade_gestora_nome_resumido,
-                    raw_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                contrato_data.get("id"), uasg, contrato_data.get("numero"),
-                contrato_data.get("licitacao_numero"), contrato_data.get("processo"),
-                contrato_data.get("fornecedor", {}).get("nome"),
-                contrato_data.get("fornecedor", {}).get("cnpj_cpf_idgener"),
-                contrato_data.get("objeto"), contrato_data.get("valor_global"),
-                contrato_data.get("vigencia_inicio"), contrato_data.get("vigencia_fim"),
-                contrato_data.get("tipo"), contrato_data.get("modalidade"),
-                contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo"),
-                contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
-                json.dumps(contrato_data) # Salva o JSON completo
-            ))
-        conn.commit()
-        conn.close()
-        print(f"✅ Dados da UASG {uasg} salvos no banco de dados.")
+        """Salva os dados da UASG no banco de dados usando SQLAlchemy."""
+        db = self._get_db_session()
+        try:
+            for contrato_data in data:
+                # Cria uma instância do modelo Contrato com os dados da API
+                novo_contrato = Contrato(
+                    id=str(contrato_data.get("id")), # Garante que o ID seja string
+                    uasg_code=uasg,
+                    numero=contrato_data.get("numero"),
+                    licitacao_numero=contrato_data.get("licitacao_numero"),
+                    processo=contrato_data.get("processo"),
+                    fornecedor_nome=contrato_data.get("fornecedor", {}).get("nome"),
+                    fornecedor_cnpj=contrato_data.get("fornecedor", {}).get("cnpj_cpf_idgener"),
+                    objeto=contrato_data.get("objeto"),
+                    valor_global=contrato_data.get("valor_global"),
+                    vigencia_inicio=contrato_data.get("vigencia_inicio"),
+                    vigencia_fim=contrato_data.get("vigencia_fim"),
+                    tipo=contrato_data.get("tipo"),
+                    modalidade=contrato_data.get("modalidade"),
+                    contratante_orgao_unidade_gestora_codigo=contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo"),
+                    contratante_orgao_unidade_gestora_nome_resumido=contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
+                    raw_json=json.dumps(contrato_data)
+                )
+                # O método merge lida com "INSERT OR REPLACE" de forma inteligente
+                db.merge(novo_contrato)
+            
+            db.commit() # Salva todas as alterações no banco de dados
+            print(f"✅ Dados da UASG {uasg} salvos com SQLAlchemy.")
+        except Exception as e:
+            print(f"❌ Erro ao salvar dados com SQLAlchemy: {e}")
+            db.rollback() # Desfaz as alterações em caso de erro
+        finally:
+            db.close() # Fecha a sessão
 
     def update_uasg_data(self, uasg):
         """Atualiza os dados da UASG no banco de dados, comparando com os dados antigos."""
