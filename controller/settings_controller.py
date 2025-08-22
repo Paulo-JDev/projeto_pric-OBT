@@ -1,5 +1,5 @@
 from PyQt6.QtCore import pyqtSignal, QObject
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox, QFileDialog
 from view.settings_dialog import SettingsDialog
 from model.offline_db_model import OfflineDBController
 
@@ -15,6 +15,7 @@ class SettingsController(QObject):
 
         self.view.close_button.clicked.connect(self.view.close)
         self.view.mode_button.clicked.connect(self._toggle_data_mode)
+        self.view.change_db_path_button.clicked.connect(self._change_db_path)
         self.view.create_db_button.clicked.connect(self.run_create_offline_db)
         self.view.delete_db_button.clicked.connect(self.run_delete_offline_db)
         
@@ -29,6 +30,31 @@ class SettingsController(QObject):
         self.current_mode = self.model.load_setting("data_mode", "Online")
         self._update_button_style()
         self.mode_changed.emit(self.current_mode)
+
+        # Carrega o caminho do banco de dados
+        default_db_dir = self.model.base_dir / "database"
+        db_path = self.model.load_setting("db_path", str(default_db_dir))
+        self.view.db_path_label.setText(f"Caminho Atual: {db_path}")
+
+    def _change_db_path(self):
+        """Abre um diálogo para o usuário escolher uma nova pasta para o banco de dados."""
+        current_path = str(self.model.database_dir)
+        
+        directory = QFileDialog.getExistingDirectory(
+            self.view,
+            "Selecione a Nova Pasta para o Banco de Dados",
+            current_path
+        )
+        
+        if directory and directory != current_path:
+            self.model.save_setting("db_path", directory)
+            self.view.db_path_label.setText(f"Caminho Atual: {directory}")
+            QMessageBox.information(
+                self.view,
+                "Alteração Salva",
+                "O local do banco de dados foi alterado.\n\n"
+                "Por favor, reinicie a aplicação para que a mudança tenha efeito."
+            )
 
     def _toggle_data_mode(self):
         """Alterna entre os modos Online e Offline e emite o sinal."""

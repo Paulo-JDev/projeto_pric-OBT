@@ -22,10 +22,16 @@ def resource_path(relative_path):
 class UASGModel:
     def __init__(self, base_dir):
         self.base_dir = Path(resource_path(base_dir))
-        self.database_dir = self.base_dir / "database"
+        self.config_path = self.base_dir / "config.json" # Definido primeiro
+
+        # Carrega o caminho do BD do config.json ou usa o padrão
+        default_db_dir = self.base_dir / "database"
+        db_directory_str = self.load_setting("db_path", str(default_db_dir))
+        
+        self.database_dir = Path(db_directory_str) # Converte a string de volta para Path
         self.database_dir.mkdir(parents=True, exist_ok=True)
         self.db_path = self.database_dir / "gerenciador_uasg.db"
-        self.config_path = self.base_dir / "config.json"
+
         print(f"📁 Caminho do banco de dados SQLite: {self.db_path}")
         self._create_tables()  # Cria as tabelas no banco de dados
 

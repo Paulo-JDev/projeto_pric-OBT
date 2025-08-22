@@ -7,7 +7,7 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Configurações")
-        self.setFixedSize(450, 250)
+        self.setFixedSize(450, 350)
 
         self.main_layout = QVBoxLayout(self)
 
@@ -19,6 +19,20 @@ class SettingsDialog(QDialog):
         mode_layout.addWidget(mode_label)
         mode_layout.addWidget(self.mode_button)
         self.main_layout.addLayout(mode_layout)
+
+        db_path_group = QGroupBox("Local do Banco de Dados")
+        db_path_layout = QVBoxLayout(db_path_group)
+
+        # Label para mostrar o caminho atual
+        self.db_path_label = QLabel("Caminho Atual: Carregando...")
+        self.db_path_label.setWordWrap(True) # Para quebra de linha em caminhos longos
+        db_path_layout.addWidget(self.db_path_label)
+
+        # Botão para alterar o caminho
+        self.change_db_path_button = QPushButton("Alterar Local...")
+        db_path_layout.addWidget(self.change_db_path_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        
+        self.main_layout.addWidget(db_path_group)
 
         offline_group = QGroupBox("Gerenciamento do Banco de Dados Offline")
         offline_layout = QVBoxLayout(offline_group)
