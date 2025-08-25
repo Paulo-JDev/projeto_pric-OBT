@@ -8,7 +8,7 @@ from datetime import datetime # Adicionado para comparação de datas
 from pathlib import Path
 
 from .database import init_database
-from .models import Base, Contrato, StatusContrato, RegistroStatus, ComentarioStatus
+from .models import Base, Contrato, StatusContrato, RegistroStatus, ComentarioStatus, Uasg
 
 # Adiciona o diretório do script ao sys.path (caminho absoluto)
 def resource_path(relative_path):
@@ -164,13 +164,21 @@ class UASGModel:
                 return None, f"Erro de rede: {e}"
         
     def save_uasg_data(self, uasg, data):
-        """Salva os dados da UASG no banco de dados usando SQLAlchemy."""
         db = self._get_db_session()
         try:
+            # --- LÓGICA CORRETA COM SQLALCHEMY ---
+            # 1. Cria ou atualiza a informação da UASG
+            if data:
+                nome_resumido = data[0].get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")
+                
+                # Cria um objeto Uasg e usa merge para fazer um "INSERT OR IGNORE"
+                nova_uasg = Uasg(uasg_code=uasg, nome_resumido=nome_resumido)
+                db.merge(nova_uasg)
+
+            # 2. Cria ou atualiza cada contrato associado
             for contrato_data in data:
-                # Cria uma instância do modelo Contrato com os dados da API
                 novo_contrato = Contrato(
-                    id=str(contrato_data.get("id")), # Garante que o ID seja string
+                    id=str(contrato_data.get("id")),
                     uasg_code=uasg,
                     numero=contrato_data.get("numero"),
                     licitacao_numero=contrato_data.get("licitacao_numero"),
@@ -187,14 +195,15 @@ class UASGModel:
                     contratante_orgao_unidade_gestora_nome_resumido=contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
                     raw_json=json.dumps(contrato_data)
                 )
-                # O método merge lida com "INSERT OR REPLACE" de forma inteligente
                 db.merge(novo_contrato)
             
-            db.commit() # Salva todas as alterações no banco de dados
+            # 3. Salva todas as alterações no banco de dados de uma só vez
+            db.commit()
             print(f"✅ Dados da UASG {uasg} salvos com SQLAlchemy.")
+
         except Exception as e:
             print(f"❌ Erro ao salvar dados com SQLAlchemy: {e}")
-            db.rollback() # Desfaz as alterações em caso de erro
+            db.rollback() # Desfaz tudo em caso de erro
         finally:
             db.close() # Fecha a sessão
 
@@ -264,29 +273,28 @@ class UASGModel:
         print(f"✅ UASG {uasg} atualizada: {contracts_to_add_count} novos/atualizados, {contracts_to_remove_count} removidos.")
         return contracts_to_add_count, contracts_to_remove_count
 
-    def delete_uasg_data(self, uasg):
-        """Remove os dados da UASG do banco de dados."""
-        conn = self._get_db_connection()
-        cursor = conn.cursor()
-        
-        # Primeiro, obter os IDs dos contratos associados a esta UASG para limpar tabelas relacionadas
-        cursor.execute("SELECT id FROM contratos WHERE uasg_code = ?", (uasg,))
-        contrato_ids = [row['id'] for row in cursor.fetchall()]
-
-        for contrato_id in contrato_ids:
-            cursor.execute("DELETE FROM registros_status WHERE contrato_id = ?", (contrato_id,))
-            cursor.execute("DELETE FROM comentarios_status WHERE contrato_id = ?", (contrato_id,))
-            cursor.execute("DELETE FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
-
-        # Deletar os contratos da UASG
-        cursor.execute("DELETE FROM contratos WHERE uasg_code = ?", (uasg,))
-        # Opcionalmente, deletar a própria UASG da tabela uasgs
-        cursor.execute("DELETE FROM uasgs WHERE uasg_code = ?", (uasg,))
-        
-        conn.commit()
-        conn.close()
-        print(f"✅ Dados da UASG {uasg} removidos do banco de dados.")
-        # self.load_saved_uasgs() # O controller chamará isso
+    def delete_uasg_data(self, uasg_code):
+        db = self._get_db_session()
+        try:
+            # Esta linha agora funcionará porque 'Uasg' foi importado
+            uasg_to_delete = db.query(Uasg).filter(Uasg.uasg_code == uasg_code).first()
+            
+            if uasg_to_delete:
+                print(f"Deletando dados da UASG {uasg_code} com SQLAlchemy...")
+                
+                # Graças ao 'cascade' que definimos nos modelos, o SQLAlchemy irá deletar
+                # automaticamente todos os contratos e seus dados relacionados.
+                db.delete(uasg_to_delete)
+                db.commit()
+                print(f"✅ Dados da UASG {uasg_code} removidos com sucesso.")
+            else:
+                print(f"⚠ UASG {uasg_code} não encontrada no banco de dados para exclusão.")
+                
+        except Exception as e:
+            print(f"❌ Erro ao deletar dados com SQLAlchemy: {e}")
+            db.rollback()
+        finally:
+            db.close()
 
     def get_all_status_data(self):
         """Busca todos os dados de status, registros e comentários do banco de dados."""

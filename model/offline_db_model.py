@@ -150,22 +150,25 @@ class OfflineDBController:
         nome_resumido = main_data[0].get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "")
         cursor.execute("INSERT OR IGNORE INTO uasgs (uasg_code, nome_resumido) VALUES (?, ?)", (uasg, nome_resumido))
 
-        # Passo 1: Filtrar os contratos com base na vigência
+        # --- LÓGICA DE FILTRAGEM CORRIGIDA ---
         hoje = datetime.now()
         contratos_a_processar = []
         print(f"Iniciando filtro de {len(main_data)} contratos da UASG {uasg}...")
         for contrato_data in main_data:
             vigencia_fim_str = contrato_data.get("vigencia_fim")
-            if vigencia_fim_str:
-                try:
-                    vigencia_fim = datetime.strptime(vigencia_fim_str, '%Y-%m-%d')
-                    # --- LÓGICA DO FILTRO DE -100 DIAS APLICADA AQUI ---
-                    if (hoje - vigencia_fim).days <= 100: # Contratos vencidos há no máximo 100 dias ou ainda vigentes
-                        contratos_a_processar.append(contrato_data)
-                except (ValueError, TypeError):
-                    print(f"⚠ Aviso: Data de vigência inválida para o contrato {contrato_data.get('id')}. Será ignorado.")
-            else:
-                print(f"⚠ Aviso: Data de vigência não encontrada para o contrato {contrato_data.get('id')}. Será ignorado.")
+            
+            # Se não há data de fim, o contrato é válido e deve ser incluído
+            if not vigencia_fim_str:
+                contratos_a_processar.append(contrato_data)
+                continue
+
+            try:
+                vigencia_fim = datetime.strptime(vigencia_fim_str, '%Y-%m-%d')
+                # Se tem data, verifica se venceu há menos de 100 dias
+                if (hoje - vigencia_fim).days <= 100:
+                    contratos_a_processar.append(contrato_data)
+            except (ValueError, TypeError):
+                print(f"⚠ Aviso: Data de vigência inválida para o contrato {contrato_data.get('id')}. Será ignorado.")
         
         print(f"Filtro concluído. Serão processados {len(contratos_a_processar)} contratos.")
         if not contratos_a_processar:
@@ -176,7 +179,7 @@ class OfflineDBController:
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setWindowTitle("Criando Banco de Dados Offline")
 
-        # Passo 2: Processar e salvar apenas os contratos filtrados
+        # O resto da função continua igual, salvando os contratos filtrados...
         for i, contrato_data in enumerate(contratos_a_processar):
             progress.setValue(i)
             if progress.wasCanceled():
@@ -186,7 +189,6 @@ class OfflineDBController:
             progress.setLabelText(f"Processando Contrato: {contrato_data.get('numero', contrato_id)}")
             QApplication.processEvents()
 
-            # --- LÓGICA PARA SALVAR O CONTRATO PRINCIPAL ADICIONADA AQUI ---
             cursor.execute('''
                 INSERT OR REPLACE INTO contratos (id, uasg_code, numero, licitacao_numero, processo, 
                 fornecedor_nome, fornecedor_cnpj, objeto, valor_global, vigencia_inicio, vigencia_fim, 
@@ -205,8 +207,6 @@ class OfflineDBController:
             ))
 
             links = contrato_data.get("links", {})
-            
-            # A busca e salvamento das sub-tabelas continua a mesma
             if "historico" in links: self._save_sub_table_data(conn, 'historico', contrato_id, self._fetch_api_data(links["historico"]))
             if "empenhos" in links: self._save_sub_table_data(conn, 'empenhos', contrato_id, self._fetch_api_data(links["empenhos"]))
             if "itens" in links: self._save_sub_table_data(conn, 'itens', contrato_id, self._fetch_api_data(links["itens"]))
