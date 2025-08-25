@@ -5,6 +5,7 @@ from model.offline_db_model import OfflineDBController
 
 class SettingsController(QObject):
     mode_changed = pyqtSignal(str)
+    database_updated = pyqtSignal()
 
     def __init__(self, model, parent=None):
         super().__init__(parent)
@@ -93,6 +94,7 @@ class SettingsController(QObject):
         if reply == QMessageBox.StandardButton.Yes:
             self.offline_db_model.process_and_save_all_data(uasg)
             QMessageBox.information(self.view, "Concluído", f"A base de dados para a UASG {uasg} foi criada/atualizada com sucesso.")
+            self.database_updated.emit()
 
     def run_delete_offline_db(self):
         """Inicia o processo de exclusão de uma UASG do banco de dados offline."""
@@ -108,3 +110,4 @@ class SettingsController(QObject):
         if reply == QMessageBox.StandardButton.Yes:
             self.offline_db_model.delete_uasg_from_db(uasg)
             QMessageBox.information(self.view, "Concluído", f"Os dados da UASG {uasg} foram removidos.")
+            self.database_updated.emit()

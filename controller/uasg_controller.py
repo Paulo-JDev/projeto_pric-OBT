@@ -258,6 +258,7 @@ class UASGController:
         settings_controller = SettingsController(self.model, self.view)
         settings_controller.mode_changed.connect(self.view.update_status_icon)
         settings_controller.mode_changed.connect(self.view.update_clear_button_icon)
+        settings_controller.database_updated.connect(self.load_saved_uasgs)
         settings_controller.show()
 
     # =========================================== Método para exportar e importar dados de status =================================================
