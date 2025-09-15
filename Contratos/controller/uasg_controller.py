@@ -1,14 +1,14 @@
-from view.main_window import MainWindow
-from model.uasg_model import UASGModel
+from Contratos.view.main_window import MainWindow
+from Contratos.model.uasg_model import UASGModel
 from utils.utils import refresh_uasg_menu
 from utils.icon_loader import icon_manager
 
-from view.details_dialog import DetailsDialog
+from Contratos.view.details_dialog import DetailsDialog
 
-from controller.controller_table import populate_table, update_row_from_details
-from controller.mensagem_controller import MensagemController
-from controller.settings_controller import SettingsController
-from view.record_popup import RecordPopup
+from Contratos.controller.controller_table import populate_table, update_row_from_details
+from Contratos.controller.mensagem_controller import MensagemController
+from Contratos.controller.settings_controller import SettingsController
+from Contratos.view.record_popup import RecordPopup
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog, QApplication, QHeaderView
 from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
@@ -24,16 +24,15 @@ from openpyxl.drawing.image import Image
 from datetime import datetime
 
 class UASGController:
-    def __init__(self, base_dir):
-        from controller.dashboard_controller import DashboardController
+    def __init__(self, base_dir, parent_view=None): # Adicionamos parent_view por boas práticas
+        from .dashboard_controller import DashboardController
 
         self.model = UASGModel(base_dir)
-        self.view = MainWindow(self)
+        self.view = MainWindow(self) # Cria sua "página"
         self.dashboard_controller = DashboardController(self.model, self.view)
+        
         self.view.settings_button.clicked.connect(self.show_settings_dialog)
-        self.view.preview_table.clicked.connect(self.show_records_popup)
 
-        # Dados carregados
         self.loaded_uasgs = {}
         self.current_data = []
         self.filtered_data = []
@@ -42,21 +41,14 @@ class UASGController:
         self.view.update_status_icon(initial_mode)
         self.view.update_clear_button_icon(initial_mode)
 
-        # Verifica se o diretório database existe
         if self.model.database_dir.exists():
             self.loaded_uasgs = self.model.load_saved_uasgs()
-            print(f"📂 UASGs carregadas: {list(self.loaded_uasgs.keys())}")
+            print(f"📂 UASGs do módulo Contratos carregadas: {list(self.loaded_uasgs.keys())}")
         else:
-            print("⚠ Diretório 'database' não encontrado. Nenhum dado carregado.")
+            print("⚠ Diretório 'database' não encontrado. Nenhum dado de Contratos carregado.")
 
-        # Carrega as UASGs salvas e atualiza o menu
         self.load_saved_uasgs()
         self.populate_previsualization_table()
-
-
-    def run(self):
-        """Executa a interface principal."""
-        self.view.show()
 
     def load_saved_uasgs(self):
         """Carrega as UASGs salvas e atualiza o menu."""

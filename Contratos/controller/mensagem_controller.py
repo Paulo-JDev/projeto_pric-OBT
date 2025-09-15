@@ -2,8 +2,8 @@
 
 import os
 from PyQt6.QtWidgets import QApplication, QPushButton, QMessageBox
-from view.mensagem_view import MensagemDialog
-from model.uasg_model import resource_path
+from Contratos.view.mensagem_view import MensagemDialog
+from Contratos.model.uasg_model import resource_path
 
 class MensagemController:
     def __init__(self, contract_data, parent=None):

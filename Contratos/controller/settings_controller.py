@@ -1,7 +1,7 @@
 from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QMessageBox, QFileDialog
-from view.settings_dialog import SettingsDialog
-from model.offline_db_model import OfflineDBController
+from Contratos.view.settings_dialog import SettingsDialog
+from Contratos.model.offline_db_model import OfflineDBController
 
 class SettingsController(QObject):
     mode_changed = pyqtSignal(str)

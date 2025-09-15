@@ -1,0 +1,2 @@
+sore as publicações sobre o contrato. (não esta na apii geral)
+https://contratos.comprasnet.gov.br/api/contrato/{contrato_id}/publicacoes

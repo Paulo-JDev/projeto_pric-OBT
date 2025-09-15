@@ -1,0 +1,52 @@
+# view/main_shell_view.py
+
+from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QListWidget, QStackedWidget, QListWidgetItem, QLabel, QVBoxLayout
+from PyQt6.QtCore import Qt, QSize # Adicione a importação de QSize
+from utils.icon_loader import icon_manager
+
+class MainShellView(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Contratos360 - Gestão Integrada")
+        self.setGeometry(100, 100, 1280, 720)
+        self.setMinimumSize(1024, 600)
+
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.main_layout = QHBoxLayout(self.central_widget)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
+
+        # --- NAVEGAÇÃO LATERAL MODIFICADA ---
+        self.nav_list = QListWidget()
+        self.nav_list.setFixedWidth(70)  # Largura reduzida
+        self.nav_list.setObjectName("NavList")
+        self.nav_list.setIconSize(QSize(40, 40)) # Ícones maiores
+        self.main_layout.addWidget(self.nav_list)
+
+        # Adiciona os itens de navegação sem texto e com tooltips
+        item_contratos = QListWidgetItem(icon_manager.get_icon("contratos"), "") # Texto vazio
+        item_contratos.setToolTip("Contratos")  # Dica de ferramenta
+        self.nav_list.addItem(item_contratos)
+
+        item_atas = QListWidgetItem(icon_manager.get_icon("atas"), "") # Texto vazio
+        item_atas.setToolTip("Atas")  # Dica de ferramenta
+        self.nav_list.addItem(item_atas)
+        # --- FIM DAS MODIFICAÇÕES ---
+
+        # 2. Área de Conteúdo Principal (empilhada)
+        self.stacked_widget = QStackedWidget()
+        self.main_layout.addWidget(self.stacked_widget)
+
+        # Tela de Boas-Vindas
+        welcome_widget = QWidget()
+        welcome_layout = QVBoxLayout(welcome_widget)
+        welcome_label = QLabel(
+            "Aplicativo para Controle de Contratos e Atas,\n"
+            "com funcionalidades de produtividade e Organização\n"
+            "com mudanças e atualizações"
+        )
+        welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        welcome_label.setObjectName("WelcomeLabel")
+        welcome_layout.addWidget(welcome_label)
+        self.stacked_widget.addWidget(welcome_widget)

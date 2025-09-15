@@ -13,47 +13,58 @@
 
 import sys
 import os
-import logging # Adicionado
+import logging
 from PyQt6.QtWidgets import QApplication
-from controller.uasg_controller import UASGController
+
+# Importa os novos componentes principais
+from view.main_shell_view import MainShellView
+from controller.main_controller import MainController
 
 def setup_logging(base_dir):
+    # (Sua função de logging continua a mesma)
     log_dir = os.path.join(base_dir, "logs")
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, "app.log")
-
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(module)s - %(message)s',
         handlers=[
             logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler(sys.stdout) # Também mostra no console
+            logging.StreamHandler(sys.stdout)
         ]
     )
 
 def setup_application():
-    """Inicializa e executa a aplicação."""
+    """Inicializa e executa a aplicação com a nova estrutura."""
     app = QApplication(sys.argv)
 
-    # Obtém o diretório base (onde o executável está sendo executado)
     if getattr(sys, 'frozen', False):
-        # Se estiver rodando como executável
         base_dir = os.path.dirname(sys.executable)
     else:
-        # Se estiver rodando como script
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    print(f"📦 Versão do APP V5.1.0")
+    print(f"📦 Versão do APP V6.1.0")
     print(f"📁 Diretório base: {base_dir}")
-    setup_logging(base_dir) # Configura o logging
+    setup_logging(base_dir)
+    logging.info("Aplicação iniciada com a nova estrutura modular.")
 
-    logging.info("Aplicação iniciada.")
+    # Carrega o estilo antes de criar a janela
+    style_path = os.path.join(base_dir, "style.qss")
+    try:
+        with open(style_path, "r", encoding="utf-8") as f:
+            app.setStyleSheet(f.read())
+    except FileNotFoundError:
+        print("Arquivo de estilo 'style.qss' não encontrado.")
 
-    # Inicializa o controlador com o diretório base
-    controller = UASGController(base_dir)
-    controller.run()
-
-    # Executa a aplicação
+    # 1. Cria a janela principal (Shell)
+    main_view = MainShellView()
+    
+    # 2. Cria o controlador principal, que gerencia os módulos
+    main_controller = MainController(main_view, base_dir)
+    
+    # 3. Inicia a aplicação
+    main_controller.run()
+    
     sys.exit(app.exec())
     logging.info("Aplicação finalizada.")
 

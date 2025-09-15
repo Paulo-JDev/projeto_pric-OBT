@@ -4,7 +4,7 @@ import json
 import sqlite3 # Adicionado
 from datetime import datetime
 from utils.icon_loader import icon_manager
-from model.uasg_model import UASGModel # Para _get_db_connection se necessário, ou usar o model passado
+from Contratos.model.uasg_model import UASGModel # Para _get_db_connection se necessário, ou usar o model passado
 
 SUCCESS_MSG_TIMEOUT_MS = 300
 
