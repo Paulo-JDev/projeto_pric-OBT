@@ -20,11 +20,8 @@ class Contrato(Base):
 
     id = Column(String, primary_key=True, index=True)
     
-    # --- PONTO CHAVE DA CORREÇÃO ---
-    # Adiciona a ForeignKey para conectar esta tabela à tabela 'uasgs'.
     uasg_code = Column(String, ForeignKey("uasgs.uasg_code"), nullable=False)
     
-    # ... (outros campos do Contrato) ...
     numero = Column(String)
     licitacao_numero = Column(String)
     processo = Column(String)
@@ -44,7 +41,7 @@ class Contrato(Base):
     uasg = relationship("Uasg", back_populates="contratos")
     status = relationship("StatusContrato", back_populates="contrato", uselist=False, cascade="all, delete-orphan")
     registros = relationship("RegistroStatus", back_populates="contrato", cascade="all, delete-orphan")
-    comentarios = relationship("ComentarioStatus", back_populates="contrato", cascade="all, delete-orphan")
+    #comentarios = relationship("ComentarioStatus", back_populates="contrato", cascade="all, delete-orphan")
     
     # Relacionamentos para dados offline
     historicos = relationship("Historico", back_populates="contrato", cascade="all, delete-orphan")
@@ -96,15 +93,16 @@ class StatusContrato(Base):
 class RegistroStatus(Base):
     __tablename__ = "registros_status"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False)
+    contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False, index=True)
     uasg_code = Column(String)
     texto = Column(Text, unique=True)
     contrato = relationship("Contrato", back_populates="registros")
 
-class ComentarioStatus(Base):
+"""class ComentarioStatus(Base):
     __tablename__ = "comentarios_status"
     id = Column(Integer, primary_key=True, autoincrement=True)
     contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False)
     uasg_code = Column(String)
     texto = Column(Text, unique=True)
     contrato = relationship("Contrato", back_populates="comentarios")
+"""

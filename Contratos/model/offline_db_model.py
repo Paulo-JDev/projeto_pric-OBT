@@ -33,14 +33,13 @@ class OfflineDBController:
 
     def _create_tables(self):
         """
-        Cria todas as tabelas no banco de dados SQLite, se não existirem.
-        Isso é importante para garantir que as tabelas de detalhes (histórico, empenhos, etc.)
-        sejam criadas, já que o modelo principal não as conhece.
+        Cria todas as tabelas no banco de dados SQLite, se não existirem,
+        e garante que os índices essenciais para performance sejam criados.
         """
         conn = self._get_db_connection()
         cursor = conn.cursor()
 
-        # As definições de tabela permanecem as mesmas
+        # Tabelas principais
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS uasgs (
             uasg_code TEXT PRIMARY KEY, nome_resumido TEXT
@@ -54,6 +53,8 @@ class OfflineDBController:
                 contratante_orgao_unidade_gestora_nome_resumido TEXT, raw_json TEXT,
                 FOREIGN KEY (uasg_code) REFERENCES uasgs (uasg_code)
             )''')
+
+        # Tabelas de detalhes (histórico, empenhos, etc.)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS historico (
                 id INTEGER PRIMARY KEY, contrato_id TEXT NOT NULL, receita_despesa TEXT,
@@ -85,8 +86,32 @@ class OfflineDBController:
                 path_arquivo TEXT, origem TEXT, link_sei TEXT, raw_json TEXT,
                 FOREIGN KEY (contrato_id) REFERENCES contratos (id)
             )''')
+
+        # --- MELHORIA: Adicionando as tabelas de status que estavam faltando ---
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS status_contratos (
+                contrato_id TEXT PRIMARY KEY, uasg_code TEXT, status TEXT, 
+                objeto_editado TEXT, portaria_edit TEXT, radio_options_json TEXT, data_registro TEXT,
+                FOREIGN KEY (contrato_id) REFERENCES contratos (id)
+            )''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS registros_status (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, contrato_id TEXT NOT NULL,
+                uasg_code TEXT, texto TEXT UNIQUE,
+                FOREIGN KEY (contrato_id) REFERENCES contratos (id)
+            )''')
+
+        # --- PONTO CHAVE: Criação dos índices para otimizar as buscas ---
+        # Este é o índice principal que você solicitou para a tabela de registros.
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_registros_contrato_id ON registros_status (contrato_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_historico_contrato_id ON historico (contrato_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_empenhos_contrato_id ON empenhos (contrato_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_itens_contrato_id ON itens (contrato_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_arquivos_contrato_id ON arquivos (contrato_id)')
+
         conn.commit()
         conn.close()
+        print("✅ Tabelas e índices do banco de dados offline foram verificados e criados com sucesso.")
 
     def _fetch_api_data(self, url, tentativas_maximas=3):
         """Busca dados de uma API com retentativas."""

@@ -8,7 +8,7 @@ from datetime import datetime # Adicionado para comparação de datas
 from pathlib import Path
 
 from .database import init_database
-from .models import Base, Contrato, StatusContrato, RegistroStatus, ComentarioStatus, Uasg
+from .models import Base, Contrato, StatusContrato, RegistroStatus, Uasg
 
 # Adiciona o diretório do script ao sys.path (caminho absoluto)
 def resource_path(relative_path):
@@ -315,9 +315,6 @@ class UASGModel:
                 cursor.execute("SELECT texto FROM registros_status WHERE contrato_id = ?", (contrato_id,))
                 data_entry['registros'] = [row['texto'] for row in cursor.fetchall()]
 
-                # Buscar comentários para este contrato_id
-                cursor.execute("SELECT texto FROM comentarios_status WHERE contrato_id = ?", (contrato_id,))
-                data_entry['comentarios'] = [row['texto'] for row in cursor.fetchall()]
                 
                 all_data.append(data_entry)
             
@@ -386,10 +383,6 @@ class UASGModel:
                 # Deleta os antigos para evitar duplicatas
                 for texto_reg in entry.get('registros', []):
                     cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_reg))
-
-                cursor.execute("DELETE FROM comentarios_status WHERE contrato_id = ?", (contrato_id,))
-                for texto_com in entry.get('comentarios', []):
-                    cursor.execute("INSERT INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_com))
             
             conn.commit()
             print("Importação de dados de status concluída com sucesso.")

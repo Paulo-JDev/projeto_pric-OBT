@@ -84,6 +84,7 @@ def create_preview_table_widget(controller):
     preview_table.verticalHeader().setVisible(False)
     preview_table.setEditTriggers(QTableView.EditTrigger.NoEditTriggers)
     preview_table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+    preview_table.clicked.connect(controller.show_records_popup)
 
     # --- LÓGICA DE REDIMENSIONAMENTO MOVIDA PARA O BOTÃO ---
     def adjust_columns():

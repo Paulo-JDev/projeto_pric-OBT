@@ -38,41 +38,6 @@ def registro_def(parent, registro_list, status_dropdown):
     add_button.clicked.connect(add_registro)
     dialog.exec()
 
-def add_comment(parent, comment_list):
-    """Abre uma mini janela para adicionar um comentário."""
-    dialog = QDialog(parent)
-    dialog.setWindowTitle("Adicionar Comentário")
-    layout = QVBoxLayout()
-    
-    text_edit = QTextEdit()
-    layout.addWidget(text_edit)
-    
-    add_button = QPushButton("Fechar e Adicionar Comentário")
-    add_button.setIcon(icon_manager.get_icon("comments"))
-    layout.addWidget(add_button)
-    
-    dialog.setLayout(layout)
-    
-    def add_comment_func():
-        comment_text = text_edit.toPlainText().strip()
-        if comment_text:
-            full_comment = f"{comment_text}"
-            item = QListWidgetItem(full_comment)
-            item.setCheckState(Qt.CheckState.Unchecked)
-            comment_list.addItem(item)  # Adiciona à lista de comentários
-            print(f"✅ Comentário adicionado: {full_comment}")
-        dialog.accept()
-    
-    add_button.clicked.connect(add_comment_func)
-    dialog.exec()
-
-def delete_comment(comment_list):
-    """Remove os comentários selecionados"""
-    for i in range(comment_list.count() - 1, -1, -1):
-        item = comment_list.item(i)
-        if item.checkState() == Qt.CheckState.Checked:
-            comment_list.takeItem(i)
-
 def delete_registro(registro_list):
     """Remove os registros selecionados"""
     for i in range(registro_list.count() - 1, -1, -1):
@@ -80,7 +45,7 @@ def delete_registro(registro_list):
         if item.checkState() == Qt.CheckState.Checked:
             registro_list.takeItem(i)
 
-def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, comment_list, objeto_edit,  portaria_edit, radio_buttons):
+def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, objeto_edit,  portaria_edit, radio_buttons):
     """Salva o status, registros e comentários no banco de dados SQLite."""
     id_contrato = data.get("id", "")
     uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
@@ -94,7 +59,7 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         "uasg": uasg,
         "status": status_dropdown.currentText(),
         "registros": [registro_list.item(i).text() for i in range(registro_list.count())],
-        "comments": [comment_list.item(i).text() for i in range(comment_list.count())] if comment_list else [],
+        #"comments": [comment_list.item(i).text() for i in range(comment_list.count())] if comment_list else [],
         "objeto": objeto_edit.text() if objeto_edit is not None else "",
         "radio_options": {
             title: next(
@@ -129,12 +94,6 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         for texto in registros_texts:
             cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (id_contrato, uasg, texto))
 
-        # Salvar comentarios_status (deletar antigos e inserir novos)
-        cursor.execute("DELETE FROM comentarios_status WHERE contrato_id = ?", (id_contrato,))
-        comentarios_texts = [comment_list.item(i).text() for i in range(comment_list.count())] if comment_list else []
-        if comentarios_texts:
-            cursor.executemany("INSERT INTO comentarios_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (id_contrato, uasg, texto))
-
         conn.commit()
         print(f"Status, registros e comentários para o contrato {id_contrato} (UASG: {uasg}) salvos no banco de dados.")
     except sqlite3.Error as e:
@@ -156,7 +115,7 @@ def show_success_message(parent):
     # Fechar a mensagem automaticamente depois de 300ms
     QTimer.singleShot(SUCCESS_MSG_TIMEOUT_MS, msg_box.close)
 
-def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_edit, radio_buttons, registro_list, comment_list):
+def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_edit, radio_buttons, registro_list):
     """Carrega os dados de status, registros e comentários do banco de dados SQLite."""
     id_contrato = data.get("id", "")
     uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
@@ -203,16 +162,6 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
                 item.setCheckState(Qt.CheckState.Unchecked)
                 registro_list.addItem(item)
             registro_list.clearSelection()
-
-        # Carregar comentarios_status
-        if comment_list is not None:
-          comment_list.clear()
-          cursor.execute("SELECT texto FROM comentarios_status WHERE contrato_id = ?", (id_contrato,))
-          for row in cursor.fetchall():
-              item = QListWidgetItem(row['texto'])
-              item.setCheckState(Qt.CheckState.Unchecked)
-              comment_list.addItem(item)
-          comment_list.clearSelection()
         
         if status_row:
             print(f"Status, registros e comentários para o contrato {id_contrato} carregados do banco de dados.")
