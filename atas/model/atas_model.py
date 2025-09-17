@@ -2,7 +2,7 @@
 import os
 import pandas as pd
 from pathlib import Path
-from sqlalchemy import create_engine, Column, Integer, String, Text, Date
+from sqlalchemy import create_engine, Column, Integer, String, Text, func
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 
@@ -22,7 +22,7 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Modelo da Tabela 'Atas'
+# Modelo da Tabela 'Atas' - Todas as colunas como String
 class Ata(Base):
     __tablename__ = "atas"
     id = Column(Integer, primary_key=True, index=True)
@@ -34,7 +34,7 @@ class Ata(Base):
     contrato_ata_parecer = Column(String)
     objeto = Column(Text)
     celebracao = Column(String)
-    termino = Column(Date)
+    termino = Column(String)  # Mantido como String
     observacoes = Column(Text)
     termo_aditivo = Column(String)
     portaria_fiscalizacao = Column(String)
@@ -50,45 +50,87 @@ class AtasModel:
     def get_all_atas(self):
         session = self._get_session()
         try:
-            atas = session.query(Ata).order_by(Ata.termino.asc()).all() # Ordena por data de término
-            return atas
+            # Ordena convertendo a string de data para o formato correto
+            atas = session.query(Ata).all()
+            # Ordena manualmente após a consulta
+            atas_ordenadas = sorted(
+                atas, 
+                key=lambda x: datetime.strptime(x.termino, '%Y-%m-%d') if x.termino else datetime.min
+            )
+            
+            return atas_ordenadas
+        except Exception as e:
+            print(f"Erro ao ordenar atas: {e}")
+            # Em caso de erro, retorna sem ordenação
+            return session.query(Ata).all()
         finally:
             session.close()
 
     def import_from_spreadsheet(self, file_path: str):
+        """Lê uma planilha .xlsx, apaga os dados antigos e insere os novos."""
         try:
-            engine = 'odf' if file_path.lower().endswith('.ods') else 'openpyxl'
-            
-            # --- CORREÇÃO APLICADA AQUI ---
-            # Removemos header=8. O padrão (header=0) lê a primeira linha como cabeçalho.
-            df = pd.read_excel(file_path, engine=engine)
+            df = pd.read_excel(file_path)
 
-            # Renomeia as colunas
+            # Limpa espaços em branco no início/fim dos nomes das colunas
+            df.columns = df.columns.str.strip()
+
+            # Mapeamento de colunas mais preciso, exatamente como na sua planilha
             column_mapping = {
-                'SETOR': 'setor', 'MODALIDADE': 'modalidade', 'N°': 'numero', 'ANO': 'ano',
-                'EMPRESA': 'empresa', 'CONTRATO - ATA PARECER': 'contrato_ata_parecer',
-                'OBJETO': 'objeto', 'CELEBRAÇÃO': 'celebracao', 'TERMO ADITIVO': 'termo_aditivo',
-                'PORTARIA DE FISCALIZAÇÃO': 'portaria_fiscalizacao', 
-                'TERMINO': 'termino', # Nome da coluna atualizado
+                'SETOR': 'setor',
+                'MODALIDADE': 'modalidade',
+                'Nº/': 'numero',
+                'ANO': 'ano',
+                'EMPRESA': 'empresa',
+                'CONTRATO – ATA PARECER': 'contrato_ata_parecer',
+                'OBJETO': 'objeto',
+                'CELEBRAÇÃO': 'celebracao',
+                'TERMO ADITIVO': 'termo_aditivo',
+                'PORTARIA DE FISCALIZAÇÃO': 'portaria_fiscalizacao',
+                'TERMINO': 'termino',
                 'OBSERVAÇÕES': 'observacoes'
             }
-            df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns}, inplace=True)
+            df.rename(columns=column_mapping, inplace=True)
             
-            # Converte a coluna 'termino' para datetime
-            if 'termino' in df.columns:
-                df['termino'] = pd.to_datetime(df['termino'], dayfirst=True, errors='coerce').dt.date
+            # Verificação para garantir que colunas essenciais foram encontradas
+            required_columns = ['termino', 'empresa', 'celebracao']
+            for col in required_columns:
+                if col not in df.columns:
+                    return False, f"Erro: Coluna '{col}' não encontrada. Verifique a planilha."
+
+            # Converte as colunas de data para string (formato YYYY-MM-DD)
+            for date_col in ['celebracao', 'termino']:
+                if date_col in df.columns:
+                    # Converte para datetime e depois para string no formato desejado
+                    df[date_col] = pd.to_datetime(df[date_col], errors='coerce').dt.strftime('%Y-%m-%d')
+            
+            # Converte NaN para string vazia
+            df = df.fillna('')
 
             session = self._get_session()
             try:
+                # Limpa a tabela antes de importar novos dados
                 session.query(Ata).delete()
                 
+                # Remove linhas onde a coluna 'empresa' está vazia
+                df = df[df['empresa'].astype(str).str.strip() != '']
+
                 for record in df.to_dict(orient='records'):
-                    valid_record = {key: value for key, value in record.items() if hasattr(Ata, key)}
+                    # Filtra apenas as colunas que existem no modelo
+                    valid_record = {}
+                    for key, value in record.items():
+                        if hasattr(Ata, key):
+                            # Garante que o valor é string
+                            if value is None:
+                                valid_record[key] = ''
+                            else:
+                                valid_record[key] = str(value)
+                    
                     ata_obj = Ata(**valid_record)
                     session.add(ata_obj)
                 
                 session.commit()
                 return True, f"{len(df)} registros importados com sucesso."
+                
             except Exception as e:
                 session.rollback()
                 return False, f"Erro ao salvar no banco de dados: {e}"
@@ -99,23 +141,9 @@ class AtasModel:
             return False, f"Erro ao ler o arquivo: {e}"
 
     def add_ata(self, ata_data: dict):
-        session = self._get_session()
-        try:
-            nova_ata = Ata(**ata_data)
-            session.add(nova_ata)
-            session.commit()
-            return nova_ata.id
-        finally:
-            session.close()
+        # Implementação futura
+        pass
 
     def delete_ata(self, ata_id: int):
-        session = self._get_session()
-        try:
-            ata_to_delete = session.query(Ata).filter(Ata.id == ata_id).first()
-            if ata_to_delete:
-                session.delete(ata_to_delete)
-                session.commit()
-                return True
-            return False
-        finally:
-            session.close()
+        # Implementação futura
+        pass

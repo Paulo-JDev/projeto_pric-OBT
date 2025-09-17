@@ -2,8 +2,8 @@
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 from PyQt6.QtGui import QStandardItem, QBrush, QColor, QFont
 from PyQt6.QtCore import Qt
-from datetime import date
-from model.atas_model import AtasModel
+from datetime import date, datetime
+from atas.model.atas_model import AtasModel
 from utils.icon_loader import icon_manager # Importa o gerenciador de ícones
 
 class AtasController:
@@ -19,6 +19,15 @@ class AtasController:
         self.view.delete_button.clicked.connect(self.delete_selected_ata)
         self.view.add_button.clicked.connect(lambda: QMessageBox.information(self.view, "Info", "Funcionalidade 'Adicionar' em desenvolvimento."))
         self.view.generate_table_button.clicked.connect(lambda: QMessageBox.information(self.view, "Info", "Funcionalidade 'Gerar Tabela' em desenvolvimento."))
+
+    def _parse_date_string(self, date_string):
+        """Converte string de data no formato YYYY-MM-DD para objeto date."""
+        if not date_string:
+            return None
+        try:
+            return datetime.strptime(date_string, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return None
 
     def _create_dias_item(self, dias_restantes):
         """Cria e formata o item da coluna 'Dias' com cores e ícones."""
@@ -57,7 +66,10 @@ class AtasController:
     def import_data(self):
         """Abre o diálogo para selecionar um arquivo e importa os dados."""
         file_path, _ = QFileDialog.getOpenFileName(
-            self.view, "Selecionar Planilha", "", "Planilhas (*.xlsx *.ods);;Todos os Arquivos (*)"
+            self.view,
+            "Selecionar Planilha Excel",
+            "",
+            "Planilhas Excel (*.xlsx)"
         )
         if not file_path:
             return
@@ -103,8 +115,11 @@ class AtasController:
         for ata in atas:
             dias_restantes = "N/A"
             if ata.termino:
-                delta = ata.termino - today
-                dias_restantes = delta.days
+                # Converte a string para objeto date antes de calcular
+                termino_date = self._parse_date_string(ata.termino)
+                if termino_date:
+                    delta = termino_date - today
+                    dias_restantes = delta.days
             
             # Usa a nova função para criar o item formatado
             dias_item = self._create_dias_item(dias_restantes)
