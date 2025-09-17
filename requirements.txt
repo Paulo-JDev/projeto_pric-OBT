@@ -8,3 +8,5 @@ SQLAlchemy==2.0.31
 Pillow==11.0.0
 python-dotenv==1.1.0 #1.0.1
 PyQt6-Charts==6.7.0
+pandas==2.3.2
+odfpy==1.4.1
