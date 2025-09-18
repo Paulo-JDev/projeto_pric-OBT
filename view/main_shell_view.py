@@ -2,7 +2,11 @@
 
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QListWidget, QStackedWidget, QListWidgetItem, QLabel, QVBoxLayout
 from PyQt6.QtCore import Qt, QSize # Adicione a importação de QSize
+from PyQt6.QtGui import QIcon
+from Contratos.model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
+import os
+
 
 class MainShellView(QMainWindow):
     def __init__(self):
@@ -10,6 +14,7 @@ class MainShellView(QMainWindow):
         self.setWindowTitle("Contratos360 - Gestão Integrada")
         self.setGeometry(100, 100, 1280, 720)
         self.setMinimumSize(1024, 600)
+        self.set_window_icon()
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -50,3 +55,13 @@ class MainShellView(QMainWindow):
         welcome_label.setObjectName("WelcomeLabel")
         welcome_layout.addWidget(welcome_label)
         self.stacked_widget.addWidget(welcome_widget)
+
+    def set_window_icon(self):
+        """Define o ícone da janela a partir de um arquivo na pasta utils/icons."""
+        # Caminho do ícone na pasta original
+        icon_path = resource_path("utils/icons/mn.ico")
+
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+        else:
+            print(f"⚠ Arquivo de ícone não encontrado: {icon_path}")
