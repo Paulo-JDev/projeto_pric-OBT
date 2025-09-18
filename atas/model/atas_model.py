@@ -1,4 +1,5 @@
-# atas/model/atas_model.py
+# atas/model/atas_model.py - VERSÃO CORRIGIDA
+
 import os
 import pandas as pd
 from pathlib import Path
@@ -38,6 +39,19 @@ class Ata(Base):
     observacoes = Column(Text)
     termo_aditivo = Column(String)
     portaria_fiscalizacao = Column(String)
+
+class AtaData:
+    """Classe para representar os dados de uma ata."""
+    def __init__(self, id, numero, ano, empresa, objeto, contrato_ata_parecer, inicio=None, termino=None, observacoes=None):
+        self.id = id
+        self.numero = numero
+        self.ano = ano
+        self.empresa = empresa
+        self.objeto = objeto
+        self.contrato_ata_parecer = contrato_ata_parecer
+        self.inicio = inicio
+        self.termino = termino
+        self.observacoes = observacoes or ""
 
 class AtasModel:
     def __init__(self):
@@ -140,10 +154,125 @@ class AtasModel:
         except Exception as e:
             return False, f"Erro ao ler o arquivo: {e}"
 
-    def add_ata(self, ata_data: dict):
-        # Implementação futura
-        pass
+    def add_ata(self, ata_data):
+        """Adiciona uma nova ata ao banco de dados usando SQLAlchemy."""
+        session = self._get_session()
+        try:
+            # Cria um novo objeto Ata
+            nova_ata = Ata(
+                numero=str(ata_data['numero']),
+                ano=str(ata_data['ano']),
+                empresa=str(ata_data['empresa']),
+                objeto=str(ata_data['objeto']),
+                contrato_ata_parecer=str(ata_data['contrato_ata_parecer']),
+                celebracao=ata_data.get('inicio', ''),  # celebracao = inicio
+                termino=ata_data.get('termino', ''),
+                observacoes=str(ata_data.get('observacoes', '')),
+                # Campos opcionais que podem ser preenchidos depois
+                setor='',
+                modalidade='',
+                termo_aditivo='',
+                portaria_fiscalizacao=''
+            )
+            
+            session.add(nova_ata)
+            session.commit()
+            return True
+            
+        except Exception as e:
+            print(f"Erro ao adicionar ata: {e}")
+            session.rollback()
+            return False
+        finally:
+            session.close()
+    
+    def get_ata_by_id(self, ata_id):
+        """Busca uma ata específica pelo ID usando SQLAlchemy."""
+        session = self._get_session()
+        try:
+            ata = session.query(Ata).filter(Ata.id == ata_id).first()
+            
+            if ata:
+                return AtaData(
+                    id=ata.id,
+                    numero=ata.numero,
+                    ano=ata.ano,
+                    empresa=ata.empresa,
+                    objeto=ata.objeto,
+                    contrato_ata_parecer=ata.contrato_ata_parecer,
+                    inicio=ata.celebracao,  # celebracao = inicio
+                    termino=ata.termino,
+                    observacoes=ata.observacoes
+                )
+            return None
+            
+        except Exception as e:
+            print(f"Erro ao buscar ata por ID: {e}")
+            return None
+        finally:
+            session.close()
+
+    def get_ata_by_parecer(self, parecer_value):
+        """Busca uma ata específica pelo valor do campo contrato_ata_parecer."""
+        session = self._get_session()
+        try:
+            ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
+            if ata:
+                return AtaData(
+                    id=ata.id, numero=ata.numero, ano=ata.ano, empresa=ata.empresa,
+                    objeto=ata.objeto, contrato_ata_parecer=ata.contrato_ata_parecer,
+                    inicio=ata.celebracao, termino=ata.termino, observacoes=ata.observacoes
+                )
+            return None
+        except Exception as e:
+            print(f"Erro ao buscar ata por parecer: {e}")
+            return None
+        finally:
+            session.close()
+
 
     def delete_ata(self, ata_id: int):
-        # Implementação futura
-        pass
+        """Exclui uma ata do banco de dados usando SQLAlchemy."""
+        session = self._get_session()
+        try:
+            # Busca a ata pelo ID
+            ata = session.query(Ata).filter(Ata.id == ata_id).first()
+            
+            if ata:
+                session.delete(ata)
+                session.commit()
+                return True
+            else:
+                print(f"Ata com ID {ata_id} não encontrada")
+                return False
+                
+        except Exception as e:
+            print(f"Erro ao excluir ata: {e}")
+            session.rollback()
+            return False
+        finally:
+            session.close()
+
+    def update_ata(self, ata_id, updated_data):
+        """Atualiza uma ata existente no banco de dados."""
+        session = self._get_session()
+        try:
+            ata = session.query(Ata).filter(Ata.id == ata_id).first()
+            
+            if ata:
+                # Atualiza apenas os campos fornecidos
+                for key, value in updated_data.items():
+                    if hasattr(ata, key):
+                        setattr(ata, key, str(value) if value is not None else '')
+                
+                session.commit()
+                return True
+            else:
+                return False
+                
+        except Exception as e:
+            print(f"Erro ao atualizar ata: {e}")
+            session.rollback()
+            return False
+        finally:
+            session.close()
