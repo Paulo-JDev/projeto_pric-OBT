@@ -63,36 +63,6 @@ def create_status_tab(self):
 
     content_layout.addLayout(registros_section) # Adiciona seção de registros ao layout principal
 
-    # ---- COLUNA DIREITA: COMENTÁRIOS ----
-    '''comentarios_section = QVBoxLayout()
-
-    # Frame para a lista de comentários
-    comentarios_frame = QFrame()
-    comentarios_frame.setObjectName("comentarios_frame")
-    comentarios_frame.setFrameShape(QFrame.Shape.StyledPanel)
-    comentarios_list_layout = QVBoxLayout(comentarios_frame)
-    comentarios_list_layout.setContentsMargins(5, 5, 5, 5)
-    
-    self.comment_list = QListWidget()
-    self.comment_list.setObjectName("comment_list")
-    comentarios_list_layout.addWidget(self.comment_list)
-    comentarios_section.addWidget(comentarios_frame) # Adiciona o frame à seção
-
-    # Botões para comentários (abaixo da lista)
-    comentario_buttons_layout = QHBoxLayout()
-    self.add_comment_button = QPushButton("Adicionar Comentário")
-    self.add_comment_button.setIcon(icon_manager.get_icon("comments"))
-    self.add_comment_button.clicked.connect(self.add_comment)
-    comentario_buttons_layout.addWidget(self.add_comment_button)
-
-    self.delete_comment_button = QPushButton("Excluir Comentário")
-    self.delete_comment_button.setIcon(icon_manager.get_icon("delete_comment"))
-    self.delete_comment_button.clicked.connect(self.delete_comment)
-    comentario_buttons_layout.addWidget(self.delete_comment_button)
-    comentarios_section.addLayout(comentario_buttons_layout) # Adiciona botões à seção
-
-    content_layout.addLayout(comentarios_section) # Adiciona seção de comentários ao layout principal'''
-
     # Adiciona o layout de conteúdo (com as duas colunas) ao layout da aba
     main_layout.addLayout(content_layout)
 

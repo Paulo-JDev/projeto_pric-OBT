@@ -1,5 +1,7 @@
 from PyQt6.QtWidgets import QLabel, QLineEdit, QHBoxLayout
 from PyQt6.QtCore import QSortFilterProxyModel, Qt, QRegularExpression
+import os
+import sys
 
 
 def refresh_uasg_menu(self):
@@ -96,3 +98,13 @@ def update_search_and_selection(text, proxy_model, table_view):
             if proxy_index.isValid():
                 table_view.selectionModel().select(proxy_index, table_view.selectionModel().SelectionFlag.Select | table_view.selectionModel().SelectionFlag.Rows)
                 break
+
+def resource_path(relative_path):
+    """Retorna o caminho absoluto para um recurso, funcionando tanto no desenvolvimento quanto no empacotamento."""
+    try:
+        # PyInstaller cria uma pasta temporária e armazena o caminho em _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)

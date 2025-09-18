@@ -1,13 +1,13 @@
-# atas/model/atas_model.py - VERSÃO CORRIGIDA
+# atas/model/atas_model.py
 
 import os
 import pandas as pd
 from pathlib import Path
-from sqlalchemy import create_engine, Column, Integer, String, Text, func
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from datetime import datetime
 
-# Define o caminho base para encontrar a pasta 'database'
+# Define o caminho base
 try:
     base_dir = Path(os.environ.get("_MEIPASS", Path.cwd()))
 except Exception:
@@ -23,7 +23,16 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Modelo da Tabela 'Atas' - Todas as colunas como String
+# --- NOVA TABELA PARA REGISTROS ---
+class RegistroAta(Base):
+    __tablename__ = "registros_atas"
+    id = Column(Integer, primary_key=True, index=True)
+    # Usa o contrato_ata_parecer como chave estrangeira
+    ata_id = Column(Integer, ForeignKey("atas.id"), nullable=False)
+    texto = Column(Text, nullable=False)
+    ata = relationship("Ata", back_populates="registros")
+
+# Modelo da Tabela 'Atas' com o relacionamento
 class Ata(Base):
     __tablename__ = "atas"
     id = Column(Integer, primary_key=True, index=True)
@@ -32,26 +41,32 @@ class Ata(Base):
     numero = Column(String)
     ano = Column(String)
     empresa = Column(String)
-    contrato_ata_parecer = Column(String)
+    # Define como chave primária para a lógica de relacionamento
+    contrato_ata_parecer = Column(String, unique=True, index=True)
     objeto = Column(Text)
     celebracao = Column(String)
-    termino = Column(String)  # Mantido como String
+    termino = Column(String)
     observacoes = Column(Text)
     termo_aditivo = Column(String)
     portaria_fiscalizacao = Column(String)
+    registros = relationship("RegistroAta", back_populates="ata", cascade="all, delete-orphan")
 
+# Classe de dados para transferência de informações
 class AtaData:
-    """Classe para representar os dados de uma ata."""
-    def __init__(self, id, numero, ano, empresa, objeto, contrato_ata_parecer, inicio=None, termino=None, observacoes=None):
-        self.id = id
-        self.numero = numero
-        self.ano = ano
-        self.empresa = empresa
-        self.objeto = objeto
-        self.contrato_ata_parecer = contrato_ata_parecer
-        self.inicio = inicio
-        self.termino = termino
-        self.observacoes = observacoes or ""
+    def __init__(self, ata_db_object):
+        self.id = ata_db_object.id
+        self.setor = ata_db_object.setor
+        self.modalidade = ata_db_object.modalidade
+        self.numero = ata_db_object.numero
+        self.ano = ata_db_object.ano
+        self.empresa = ata_db_object.empresa
+        self.contrato_ata_parecer = ata_db_object.contrato_ata_parecer
+        self.objeto = ata_db_object.objeto
+        self.celebracao = ata_db_object.celebracao
+        self.termino = ata_db_object.termino
+        self.observacoes = ata_db_object.observacoes
+        self.portaria_fiscalizacao = ata_db_object.portaria_fiscalizacao
+        self.registros = [reg.texto for reg in ata_db_object.registros] if ata_db_object.registros else []
 
 class AtasModel:
     def __init__(self):
@@ -64,215 +79,107 @@ class AtasModel:
     def get_all_atas(self):
         session = self._get_session()
         try:
-            # Ordena convertendo a string de data para o formato correto
             atas = session.query(Ata).all()
-            # Ordena manualmente após a consulta
             atas_ordenadas = sorted(
-                atas, 
-                key=lambda x: datetime.strptime(x.termino, '%Y-%m-%d') if x.termino else datetime.min
+                atas, key=lambda x: datetime.strptime(x.termino, '%Y-%m-%d') if x.termino else datetime.min
             )
-            
             return atas_ordenadas
-        except Exception as e:
-            print(f"Erro ao ordenar atas: {e}")
-            # Em caso de erro, retorna sem ordenação
-            return session.query(Ata).all()
         finally:
             session.close()
 
-    def import_from_spreadsheet(self, file_path: str):
-        """Lê uma planilha .xlsx, apaga os dados antigos e insere os novos."""
-        try:
-            df = pd.read_excel(file_path)
-
-            # Limpa espaços em branco no início/fim dos nomes das colunas
-            df.columns = df.columns.str.strip()
-
-            # Mapeamento de colunas mais preciso, exatamente como na sua planilha
-            column_mapping = {
-                'SETOR': 'setor',
-                'MODALIDADE': 'modalidade',
-                'Nº/': 'numero',
-                'ANO': 'ano',
-                'EMPRESA': 'empresa',
-                'CONTRATO – ATA PARECER': 'contrato_ata_parecer',
-                'OBJETO': 'objeto',
-                'CELEBRAÇÃO': 'celebracao',
-                'TERMO ADITIVO': 'termo_aditivo',
-                'PORTARIA DE FISCALIZAÇÃO': 'portaria_fiscalizacao',
-                'TERMINO': 'termino',
-                'OBSERVAÇÕES': 'observacoes'
-            }
-            df.rename(columns=column_mapping, inplace=True)
-            
-            # Verificação para garantir que colunas essenciais foram encontradas
-            required_columns = ['termino', 'empresa', 'celebracao']
-            for col in required_columns:
-                if col not in df.columns:
-                    return False, f"Erro: Coluna '{col}' não encontrada. Verifique a planilha."
-
-            # Converte as colunas de data para string (formato YYYY-MM-DD)
-            for date_col in ['celebracao', 'termino']:
-                if date_col in df.columns:
-                    # Converte para datetime e depois para string no formato desejado
-                    df[date_col] = pd.to_datetime(df[date_col], errors='coerce').dt.strftime('%Y-%m-%d')
-            
-            # Converte NaN para string vazia
-            df = df.fillna('')
-
-            session = self._get_session()
-            try:
-                # Limpa a tabela antes de importar novos dados
-                session.query(Ata).delete()
-                
-                # Remove linhas onde a coluna 'empresa' está vazia
-                df = df[df['empresa'].astype(str).str.strip() != '']
-
-                for record in df.to_dict(orient='records'):
-                    # Filtra apenas as colunas que existem no modelo
-                    valid_record = {}
-                    for key, value in record.items():
-                        if hasattr(Ata, key):
-                            # Garante que o valor é string
-                            if value is None:
-                                valid_record[key] = ''
-                            else:
-                                valid_record[key] = str(value)
-                    
-                    ata_obj = Ata(**valid_record)
-                    session.add(ata_obj)
-                
-                session.commit()
-                return True, f"{len(df)} registros importados com sucesso."
-                
-            except Exception as e:
-                session.rollback()
-                return False, f"Erro ao salvar no banco de dados: {e}"
-            finally:
-                session.close()
-
-        except Exception as e:
-            return False, f"Erro ao ler o arquivo: {e}"
-
-    def add_ata(self, ata_data):
-        """Adiciona uma nova ata ao banco de dados usando SQLAlchemy."""
+    def get_ata_by_parecer(self, parecer_value):
         session = self._get_session()
         try:
-            # Cria um novo objeto Ata
-            nova_ata = Ata(
-                numero=str(ata_data['numero']),
-                ano=str(ata_data['ano']),
-                empresa=str(ata_data['empresa']),
-                objeto=str(ata_data['objeto']),
-                contrato_ata_parecer=str(ata_data['contrato_ata_parecer']),
-                celebracao=ata_data.get('inicio', ''),  # celebracao = inicio
-                termino=ata_data.get('termino', ''),
-                observacoes=str(ata_data.get('observacoes', '')),
-                # Campos opcionais que podem ser preenchidos depois
-                setor='',
-                modalidade='',
-                termo_aditivo='',
-                portaria_fiscalizacao=''
-            )
-            
+            ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
+            return AtaData(ata) if ata else None
+        finally:
+            session.close()
+
+    def add_ata(self, ata_data):
+        session = self._get_session()
+        try:
+            ata_cols = {c.name for c in Ata.__table__.columns}
+            filtered_data = {k: v for k, v in ata_data.items() if k in ata_cols}
+            nova_ata = Ata(**filtered_data)
             session.add(nova_ata)
             session.commit()
             return True
-            
         except Exception as e:
             print(f"Erro ao adicionar ata: {e}")
             session.rollback()
             return False
         finally:
             session.close()
-    
-    def get_ata_by_id(self, ata_id):
-        """Busca uma ata específica pelo ID usando SQLAlchemy."""
-        session = self._get_session()
-        try:
-            ata = session.query(Ata).filter(Ata.id == ata_id).first()
-            
-            if ata:
-                return AtaData(
-                    id=ata.id,
-                    numero=ata.numero,
-                    ano=ata.ano,
-                    empresa=ata.empresa,
-                    objeto=ata.objeto,
-                    contrato_ata_parecer=ata.contrato_ata_parecer,
-                    inicio=ata.celebracao,  # celebracao = inicio
-                    termino=ata.termino,
-                    observacoes=ata.observacoes
-                )
-            return None
-            
-        except Exception as e:
-            print(f"Erro ao buscar ata por ID: {e}")
-            return None
-        finally:
-            session.close()
 
-    def get_ata_by_parecer(self, parecer_value):
-        """Busca uma ata específica pelo valor do campo contrato_ata_parecer."""
+    def delete_ata(self, parecer_value: str):
         session = self._get_session()
         try:
             ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
             if ata:
-                return AtaData(
-                    id=ata.id, numero=ata.numero, ano=ata.ano, empresa=ata.empresa,
-                    objeto=ata.objeto, contrato_ata_parecer=ata.contrato_ata_parecer,
-                    inicio=ata.celebracao, termino=ata.termino, observacoes=ata.observacoes
-                )
-            return None
-        except Exception as e:
-            print(f"Erro ao buscar ata por parecer: {e}")
-            return None
-        finally:
-            session.close()
-
-
-    def delete_ata(self, ata_id: int):
-        """Exclui uma ata do banco de dados usando SQLAlchemy."""
-        session = self._get_session()
-        try:
-            # Busca a ata pelo ID
-            ata = session.query(Ata).filter(Ata.id == ata_id).first()
-            
-            if ata:
                 session.delete(ata)
                 session.commit()
                 return True
-            else:
-                print(f"Ata com ID {ata_id} não encontrada")
-                return False
-                
-        except Exception as e:
-            print(f"Erro ao excluir ata: {e}")
-            session.rollback()
             return False
         finally:
             session.close()
 
-    def update_ata(self, ata_id, updated_data):
-        """Atualiza uma ata existente no banco de dados."""
+    def update_ata(self, parecer_value, updated_data, registros_list):
         session = self._get_session()
         try:
-            ata = session.query(Ata).filter(Ata.id == ata_id).first()
-            
+            ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
             if ata:
-                # Atualiza apenas os campos fornecidos
                 for key, value in updated_data.items():
                     if hasattr(ata, key):
                         setattr(ata, key, str(value) if value is not None else '')
-                
+
+                # Limpa registos antigos e adiciona os novos usando o ID
+                session.query(RegistroAta).filter(RegistroAta.ata_id == ata.id).delete(synchronize_session=False)
+                for texto in registros_list:
+                    session.add(RegistroAta(ata_id=ata.id, texto=texto))
+
                 session.commit()
                 return True
-            else:
-                return False
-                
+            return False
         except Exception as e:
             print(f"Erro ao atualizar ata: {e}")
             session.rollback()
             return False
         finally:
             session.close()
+            
+    def import_from_spreadsheet(self, file_path: str):
+        # (Este método permanece igual)
+        try:
+            df = pd.read_excel(file_path)
+            df.columns = df.columns.str.strip()
+            column_mapping = {
+                'SETOR': 'setor', 'MODALIDADE': 'modalidade', 'Nº/': 'numero',
+                'ANO': 'ano', 'EMPRESA': 'empresa', 'CONTRATO – ATA PARECER': 'contrato_ata_parecer',
+                'OBJETO': 'objeto', 'CELEBRAÇÃO': 'celebracao', 'TERMO ADITIVO': 'termo_aditivo',
+                'PORTARIA DE FISCALIZAÇÃO': 'portaria_fiscalizacao', 'TERMINO': 'termino',
+                'OBSERVAÇÕES': 'observacoes'
+            }
+            df.rename(columns=column_mapping, inplace=True)
+            
+            for date_col in ['celebracao', 'termino']:
+                if date_col in df.columns:
+                    df[date_col] = pd.to_datetime(df[date_col], errors='coerce').dt.strftime('%Y-%m-%d')
+            
+            df = df.fillna('')
+            session = self._get_session()
+            try:
+                session.query(Ata).delete()
+                df = df[df['empresa'].astype(str).str.strip() != '']
+                for record in df.to_dict(orient='records'):
+                    valid_record = {key: str(value) if value is not None else '' for key, value in record.items() if hasattr(Ata, key)}
+                    ata_obj = Ata(**valid_record)
+                    session.add(ata_obj)
+                session.commit()
+                return True, f"{len(df)} registros importados com sucesso."
+            except Exception as e:
+                session.rollback()
+                return False, f"Erro ao salvar no banco de dados: {e}"
+            finally:
+                session.close()
+        except Exception as e:
+            return False, f"Erro ao ler o arquivo: {e}"
