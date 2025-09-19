@@ -6,6 +6,9 @@ from datetime import date, datetime
 from atas.model.atas_model import AtasModel
 from utils.icon_loader import icon_manager 
 from atas.view.ata_details_dialog import AtaDetailsDialog
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
 
 class AtasController:
     def __init__(self, model: AtasModel, view):
@@ -18,7 +21,7 @@ class AtasController:
         self.view.import_button.clicked.connect(self.import_data)
         self.view.delete_button.clicked.connect(self.delete_selected_ata)
         self.view.add_button.clicked.connect(self.show_add_ata_dialog)
-        self.view.generate_table_button.clicked.connect(lambda: QMessageBox.information(self.view, "Info", "Funcionalidade 'Gerar Tabela' em desenvolvimento."))
+        self.view.generate_table_button.clicked.connect(self.generate_excel_report)
         self.view.table_view.doubleClicked.connect(self.show_details_on_double_click)
         self.view.table_view.customContextMenuRequested.connect(self.show_context_menu)
 
@@ -201,3 +204,96 @@ class AtasController:
                     source_model.item(row, 5).setText(ata_data.objeto)
                     print(f"✅ Linha da ata {parecer_value} atualizada na tabela.")
                 break
+
+    def generate_excel_report(self):
+        """Gera e salva uma planilha Excel com os dados das atas e hyperlinks."""
+        atas = self.model.get_all_atas()
+        if not atas:
+            QMessageBox.warning(self.view, "Nenhum Dado", "Não há atas para gerar a tabela.")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view, "Salvar Planilha como...", "Relatorio_Atas_Administrativas.xlsx",
+            "Excel Files (*.xlsx)"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            workbook = Workbook()
+            ws = workbook.active
+            ws.title = "Atas Administrativas"
+
+            # --- ESTILOS ---
+            title_font = Font(bold=True, size=16, color="FFFFFF")
+            subtitle_font = Font(bold=True, size=12, color="FFFFFF")
+            header_font = Font(bold=True, color="FFFFFF")
+            link_font = Font(color="0066CC", underline="single")
+            header_fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+            center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+            # --- CABEÇALHO ---
+            ws.merge_cells('A1:L3')
+            ws['A1'].value = "ATAS ADMINISTRATIVAS"
+            ws['A1'].font = title_font
+            ws['A1'].alignment = center_align
+
+            ws.merge_cells('A4:L4')
+            ws['A4'].value = f"ACORDOS ADMINISTRATIVOS EM VIGOR {datetime.now().year}"
+            ws['A4'].font = subtitle_font
+            ws['A4'].alignment = center_align
+
+            # --- CABEÇALHOS DA TABELA ---
+            headers = ["SETOR", "MODALIDADE", "N°", "ANO", "EMPRESA", "ATA - PARECER", "OBJETO",
+                    "CELEBRAÇÃO", "TERMO ADITIVO", "PORTARIA DE FISCALIZAÇÃO", "TÉRMINO", "DIAS P/ VENCIMENTO"]
+            ws.append(headers)
+            header_row = ws.max_row
+            for cell in ws[header_row]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center_align
+
+            # --- DADOS ---
+            today = date.today()
+            for ata in atas:
+                dias_restantes = "N/A"
+                if ata.termino:
+                    termino_date = self._parse_date_string(ata.termino)
+                    if termino_date:
+                        dias_restantes = (termino_date - today).days
+
+                # Prepara os valores, incluindo hyperlinks
+                parecer_val = ata.contrato_ata_parecer or "N/A"
+                if ata.links and ata.links.serie_ata_link:
+                    parecer_val = f'=HYPERLINK("{ata.links.serie_ata_link}", "{parecer_val}")'
+
+                termo_val = ata.termo_aditivo or "N/A"
+                if ata.links and ata.links.ta_link:
+                    termo_val = f'=HYPERLINK("{ata.links.ta_link}", "{termo_val}")'
+
+                portaria_val = ata.portaria_fiscalizacao or "N/A"
+                if ata.links and ata.links.portaria_link:
+                    portaria_val = f'=HYPERLINK("{ata.links.portaria_link}", "{portaria_val}")'
+
+                ws.append([
+                    ata.setor, ata.modalidade, ata.numero, ata.ano, ata.empresa,
+                    parecer_val, ata.objeto, ata.celebracao, termo_val,
+                    portaria_val, ata.termino, dias_restantes
+                ])
+                # Aplica estilo de link
+                current_row = ws.max_row
+                if "=" in str(ws[f'F{current_row}'].value): ws[f'F{current_row}'].font = link_font
+                if "=" in str(ws[f'I{current_row}'].value): ws[f'I{current_row}'].font = link_font
+                if "=" in str(ws[f'J{current_row}'].value): ws[f'J{current_row}'].font = link_font
+
+            # --- AJUSTE DE COLUNAS ---
+            for i, column_cells in enumerate(ws.columns):
+                length = max(len(str(cell.value or "")) for cell in column_cells)
+                ws.column_dimensions[get_column_letter(i + 1)].width = length + 2
+
+            workbook.save(file_path)
+            QMessageBox.information(self.view, "Sucesso", f"Planilha salva com sucesso em:\n{file_path}")
+
+        except Exception as e:
+            QMessageBox.critical(self.view, "Erro", f"Ocorreu um erro ao gerar a planilha:\n{str(e)}")

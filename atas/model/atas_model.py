@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship, joinedload
 from datetime import datetime
 
 # Define o caminho base
@@ -98,11 +98,19 @@ class AtasModel:
     def get_all_atas(self):
         session = self._get_session()
         try:
-            atas = session.query(Ata).all()
+            # --- ALTERAÇÃO AQUI ---
+            # options(joinedload(Ata.links)) força o carregamento dos links
+            # na mesma consulta, evitando o erro de sessão fechada.
+            atas = session.query(Ata).options(joinedload(Ata.links)).all()
+
             atas_ordenadas = sorted(
-                atas, key=lambda x: datetime.strptime(x.termino, '%Y-%m-%d') if x.termino else datetime.min
+                atas, 
+                key=lambda x: datetime.strptime(x.termino, '%Y-%m-%d') if x.termino else datetime.min
             )
             return atas_ordenadas
+        except Exception as e:
+            print(f"Erro ao carregar atas: {e}")
+            return [] # Retorna lista vazia em caso de erro
         finally:
             session.close()
 
