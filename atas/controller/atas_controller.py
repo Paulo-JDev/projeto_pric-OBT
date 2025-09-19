@@ -195,6 +195,8 @@ class AtasController:
                             dias_restantes = (termino_date - date.today()).days
 
                     source_model.setItem(row, 0, self._create_dias_item(dias_restantes))
+                    source_model.item(row, 1).setText(ata_data.numero)
+                    source_model.item(row, 2).setText(ata_data.ano)
                     source_model.item(row, 3).setText(ata_data.empresa)
                     source_model.item(row, 5).setText(ata_data.objeto)
                     print(f"✅ Linha da ata {parecer_value} atualizada na tabela.")

@@ -24,6 +24,7 @@ class AtaDetailsDialog(QDialog):
 
         self.create_general_tab()
         self.create_registros_tab()
+        self.create_links_tab()
 
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -42,23 +43,33 @@ class AtaDetailsDialog(QDialog):
         self.load_data()
 
     def create_general_tab(self):
+        """Cria a aba de Informações Gerais com os novos campos editáveis."""
         general_tab = QWidget()
         layout = QFormLayout(general_tab)
         layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
-        self.setor_le = QLineEdit()
+        # Campos de texto editáveis
+        self.numero_le = QLineEdit()
+        self.ano_le = QLineEdit()
+        self.modalidade_le = QLineEdit()
         self.empresa_le = QLineEdit()
         self.objeto_le = QLineEdit()
+        self.termo_aditivo_le = QLineEdit()
         self.portaria_le = QLineEdit()
-        
+
+        # Campos de data
         self.celebracao_de = QDateEdit(calendarPopup=True)
         self.celebracao_de.setDisplayFormat("dd/MM/yyyy")
         self.termino_de = QDateEdit(calendarPopup=True)
         self.termino_de.setDisplayFormat("dd/MM/yyyy")
-        
-        layout.addRow(QLabel("<b>Setor:</b>"), self.setor_le)
+
+        # Adiciona os campos ao layout
+        layout.addRow(QLabel("<b>Número:</b>"), self.numero_le)
+        layout.addRow(QLabel("<b>Ano:</b>"), self.ano_le)
+        layout.addRow(QLabel("<b>Modalidade:</b>"), self.modalidade_le)
         layout.addRow(QLabel("<b>Empresa:</b>"), self.empresa_le)
         layout.addRow(QLabel("<b>Objeto:</b>"), self.objeto_le)
+        layout.addRow(QLabel("<b>Termo Aditivo:</b>"), self.termo_aditivo_le)
         layout.addRow(QLabel("<b>Portaria de Fiscalização:</b>"), self.portaria_le)
         layout.addRow(QLabel("<b>Data de Celebração:</b>"), self.celebracao_de)
         layout.addRow(QLabel("<b>Data de Término:</b>"), self.termino_de)
@@ -86,29 +97,65 @@ class AtaDetailsDialog(QDialog):
         layout.addLayout(button_layout)
         self.tabs.addTab(registros_tab, "Registros")
 
+    def create_links_tab(self):
+        """Cria a aba para inserir os links."""
+        links_tab = QWidget()
+        layout = QFormLayout(links_tab)
+        layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+
+        self.serie_ata_link_le = QLineEdit()
+        self.portaria_link_le = QLineEdit()
+        self.ta_link_le = QLineEdit()
+
+        self.serie_ata_link_le.setPlaceholderText("Cole aqui o link da Série da Ata (opcional)")
+        self.portaria_link_le.setPlaceholderText("Cole aqui o link da Portaria (opcional)")
+        self.ta_link_le.setPlaceholderText("Cole aqui o link do Termo Aditivo (opcional)")
+
+        layout.addRow(QLabel("<b>Link Série Ata:</b>"), self.serie_ata_link_le)
+        layout.addRow(QLabel("<b>Link Portaria:</b>"), self.portaria_link_le)
+        layout.addRow(QLabel("<b>Link Termo Aditivo:</b>"), self.ta_link_le)
+
+        self.tabs.addTab(links_tab, "Links Atas")
+
     def load_data(self):
         """Carrega os dados da ata nos campos da interface."""
-        self.setor_le.setText(self.ata_data.setor or "")
+        self.numero_le.setText(self.ata_data.numero or "")
+        self.ano_le.setText(self.ata_data.ano or "")
+        self.modalidade_le.setText(self.ata_data.modalidade or "")
         self.empresa_le.setText(self.ata_data.empresa or "")
         self.objeto_le.setText(self.ata_data.objeto or "")
+        self.termo_aditivo_le.setText(self.ata_data.termo_aditivo or "")
         self.portaria_le.setText(self.ata_data.portaria_fiscalizacao or "")
-        
+
+        # Links
+        self.serie_ata_link_le.setText(self.ata_data.serie_ata_link or "")
+        self.portaria_link_le.setText(self.ata_data.portaria_link or "")
+        self.ta_link_le.setText(self.ata_data.ta_link or "")
+
         if self.ata_data.celebracao:
             self.celebracao_de.setDate(QDate.fromString(self.ata_data.celebracao, "yyyy-MM-dd"))
         if self.ata_data.termino:
             self.termino_de.setDate(QDate.fromString(self.ata_data.termino, "yyyy-MM-dd"))
-            
+
+        # Registros
         self.registro_list.clear()
         self.registro_list.addItems(self.ata_data.registros)
 
     def get_updated_data(self):
+        """Retorna um dicionário com os dados atualizados da interface."""
         return {
-            'setor': self.setor_le.text(),
+            'numero': self.numero_le.text(),
+            'ano': self.ano_le.text(),
+            'modalidade': self.modalidade_le.text(),
             'empresa': self.empresa_le.text(),
             'objeto': self.objeto_le.text(),
+            'termo_aditivo': self.termo_aditivo_le.text(),
             'portaria_fiscalizacao': self.portaria_le.text(),
             'celebracao': self.celebracao_de.date().toString("yyyy-MM-dd"),
-            'termino': self.termino_de.date().toString("yyyy-MM-dd")
+            'termino': self.termino_de.date().toString("yyyy-MM-dd"),
+            'serie_ata_link': self.serie_ata_link_le.text(),
+            'portaria_link': self.portaria_link_le.text(),
+            'ta_link': self.ta_link_le.text()
         }
 
     def add_registro(self):

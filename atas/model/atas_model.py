@@ -27,10 +27,19 @@ Base = declarative_base()
 class RegistroAta(Base):
     __tablename__ = "registros_atas"
     id = Column(Integer, primary_key=True, index=True)
-    # Usa o contrato_ata_parecer como chave estrangeira
-    ata_id = Column(Integer, ForeignKey("atas.id"), nullable=False)
+    # A ligação agora é feita através da coluna de texto, que é única
+    ata_parecer = Column(String, ForeignKey("atas.contrato_ata_parecer"), nullable=False) 
     texto = Column(Text, nullable=False)
     ata = relationship("Ata", back_populates="registros")
+
+class LinksAta(Base):
+    __tablename__ = "links_ata"
+    id = Column(Integer, primary_key=True)
+    ata_parecer = Column(String, ForeignKey("atas.contrato_ata_parecer"), nullable=False, unique=True)
+    serie_ata_link = Column(String)
+    portaria_link = Column(String)
+    ta_link = Column(String)
+    ata = relationship("Ata", back_populates="links")
 
 # Modelo da Tabela 'Atas' com o relacionamento
 class Ata(Base):
@@ -41,7 +50,6 @@ class Ata(Base):
     numero = Column(String)
     ano = Column(String)
     empresa = Column(String)
-    # Define como chave primária para a lógica de relacionamento
     contrato_ata_parecer = Column(String, unique=True, index=True)
     objeto = Column(Text)
     celebracao = Column(String)
@@ -49,12 +57,15 @@ class Ata(Base):
     observacoes = Column(Text)
     termo_aditivo = Column(String)
     portaria_fiscalizacao = Column(String)
+    links = relationship("LinksAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     registros = relationship("RegistroAta", back_populates="ata", cascade="all, delete-orphan")
 
 # Classe de dados para transferência de informações
 class AtaData:
     def __init__(self, ata_db_object):
         self.id = ata_db_object.id
+
+        # Aba geral
         self.setor = ata_db_object.setor
         self.modalidade = ata_db_object.modalidade
         self.numero = ata_db_object.numero
@@ -66,7 +77,15 @@ class AtaData:
         self.termino = ata_db_object.termino
         self.observacoes = ata_db_object.observacoes
         self.portaria_fiscalizacao = ata_db_object.portaria_fiscalizacao
+        self.termo_aditivo = ata_db_object.termo_aditivo
+
+        # Aba registros
         self.registros = [reg.texto for reg in ata_db_object.registros] if ata_db_object.registros else []
+
+        # Aba links
+        self.serie_ata_link = ata_db_object.links.serie_ata_link if ata_db_object.links else ""
+        self.portaria_link = ata_db_object.links.portaria_link if ata_db_object.links else ""
+        self.ta_link = ata_db_object.links.ta_link if ata_db_object.links else ""
 
 class AtasModel:
     def __init__(self):
@@ -128,14 +147,22 @@ class AtasModel:
         try:
             ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
             if ata:
+                # Atualiza os dados principais da ata
                 for key, value in updated_data.items():
                     if hasattr(ata, key):
                         setattr(ata, key, str(value) if value is not None else '')
 
-                # Limpa registos antigos e adiciona os novos usando o ID
-                session.query(RegistroAta).filter(RegistroAta.ata_id == ata.id).delete(synchronize_session=False)
+                # Cria ou atualiza os links
+                if not ata.links:
+                    ata.links = LinksAta()
+                ata.links.serie_ata_link = updated_data.get('serie_ata_link', '')
+                ata.links.portaria_link = updated_data.get('portaria_link', '')
+                ata.links.ta_link = updated_data.get('ta_link', '')
+
+                # Atualiza os registros
+                session.query(RegistroAta).filter(RegistroAta.ata_parecer == parecer_value).delete(synchronize_session=False)
                 for texto in registros_list:
-                    session.add(RegistroAta(ata_id=ata.id, texto=texto))
+                    session.add(RegistroAta(ata_parecer=parecer_value, texto=texto))
 
                 session.commit()
                 return True
@@ -146,7 +173,7 @@ class AtasModel:
             return False
         finally:
             session.close()
-            
+                
     def import_from_spreadsheet(self, file_path: str):
         # (Este método permanece igual)
         try:
