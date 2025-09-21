@@ -304,6 +304,7 @@ class UASGController:
             except Exception as e:
                 QMessageBox.critical(self.view, "Erro ao Importar", f"Não foi possível importar os dados: {e}")
 
+# =========================================== Método para exportar a tabela para um arquivo Excel =================================================
     def export_table_to_excel(self):
         """
         Exporta os dados para um arquivo Excel (.xlsx) com formatação avançada,
@@ -381,7 +382,7 @@ class UASGController:
 
             # --- CABEÇALHOS DAS COLUNAS (com quebra de linha) ---
             headers = [
-                "SETOR", "MODALIDADE", "N°/ANO", "EMPRESA", "CONTRATO\n- ATA PARECER", 
+                "SETOR", "MODALIDADE", "N°/ANO", "EMPRESA", "CONTRATOS",
                 "OBJETO", "CELEBRAÇÃO", "TERMO\nADITIVO", "PORTARIA DE\nFISCALIZAÇÃO", 
                 "TÉRMINO", "DIAS P/\nVENCIMENTO", "OBS"
             ]
