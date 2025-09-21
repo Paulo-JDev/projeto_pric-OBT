@@ -3,7 +3,6 @@ from PyQt6.QtCore import QSortFilterProxyModel, Qt, QRegularExpression
 import os
 import sys
 
-
 def refresh_uasg_menu(self):
         """Atualiza o menu com as UASGs carregadas."""
         menu = self.view.menu_button.menu()
