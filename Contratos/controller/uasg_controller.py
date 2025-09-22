@@ -402,7 +402,11 @@ class UASGController:
             center_alignment = Alignment(horizontal='center', vertical='center')
             green_font = Font(color="00B050") # Tom de verde padrão do Excel
 
-            for row_idx, contrato in enumerate(self.current_data, start=8): # Começa na linha 8
+            all_contracts = []
+            for uasg_contracts in self.loaded_uasgs.values():
+                all_contracts.extend(uasg_contracts)
+
+            for row_idx, contrato in enumerate(all_contracts, start=8):
                 data_termino_str = contrato.get("vigencia_fim", "")
                 data_termino_excel = None
                 if data_termino_str:
@@ -419,44 +423,33 @@ class UASGController:
                     contrato.get("numero", ""),
                     contrato.get("objeto", ""),
                     contrato.get("data_assinatura", "N/A"),
-                    "XXX",
-                    "XXX",
-                    data_termino_excel,
-                    f'=IF(ISBLANK(J{row_idx}), "N/A", J{row_idx}-TODAY())', # FÓRMULA DINÂMICA
-                    ""
+                    "XXX", "XXX", data_termino_excel,
+                    f'=IF(ISBLANK(J{row_idx}), "N/A", J{row_idx}-TODAY())', ""
                 ]
                 ws.append(row_data)
 
-                for col_idx in range(1, len(row_data) + 1):
-                    cell = ws.cell(row=row_idx, column=col_idx)
+                for col_idx, cell in enumerate(ws[row_idx], 1):
                     cell.alignment = center_alignment
-                    
                     if col_idx in [7, 10] and isinstance(cell.value, datetime):
                         cell.number_format = 'DD/MM/YYYY'
-                    
                     if col_idx == 11:
                         cell.font = green_font
                         cell.number_format = '0'
 
             # --- AJUSTE FINAL DAS LARGURAS DAS COLUNAS ---
-            ws.column_dimensions['A'].width = 10
-            ws.column_dimensions['B'].width = 12
-            ws.column_dimensions['C'].width = 12
-            ws.column_dimensions['D'].width = 35
-            ws.column_dimensions['E'].width = 15
-            ws.column_dimensions['F'].width = 45
-            ws.column_dimensions['G'].width = 12
-            ws.column_dimensions['H'].width = 12
-            ws.column_dimensions['I'].width = 15
-            ws.column_dimensions['J'].width = 12
-            ws.column_dimensions['K'].width = 15
-            ws.column_dimensions['L'].width = 20
+            ws.column_dimensions['A'].width = 10; ws.column_dimensions['B'].width = 12
+            ws.column_dimensions['C'].width = 12; ws.column_dimensions['D'].width = 35
+            ws.column_dimensions['E'].width = 15; ws.column_dimensions['F'].width = 45
+            ws.column_dimensions['G'].width = 12; ws.column_dimensions['H'].width = 12
+            ws.column_dimensions['I'].width = 15; ws.column_dimensions['J'].width = 12
+            ws.column_dimensions['K'].width = 15; ws.column_dimensions['L'].width = 20
 
             workbook.save(file_path)
-            QMessageBox.information(self.view, "Exportação Concluída", f"Planilha salva com sucesso em:\n{file_path}")
+            QMessageBox.information(self.view, "Exportação Concluída", f"Planilha com todas as UASGs salva com sucesso em:\n{file_path}")
 
         except Exception as e:
-            QMessageBox.critical(self.view, "Erro ao Exportar", f"Ocorreu um erro ao gerar a planilha:\n{e}")  # Funções auxiliares que você precisaria (ou adaptar das existentes em controller_table.py)
+            QMessageBox.critical(self.view, "Erro ao Exportar", f"Ocorreu um erro ao gerar a planilha:\n{e}")
+
     def _calculate_dias_restantes(self, vigencia_fim_str):
         from datetime import date, datetime # Mover imports para o topo do arquivo
         if vigencia_fim_str:
