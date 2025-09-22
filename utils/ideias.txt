@@ -8,8 +8,7 @@ ou oque o usario quiser.
 
 -new btn -> DADOS
 -Sub btns (olds) -> exportar e importar tabela
--Sub btns (news) -> full and empty table (tabela completa e vazia)
-
+-Sub btns (news) -> Tabela vazia e completa
 
 ----------------------------- Contratos --------------------------------
 

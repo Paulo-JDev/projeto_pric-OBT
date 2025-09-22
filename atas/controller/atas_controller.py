@@ -20,10 +20,15 @@ class AtasController:
         self.load_initial_data()
 
     def _connect_signals(self):
-        self.view.import_button.clicked.connect(self.import_data)
         self.view.delete_button.clicked.connect(self.delete_selected_ata)
         self.view.add_button.clicked.connect(self.show_add_ata_dialog)
-        self.view.generate_table_button.clicked.connect(self.generate_excel_report)
+        
+        # --- SIGNALS DO MENU "DADOS" ---
+        self.view.import_action.triggered.connect(self.import_data)
+        self.view.export_completo_action.triggered.connect(self.generate_excel_report)
+        self.view.template_vazio_action.triggered.connect(self.generate_empty_template)
+        self.view.export_para_importacao_action.triggered.connect(self.export_for_reimport)
+
         self.view.table_view.doubleClicked.connect(self.show_details_on_double_click)
         self.view.table_view.customContextMenuRequested.connect(self.show_context_menu)
 
@@ -338,4 +343,77 @@ class AtasController:
             QMessageBox.information(self.view, "Sucesso", f"Planilha salva com sucesso em:\n{file_path}")
 
         except Exception as e:
-            QMessageBox.critical(self.view, "Erro ao Gerar Planilha", f"Ocorreu um erro ao gerar a planilha:\n{str(e)}")        
+            QMessageBox.critical(self.view, "Erro ao Gerar Planilha", f"Ocorreu um erro ao gerar a planilha:\n{str(e)}")
+
+    def generate_empty_template(self):
+        """Gera uma planilha Excel vazia com os cabeçalhos necessários para a importação."""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view, "Salvar Modelo de Planilha Vazia", "Modelo_Importacao_Atas.xlsx",
+            "Excel Files (*.xlsx)"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            workbook = Workbook()
+            ws = workbook.active
+            ws.title = "Dados Atas"
+
+            # Cabeçalhos exatos que o método de importação espera
+            headers = [
+                'SETOR', 'MODALIDADE', 'Nº/', 'ANO', 'EMPRESA', 
+                'CONTRATO – ATA PARECER', 'OBJETO', 'CELEBRAÇÃO', 
+                'TERMO ADITIVO', 'PORTARIA DE FISCALIZAÇÃO', 'TERMINO', 'OBSERVAÇÕES'
+            ]
+            ws.append(headers)
+
+            # Estilo
+            header_font = Font(bold=True)
+            for cell in ws[1]:
+                cell.font = header_font
+
+            workbook.save(file_path)
+            QMessageBox.information(self.view, "Sucesso", f"Modelo de planilha vazia salvo em:\n{file_path}")
+        except Exception as e:
+            QMessageBox.critical(self.view, "Erro", f"Não foi possível gerar o modelo: {e}")
+
+    def export_for_reimport(self):
+        """Exporta todos os dados atuais para uma planilha no formato exato de importação."""
+        atas = self.model.get_all_atas()
+        if not atas:
+            QMessageBox.warning(self.view, "Nenhum Dado", "Não há atas para exportar.")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view, "Exportar Dados para Re-importação", "Backup_Atas_Importacao.xlsx",
+            "Excel Files (*.xlsx)"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            workbook = Workbook()
+            ws = workbook.active
+            ws.title = "Dados Atas"
+
+            headers = [
+                'SETOR', 'MODALIDADE', 'Nº/', 'ANO', 'EMPRESA', 
+                'CONTRATO – ATA PARECER', 'OBJETO', 'CELEBRAÇÃO', 
+                'TERMO ADITIVO', 'PORTARIA DE FISCALIZAÇÃO', 'TERMINO', 'OBSERVAÇÕES'
+            ]
+            ws.append(headers)
+
+            for ata in atas:
+                ws.append([
+                    ata.setor, ata.modalidade, ata.numero, ata.ano, ata.empresa,
+                    ata.contrato_ata_parecer, ata.objeto, ata.celebracao,
+                    ata.termo_aditivo, ata.portaria_fiscalizacao, ata.termino,
+                    ata.observacoes
+                ])
+
+            workbook.save(file_path)
+            QMessageBox.information(self.view, "Sucesso", f"Dados exportados com sucesso para:\n{file_path}")
+        except Exception as e:
+            QMessageBox.critical(self.view, "Erro", f"Ocorreu um erro ao exportar os dados: {e}")   

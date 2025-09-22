@@ -1,6 +1,6 @@
 # atas/view/atas_view.py
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableView, 
-                             QPushButton, QLineEdit, QHeaderView)
+                             QPushButton, QLineEdit, QHeaderView, QMenu)
 from PyQt6.QtGui import QStandardItemModel
 from PyQt6.QtCore import Qt
 from utils.icon_loader import icon_manager
@@ -27,14 +27,20 @@ class AtasView(QWidget):
         self.delete_button.setIcon(icon_manager.get_icon("delete"))
         toolbar_layout.addWidget(self.delete_button)
 
-        self.import_button = QPushButton(" Importar Planilha")
-        self.import_button.setIcon(icon_manager.get_icon("importar"))
-        toolbar_layout.addWidget(self.import_button)
+        self.dados_button = QPushButton(" Dados")
+        self.dados_button.setIcon(icon_manager.get_icon("database"))
+        
+        # Cria o menu que ficará associado ao botão
+        self.dados_menu = QMenu(self)
+        self.import_action = self.dados_menu.addAction(icon_manager.get_icon("importar"), "Importar Planilha")
+        self.export_completo_action = self.dados_menu.addAction(icon_manager.get_icon("excel_down"), "Exportar Tabela Completa")
+        self.dados_menu.addSeparator()
+        self.template_vazio_action = self.dados_menu.addAction(icon_manager.get_icon("excel"), "Gerar Tabela Vazia")
+        self.export_para_importacao_action = self.dados_menu.addAction(icon_manager.get_icon("excel_up"), "Exportar para Re-importação")
 
-        self.generate_table_button = QPushButton(" Gerar Tabela")
-        self.generate_table_button.setIcon(icon_manager.get_icon("excel_down"))
-        toolbar_layout.addWidget(self.generate_table_button)
-
+        self.dados_button.setMenu(self.dados_menu)
+        toolbar_layout.addWidget(self.dados_button)
+        
         main_layout.addLayout(toolbar_layout)
 
         self.table_view = QTableView()
