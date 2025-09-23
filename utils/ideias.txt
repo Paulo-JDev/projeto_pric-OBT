@@ -1,14 +1,6 @@
 ----------------------------------- ATAS ----------------------------- 
 
-Trocar o btn de impotar tabela e exportar por um com nome DADOS e vai abrir uma mini janela com os btn de importar e exportar tabela.
-E com mais dois, um chamado tabela vazia (que vai gerar uma tabela vaizia para o usuaio colocar as informacoes numa tabela que o programa
-consiga pegar os dados).
-e o outro vai gerar umka tabela com todas as informacoes porem de uma forma que o programa consiga ler, pois assim se precisar mudar algo ou do genero
-ou oque o usario quiser.
 
--new btn -> DADOS
--Sub btns (olds) -> exportar e importar tabela
--Sub btns (news) -> Tabela vazia e completa
 
 ----------------------------- Contratos --------------------------------
 

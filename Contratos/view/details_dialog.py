@@ -77,7 +77,7 @@ class DetailsDialog(QDialog):
         self.main_layout.addLayout(button_layout)
 
         # Carregar dados salvos
-        load_status(self.data, self.model, self.status_dropdown, self.objeto_edit, self.portaria_edit, self.radio_buttons, self.registro_list)
+        load_status(self.data, self.model, self.status_dropdown, self.objeto_edit, self.portaria_edit, self.radio_buttons, self.registro_list, self)
 
     def registro_def(self):
         """Abre uma mini janela para adicionar um comentário com data, hora e status selecionado."""

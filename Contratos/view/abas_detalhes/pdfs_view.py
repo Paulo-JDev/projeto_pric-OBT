@@ -1,49 +1,34 @@
-# view/abas_detalhes/object_tab.py
+# Contratos/view/abas_detalhes/pdfs_view.py
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QPushButton, QHBoxLayout
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QFrame, QPushButton, 
+                             QHBoxLayout, QLineEdit, QFormLayout, QGroupBox)
 from PyQt6.QtCore import Qt
 from urllib.parse import quote
 
-# As importações de 'requests' e 'json' não são mais necessárias aqui,
-# pois a lógica de busca foi movida para o UASGModel.
-
 def create_link_section(title, url, link_text):
     """Cria uma seção de link com título e URL clicável."""
-    if not url:
-        return None
-    
+    if not url: return None
     frame = QFrame()
     frame.setFrameShape(QFrame.Shape.StyledPanel)
     layout = QVBoxLayout(frame)
-    
     display_html = f'<b>{title}</b><br><a href="{url}" style="color: #8AB4F8;">{link_text}</a>'
-    
     link_label = QLabel(display_html)
     link_label.setOpenExternalLinks(True)
     link_label.setWordWrap(True)
     link_label.setTextFormat(Qt.TextFormat.RichText)
-    
     layout.addWidget(link_label)
     return frame
 
-# A função get_pdf_link foi removida daqui e sua lógica foi movida para o UASGModel.
-
 def create_object_tab(self):
     """
-    Cria a aba de links com um botão para carregar os links de arquivos
-    do contrato, funcionando nos modos Online e Offline.
+    Cria a aba de links com campos editáveis e um botão para carregar os links de arquivos.
     """
     object_tab = QWidget()
     main_layout = QVBoxLayout(object_tab)
     main_layout.setSpacing(15)
 
-    # Container para os resultados dos links, começa vazio
-    links_container = QVBoxLayout()
-    main_layout.addLayout(links_container)
-
-    contrato_id = self.data.get("id")
-
     # --- Links que NÃO precisam de requisição extra são exibidos imediatamente ---
+    contrato_id = self.data.get("id")
     comprasnet_url = f"https://contratos.comprasnet.gov.br/transparencia/contratos/{contrato_id}"
     comprasnet_section = create_link_section(
         "Link para a página do Contrato (Comprasnet):", 
@@ -51,7 +36,7 @@ def create_object_tab(self):
         "Acessar página do Comprasnet"
     )
     if comprasnet_section:
-        links_container.addWidget(comprasnet_section)
+        main_layout.addWidget(comprasnet_section)
 
     processo_numero = self.data.get("processo")
     if processo_numero:
@@ -63,54 +48,70 @@ def create_object_tab(self):
             f"Buscar processo {processo_numero} no PNCP"
         )
         if pncp_section:
-            links_container.addWidget(pncp_section)
+            main_layout.addWidget(pncp_section)
     
-    main_layout.addStretch() # Empurra o botão para baixo
+    # Container para os links dinâmicos da API
+    self.links_container = QVBoxLayout()
+    main_layout.addLayout(self.links_container)
 
-    # --- Botão para buscar os links de arquivos (PDF e outros) ---
-    files_button = QPushButton("Buscar Links de Arquivos (PDF, etc.)")
-    # Removido o ícone fixo para não confundir
+    # --- NOVO: Campos editáveis para os links ---
+    links_group = QGroupBox("Links de Documentos do Contrato")
+    form_layout = QFormLayout(links_group)
+    form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+
+    self.link_contrato_le = QLineEdit()
+    self.link_ta_le = QLineEdit()
+    self.link_portaria_le = QLineEdit()
+    self.link_pncp_espc_le = QLineEdit()
+
+    form_layout.addRow(QLabel("<b>Link Contrato (PDF):</b>"), self.link_contrato_le)
+    form_layout.addRow(QLabel("<b>Link Termo Aditivo (TA):</b>"), self.link_ta_le)
+    form_layout.addRow(QLabel("<b>Link Portaria:</b>"), self.link_portaria_le)
+    form_layout.addRow(QLabel("<b>Link PNCP Específico:</b>"), self.link_pncp_espc_le)
     
+    main_layout.addWidget(links_group)
+    main_layout.addStretch()
+
+    # --- Botão para buscar os links de arquivos ---
+    files_button = QPushButton("Buscar e Preencher Link do Contrato (PDF) e Outros")
     button_hbox = QHBoxLayout()
     button_hbox.addStretch()
     button_hbox.addWidget(files_button)
     main_layout.addLayout(button_hbox)
 
     def fetch_and_display_file_links():
-        """Função chamada pelo clique do botão, que agora usa o Model."""
         files_button.setText("Buscando...")
         files_button.setEnabled(False)
 
-        # --- A MÁGICA ACONTECE AQUI ---
-        # Pede os dados ao model, que sabe se está online ou offline
+        # Limpa os links antigos da API
+        while self.links_container.count():
+            child = self.links_container.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
         arquivos, error_message = self.model.get_sub_data_for_contract(contrato_id, "arquivos")
         
         if error_message or not arquivos:
-            msg = error_message if error_message else "Nenhum arquivo encontrado."
-            error_frame = QFrame()
-            error_frame.setFrameShape(QFrame.Shape.StyledPanel)
-            error_layout = QVBoxLayout(error_frame)
-            error_label = QLabel(f"<b>{msg}</b>")
-            error_layout.addWidget(error_label)
-            links_container.insertWidget(0, error_frame)
-            files_button.setText("Tentar Novamente")
-            files_button.setEnabled(True)
+            error_label = QLabel(f"<b>{error_message or 'Nenhum arquivo encontrado na API.'}</b>")
+            self.links_container.addWidget(error_label)
         else:
-            # Se encontrou arquivos, cria um link para cada um
-            for arquivo in reversed(arquivos): # reversed para inserir do último ao primeiro no topo
-                link_url = arquivo.get("path_arquivo")
-                # O texto do link será a descrição do arquivo, ou o tipo, ou um texto padrão
-                link_description = arquivo.get("descricao") or arquivo.get("tipo") or "Clique aqui para abrir"
+            link_contrato_encontrado = False
+            for arquivo in reversed(arquivos):
+                if arquivo.get("tipo") == "Contrato" and arquivo.get("path_arquivo") and not link_contrato_encontrado:
+                    self.link_contrato_le.setText(arquivo["path_arquivo"])
+                    link_contrato_encontrado = True
                 
-                section = create_link_section(
-                    f"Link para '{arquivo.get('tipo', 'Arquivo')}':", 
-                    link_url, 
-                    link_description
-                )
+                link_url = arquivo.get("path_arquivo")
+                link_description = arquivo.get("descricao") or arquivo.get("tipo") or "Clique aqui para abrir"
+                section = create_link_section(f"Link para '{arquivo.get('tipo', 'Arquivo')}':", link_url, link_description)
                 if section:
-                    links_container.insertWidget(0, section) # Insere no topo
+                    self.links_container.insertWidget(0, section)
             
-            files_button.setVisible(False) # Oculta o botão após o sucesso
+            if not link_contrato_encontrado:
+                print("Link do tipo 'Contrato' não encontrado nos arquivos da API.")
+
+        files_button.setText("Buscar Links de Arquivos (PDF, etc.)")
+        files_button.setEnabled(True)
 
     files_button.clicked.connect(fetch_and_display_file_links)
     

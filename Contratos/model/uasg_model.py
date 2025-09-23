@@ -459,3 +459,43 @@ class UASGModel:
             conn.close()
 
         return contracts_data
+    
+    # =============================== Novos métodos para salvar e buscar links de contratos =============================
+    def save_contract_links(self, contrato_id, link_data):
+        """Salva ou atualiza os links associados a um contrato."""
+        from .models import LinksContrato # Importação local
+        db = self._get_db_session()
+        try:
+            links = db.query(LinksContrato).filter(LinksContrato.contrato_id == contrato_id).first()
+            if not links:
+                links = LinksContrato(contrato_id=contrato_id)
+                db.add(links)
+            
+            links.link_contrato = link_data.get('link_contrato')
+            links.link_ta = link_data.get('link_ta')
+            links.link_portaria = link_data.get('link_portaria')
+            links.link_pncp_espc = link_data.get('link_pncp_espc')
+            
+            db.commit()
+        except Exception as e:
+            print(f"Erro ao salvar links do contrato {contrato_id}: {e}")
+            db.rollback()
+        finally:
+            db.close()
+
+    def get_contract_links(self, contrato_id):
+        """Busca os links de um contrato específico."""
+        from .models import LinksContrato # Importação local
+        db = self._get_db_session()
+        try:
+            links = db.query(LinksContrato).filter(LinksContrato.contrato_id == contrato_id).first()
+            if links:
+                return {
+                    "link_contrato": links.link_contrato,
+                    "link_ta": links.link_ta,
+                    "link_portaria": links.link_portaria,
+                    "link_pncp_espc": links.link_pncp_espc
+                }
+            return None
+        finally:
+            db.close()

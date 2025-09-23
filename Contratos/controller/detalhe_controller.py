@@ -53,6 +53,15 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
     if not id_contrato or not uasg:
         print("Erro: ID do contrato ou UASG não encontrado para salvar o status.")
         return None, None
+    
+    link_data = {
+        "link_contrato": parent.link_contrato_le.text(),
+        "link_ta": parent.link_ta_le.text(),
+        "link_portaria": parent.link_portaria_le.text(),
+        "link_pncp_espc": parent.link_pncp_espc_le.text()
+    }
+
+    model.save_contract_links(id_contrato, link_data)
 
     radio_options_dict = {
         "id_contrato": id_contrato,
@@ -115,7 +124,7 @@ def show_success_message(parent):
     # Fechar a mensagem automaticamente depois de 300ms
     QTimer.singleShot(SUCCESS_MSG_TIMEOUT_MS, msg_box.close)
 
-def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_edit, radio_buttons, registro_list):
+def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_edit, radio_buttons, registro_list, parent_dialog):
     """Carrega os dados de status, registros e comentários do banco de dados SQLite."""
     id_contrato = data.get("id", "")
     uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
@@ -126,6 +135,13 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
 
     conn = model._get_db_connection()
     cursor = conn.cursor()
+
+    links = model.get_contract_links(id_contrato)
+    if links:
+        parent_dialog.link_contrato_le.setText(links.get("link_contrato", ""))
+        parent_dialog.link_ta_le.setText(links.get("link_ta", ""))
+        parent_dialog.link_portaria_le.setText(links.get("link_portaria", ""))
+        parent_dialog.link_pncp_espc_le.setText(links.get("link_pncp_espc", ""))
 
     try:
         # Carregar status_contratos

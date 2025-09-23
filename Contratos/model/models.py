@@ -41,6 +41,7 @@ class Contrato(Base):
     uasg = relationship("Uasg", back_populates="contratos")
     status = relationship("StatusContrato", back_populates="contrato", uselist=False, cascade="all, delete-orphan")
     registros = relationship("RegistroStatus", back_populates="contrato", cascade="all, delete-orphan")
+    links = relationship("LinksContrato", uselist=False, back_populates="contrato", cascade="all, delete-orphan")
     #comentarios = relationship("ComentarioStatus", back_populates="contrato", cascade="all, delete-orphan")
     
     # Relacionamentos para dados offline
@@ -97,6 +98,16 @@ class RegistroStatus(Base):
     uasg_code = Column(String)
     texto = Column(Text, unique=True)
     contrato = relationship("Contrato", back_populates="registros")
+
+class LinksContrato(Base):
+    __tablename__ = "links_contratos"
+    id = Column(Integer, primary_key=True)
+    contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False, unique=True)
+    link_contrato = Column(String)
+    link_ta = Column(String)
+    link_portaria = Column(String)
+    link_pncp_espc = Column(String)
+    contrato = relationship("Contrato", back_populates="links")
 
 """class ComentarioStatus(Base):
     __tablename__ = "comentarios_status"
