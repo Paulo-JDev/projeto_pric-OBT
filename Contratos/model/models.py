@@ -107,6 +107,7 @@ class LinksContrato(Base):
     link_ta = Column(String)
     link_portaria = Column(String)
     link_pncp_espc = Column(String)
+    link_portal_marinha = Column(String)
     contrato = relationship("Contrato", back_populates="links")
 
 """class ComentarioStatus(Base):

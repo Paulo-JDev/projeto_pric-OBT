@@ -475,6 +475,7 @@ class UASGModel:
             links.link_ta = link_data.get('link_ta')
             links.link_portaria = link_data.get('link_portaria')
             links.link_pncp_espc = link_data.get('link_pncp_espc')
+            links.link_portal_marinha = link_data.get('link_portal_marinha')
             
             db.commit()
         except Exception as e:
@@ -494,7 +495,8 @@ class UASGModel:
                     "link_contrato": links.link_contrato,
                     "link_ta": links.link_ta,
                     "link_portaria": links.link_portaria,
-                    "link_pncp_espc": links.link_pncp_espc
+                    "link_pncp_espc": links.link_pncp_espc,
+                    "link_portal_marinha": links.link_portal_marinha
                 }
             return None
         finally:

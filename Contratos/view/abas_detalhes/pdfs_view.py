@@ -63,11 +63,13 @@ def create_object_tab(self):
     self.link_ta_le = QLineEdit()
     self.link_portaria_le = QLineEdit()
     self.link_pncp_espc_le = QLineEdit()
+    self.link_portal_marinha_le = QLineEdit()
 
     form_layout.addRow(QLabel("<b>Link Contrato (PDF):</b>"), self.link_contrato_le)
     form_layout.addRow(QLabel("<b>Link Termo Aditivo (TA):</b>"), self.link_ta_le)
     form_layout.addRow(QLabel("<b>Link Portaria:</b>"), self.link_portaria_le)
     form_layout.addRow(QLabel("<b>Link PNCP Específico:</b>"), self.link_pncp_espc_le)
+    form_layout.addRow(QLabel("<b>Link Portal Marinha:</b>"), self.link_portal_marinha_le)
     
     main_layout.addWidget(links_group)
     main_layout.addStretch()

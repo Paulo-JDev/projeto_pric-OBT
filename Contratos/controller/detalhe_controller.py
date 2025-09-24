@@ -58,7 +58,9 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         "link_contrato": parent.link_contrato_le.text(),
         "link_ta": parent.link_ta_le.text(),
         "link_portaria": parent.link_portaria_le.text(),
-        "link_pncp_espc": parent.link_pncp_espc_le.text()
+        "link_pncp_espc": parent.link_pncp_espc_le.text(),
+        "link_portal_marinha": parent.link_portal_marinha_le.text()
+
     }
 
     model.save_contract_links(id_contrato, link_data)
@@ -142,6 +144,7 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
         parent_dialog.link_ta_le.setText(links.get("link_ta", ""))
         parent_dialog.link_portaria_le.setText(links.get("link_portaria", ""))
         parent_dialog.link_pncp_espc_le.setText(links.get("link_pncp_espc", ""))
+        parent_dialog.link_portal_marinha_le.setText(links.get("link_portal_marinha", ""))
 
     try:
         # Carregar status_contratos

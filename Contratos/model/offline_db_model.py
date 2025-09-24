@@ -100,6 +100,17 @@ class OfflineDBController:
                 uasg_code TEXT, texto TEXT UNIQUE,
                 FOREIGN KEY (contrato_id) REFERENCES contratos (id)
             )''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS links_contratos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                contrato_id TEXT NOT NULL UNIQUE,
+                link_contrato TEXT,
+                link_ta TEXT,
+                link_portaria TEXT,
+                link_pncp_espc TEXT,
+                link_portal_marinha TEXT,
+                FOREIGN KEY (contrato_id) REFERENCES contratos (id)
+            )''')
 
         # --- PONTO CHAVE: Criação dos índices para otimizar as buscas ---
         # Este é o índice principal que você solicitou para a tabela de registros.
@@ -108,6 +119,7 @@ class OfflineDBController:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_empenhos_contrato_id ON empenhos (contrato_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_itens_contrato_id ON itens (contrato_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_arquivos_contrato_id ON arquivos (contrato_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_links_contrato_id ON links_contratos (contrato_id)')
 
         conn.commit()
         conn.close()
@@ -253,7 +265,7 @@ class OfflineDBController:
         if contrato_ids:
             # Transforma a lista de IDs em uma string para a cláusula IN
             placeholders = ', '.join('?' for _ in contrato_ids)
-            for table in ['historico', 'empenhos', 'itens', 'arquivos', 'status_contratos', 'registros_status', 'comentarios_status']:
+            for table in ['historico', 'empenhos', 'itens', 'arquivos', 'status_contratos', 'registros_status', 'links_contratos']:
                 cursor.execute(f"DELETE FROM {table} WHERE contrato_id IN ({placeholders})", contrato_ids)
         
         cursor.execute("DELETE FROM contratos WHERE uasg_code = ?", (uasg,))
