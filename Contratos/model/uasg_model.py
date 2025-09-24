@@ -297,100 +297,123 @@ class UASGModel:
             db.close()
 
     def get_all_status_data(self):
-        """Busca todos os dados de status, registros e comentários do banco de dados."""
-        conn = self._get_db_connection()
-        cursor = conn.cursor()
+        """REFATORADO COM SQLALCHEMY: Busca todos os dados de status, registros e links para exportação."""
+        # --- CORREÇÃO AQUI ---
+        # Importa os modelos necessários com o nome correto
+        from .models import StatusContrato, RegistroStatus, LinksContrato
+        
+        db = self._get_db_session()
         all_data = []
 
         try:
-            # Buscar todos os status_contratos
-            cursor.execute("SELECT contrato_id, uasg_code, status, objeto_editado, portaria_edit, radio_options_json, data_registro FROM status_contratos")
-            status_rows = cursor.fetchall()
+            # Busca todos os status_contratos usando o ORM
+            all_statuses = db.query(StatusContrato).all()
 
-            for status_row in status_rows:
-                contrato_id = status_row['contrato_id']
-                data_entry = dict(status_row) # Converte a linha do DB para um dicionário
+            for status in all_statuses:
+                # Constrói a entrada de dados base
+                data_entry = {
+                    "contrato_id": status.contrato_id,
+                    "uasg_code": status.uasg_code,
+                    "status": status.status,
+                    "objeto_editado": status.objeto_editado,
+                    "portaria_edit": status.portaria_edit,
+                    "radio_options_json": status.radio_options_json,
+                    "data_registro": status.data_registro
+                }
 
-                # Buscar registros para este contrato_id
-                cursor.execute("SELECT texto FROM registros_status WHERE contrato_id = ?", (contrato_id,))
-                data_entry['registros'] = [row['texto'] for row in cursor.fetchall()]
+                # --- CORREÇÃO AQUI ---
+                # Busca os registros associados usando o nome correto do modelo
+                registros = db.query(RegistroStatus.texto).filter(RegistroStatus.contrato_id == status.contrato_id).all()
+                data_entry['registros'] = [reg[0] for reg in registros]
 
+                # Busca os links associados
+                links = self.get_contract_links(status.contrato_id)
+                if links:
+                    data_entry.update(links)
                 
                 all_data.append(data_entry)
-            
-        except sqlite3.Error as e:
-            print(f"Erro ao buscar todos os dados de status: {e}")
-            return [] # Retorna lista vazia em caso de erro
+                
+        except Exception as e:
+            print(f"Erro ao buscar todos os dados de status com SQLAlchemy: {e}")
+            return []
         finally:
-            conn.close()
+            db.close()
         
         return all_data
 
     def import_statuses(self, data_to_import):
-        conn = self._get_db_connection()
-        cursor = conn.cursor()
+        """REFATORADO COM SQLALCHEMY: Importa status, registros e links de um JSON usando uma única sessão."""
+        # Importa os modelos e datetime
+        # --- CORREÇÃO AQUI ---
+        from .models import StatusContrato, RegistroStatus # Alterado de RegistrosStatus para RegistroStatus
+        from datetime import datetime
+        
+        db = self._get_db_session() # Inicia a sessão SQLAlchemy UMA ÚNICA VEZ para toda a operação
 
         try:
             for entry in data_to_import:
                 contrato_id = entry.get('contrato_id')
                 uasg_code = entry.get('uasg_code')
-
-                if not contrato_id or not uasg_code:
-                    print(f"Aviso: Entrada ignorada por falta de 'contrato_id' ou 'uasg_code': {entry}")
-                    continue
-
                 data_registro_import_str = entry.get('data_registro')
-                if not data_registro_import_str:
-                    print(f"Aviso: 'data_registro' não encontrada para o contrato {contrato_id}. A entrada de status será ignorada.")
+
+                if not all([contrato_id, uasg_code, data_registro_import_str]):
+                    print(f"Aviso: Entrada ignorada por falta de dados essenciais: {entry}")
                     continue
 
-                # --- LÓGICA DE COMPARAÇÃO DE DATAS ---
-                cursor.execute("SELECT data_registro FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
-                existing_row = cursor.fetchone()
-
+                # --- LÓGICA DE COMPARAÇÃO DE DATAS USANDO SQLAlchemy ---
+                existing_status = db.query(StatusContrato).filter(StatusContrato.contrato_id == contrato_id).first()
+                
                 should_update = True
-                if existing_row and existing_row['data_registro']:
+                if existing_status and existing_status.data_registro:
                     try:
-                        datetime_db = datetime.strptime(existing_row['data_registro'], "%d/%m/%Y %H:%M:%S")
+                        datetime_db = datetime.strptime(existing_status.data_registro, "%d/%m/%Y %H:%M:%S")
                         datetime_import = datetime.strptime(data_registro_import_str, "%d/%m/%Y %H:%M:%S")
                         if datetime_db >= datetime_import:
                             should_update = False
-                            print(f"Info: Dados para o contrato {contrato_id} no banco de dados são mais recentes. Importação ignorada.")
+                            print(f"Info: Dados para o contrato {contrato_id} no DB são mais recentes. Ignorando.")
                     except (ValueError, TypeError):
-                        pass # Se as datas forem inválidas, permite a atualização para corrigir o dado.
+                        pass
                 
                 if should_update:
-                    # Prepara um dicionário com todos os dados, usando valores padrão para campos que podem não existir no JSON
-                    status_data = {
-                        "contrato_id": contrato_id,
-                        "uasg_code": uasg_code,
-                        "status": entry.get('status'),
-                        "objeto_editado": entry.get('objeto_editado'),
-                        "portaria_edit": entry.get('portaria_edit', ''), # <<< PONTO CHAVE: Usa '' se 'portaria_edit' não existir
-                        "radio_options_json": entry.get('radio_options_json'),
-                        "data_registro": data_registro_import_str
+                    if not existing_status:
+                        existing_status = StatusContrato(contrato_id=contrato_id)
+                        db.add(existing_status)
+                    
+                    existing_status.uasg_code = uasg_code
+                    existing_status.status = entry.get('status')
+                    existing_status.objeto_editado = entry.get('objeto_editado')
+                    existing_status.portaria_edit = entry.get('portaria_edit', '')
+                    existing_status.radio_options_json = entry.get('radio_options_json')
+                    existing_status.data_registro = data_registro_import_str
+                    print(f"Info: Dados do contrato {contrato_id} preparados para atualização.")
+
+                    link_data = {
+                        "link_contrato": entry.get('link_contrato', ''),
+                        "link_ta": entry.get('link_ta', ''),
+                        "link_portaria": entry.get('link_portaria', ''),
+                        "link_pncp_espc": entry.get('link_pncp_espc', ''),
+                        "link_portal_marinha": entry.get('link_portal_marinha', '')
                     }
+                    self.save_contract_links(contrato_id, link_data, db_session=db)
+                    print(f"Info: Links para o contrato {contrato_id} preparados para importação.")
 
-                    # Usa INSERT OR REPLACE para inserir ou atualizar o registro de uma só vez
-                    cursor.execute('''
-                        INSERT OR REPLACE INTO status_contratos 
-                        (contrato_id, uasg_code, status, objeto_editado, portaria_edit, radio_options_json, data_registro) 
-                        VALUES (:contrato_id, :uasg_code, :status, :objeto_editado, :portaria_edit, :radio_options_json, :data_registro)
-                    ''', status_data)
-                    print(f"Info: Dados do contrato {contrato_id} foram inseridos/atualizados.")
+                    # --- CORREÇÃO AQUI ---
+                    # Deleta registros antigos e insere os novos
+                    db.query(RegistroStatus).filter(RegistroStatus.contrato_id == contrato_id).delete(synchronize_session=False) # Alterado de RegistrosStatus para RegistroStatus
+                    for texto_reg in entry.get('registros', []):
+                        # --- CORREÇÃO AQUI ---
+                        novo_registro = RegistroStatus(contrato_id=contrato_id, uasg_code=uasg_code, texto=texto_reg) # Alterado de RegistrosStatus para RegistroStatus
+                        db.add(novo_registro)
 
-                # A lógica para registros e comentários permanece, pois é independente da atualização do status
-                # Deleta os antigos para evitar duplicatas
-                for texto_reg in entry.get('registros', []):
-                    cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (contrato_id, uasg_code, texto_reg))
-            
-            conn.commit()
-            print("Importação de dados de status concluída com sucesso.")
-        except sqlite3.Error as e:
-            print(f"Erro ao importar dados de status para o banco de dados: {e}")
-            conn.rollback()
+            db.commit()
+            print("Importação de dados concluída com sucesso.")
+
+        except Exception as e:
+            print(f"ERRO CRÍTICO ao importar dados. Nenhuma alteração foi salva. Erro: {e}")
+            db.rollback()
         finally:
-            conn.close()
+            db.close()
+
 
     def save_setting(self, key, value):
         """Salva uma configuração no arquivo config.json."""
@@ -461,10 +484,9 @@ class UASGModel:
         return contracts_data
     
     # =============================== Novos métodos para salvar e buscar links de contratos =============================
-    def save_contract_links(self, contrato_id, link_data):
-        """Salva ou atualiza os links associados a um contrato."""
-        from .models import LinksContrato # Importação local
-        db = self._get_db_session()
+    def save_contract_links(self, contrato_id, link_data, db_session=None):
+        from .models import LinksContrato
+        db = db_session if db_session else self._get_db_session()
         try:
             links = db.query(LinksContrato).filter(LinksContrato.contrato_id == contrato_id).first()
             if not links:
@@ -477,12 +499,15 @@ class UASGModel:
             links.link_pncp_espc = link_data.get('link_pncp_espc')
             links.link_portal_marinha = link_data.get('link_portal_marinha')
             
-            db.commit()
+            if not db_session:
+                db.commit()
         except Exception as e:
             print(f"Erro ao salvar links do contrato {contrato_id}: {e}")
-            db.rollback()
+            if not db_session:
+                db.rollback()
         finally:
-            db.close()
+            if not db_session:
+                db.close()
 
     def get_contract_links(self, contrato_id):
         """Busca os links de um contrato específico."""
