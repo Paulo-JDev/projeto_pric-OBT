@@ -126,7 +126,7 @@ def _get_status_style(status_text):
     # Mapeamento de status para cores e fontes
     status_styles = {
         "SEÇÃO CONTRATOS": (Qt.GlobalColor.white, QFont.Weight.Bold),
-        "ATA GERADA": (QColor(230, 230, 150), QFont.Weight.Bold), # Amarelo menos saturado
+        "PORTARIA": (QColor(230, 230, 150), QFont.Weight.Bold), # Amarelo menos saturado
         "EMPRESA": (QColor(230, 230, 150), QFont.Weight.Bold),    # Amarelo menos saturado
         "SIGDEM": (QColor(230, 180, 100), QFont.Weight.Bold),   # Laranja menos saturado
         "ASSINADO": (QColor(230, 180, 100), QFont.Weight.Bold), # Laranja menos saturado

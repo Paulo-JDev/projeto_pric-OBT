@@ -60,6 +60,23 @@ class AtasController:
         except Exception as e:
             QMessageBox.critical(self.view, "Erro", f"Não foi possível carregar os dados:\n{e}")
 
+    def _get_status_style(self, status_text):
+        """Retorna a cor e a fonte para um determinado status."""
+        status_styles = {
+            "SEÇÃO CONTRATOS": (QColor("#FFFFFF"), QFont.Weight.Bold),
+            "ATA GERADA": QColor(230, 230, 150),
+            "EMPRESA": QColor(230, 230, 150),
+            "SIGDEM": QColor(230, 180, 100),
+            "ASSINADO": QColor(230, 180, 100),
+            "PUBLICADO": QColor(135, 206, 250),
+            "ALERTA PRAZO": QColor(255, 160, 160),
+            "NOTA TÉCNICA": QColor(255, 160, 160),
+            "AGU": QColor(255, 160, 160),
+            "PRORROGADO": QColor(135, 206, 250)
+        }
+        color, weight = status_styles.get(status_text, (QColor("#FFFFFF"), QFont.Weight.Normal))
+        return QBrush(color), weight
+
     def import_data(self):
         file_path, _ = QFileDialog.getOpenFileName(self.view, "Selecionar Planilha", "", "Planilhas Excel (*.xlsx)")
         if not file_path: return
@@ -117,7 +134,7 @@ class AtasController:
     def populate_table(self, atas: list):
         model = self.view.table_model
         model.clear()
-        headers = ["Dias", "Número", "Ano", "Empresa", "Ata", "Objeto"]
+        headers = ["Dias", "Número", "Ano", "Empresa", "Ata", "Objeto", "Status"]
         model.setHorizontalHeaderLabels(headers)
         today = date.today()
         for ata in atas:
@@ -126,10 +143,20 @@ class AtasController:
                 termino_date = self._parse_date_string(ata.termino)
                 if termino_date:
                     dias_restantes = (termino_date - today).days
+
+            status_text = ata.status_info.status if ata.status_info else "SEÇÃO CONTRATOS"
+            status_item = self._create_centered_item(status_text)
+            brush, weight = self._get_status_style(status_text)
+            status_item.setForeground(brush)
+            font = status_item.font()
+            font.setWeight(weight)
+            status_item.setFont(font)
+
             model.appendRow([
                 self._create_dias_item(dias_restantes), self._create_centered_item(ata.numero), 
                 self._create_centered_item(ata.ano), self._create_centered_item(ata.empresa), 
-                self._create_centered_item(ata.contrato_ata_parecer), self._create_centered_item(ata.objeto)
+                self._create_centered_item(ata.contrato_ata_parecer), self._create_centered_item(ata.objeto),
+                status_item
             ])
         # Configura as colunas
         header = self.view.table_view.horizontalHeader()
@@ -139,6 +166,8 @@ class AtasController:
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed); header.resizeSection(4, 170)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
+        header.resizeSection(6, 180)
 
     def show_details_on_double_click(self, index):
         source_index = self.view.proxy_model.mapToSource(index)

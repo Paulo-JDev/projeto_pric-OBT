@@ -10,7 +10,7 @@ def _get_status_style(status_text):
     """Retorna a cor e a fonte para um determinado status."""
     status_styles = {
         "SEÇÃO CONTRATOS": (QColor("#FFFFFF"), QFont.Weight.Bold),
-        "ATA GERADA": (QColor(230, 230, 150), QFont.Weight.Bold),
+        "PORTARIA": (QColor(230, 230, 150), QFont.Weight.Bold),
         "EMPRESA": (QColor(230, 230, 150), QFont.Weight.Bold),
         "SIGDEM": (QColor(230, 180, 100), QFont.Weight.Bold),
         "ASSINADO": (QColor(230, 180, 100), QFont.Weight.Bold),

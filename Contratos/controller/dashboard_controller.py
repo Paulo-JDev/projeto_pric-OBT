@@ -14,7 +14,7 @@ class DashboardController:
 
         self.status_color_map = {
             "SEÇÃO CONTRATOS": QColor("#FFFFFF"),
-            "ATA GERADA": QColor(230, 230, 150),
+            "PORTARIA": QColor(230, 230, 150),
             "EMPRESA": QColor(230, 230, 150),
             "SIGDEM": QColor(230, 180, 100),
             "ASSINADO": QColor(230, 180, 100),

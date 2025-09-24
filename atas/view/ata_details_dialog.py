@@ -3,7 +3,7 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, 
                              QLabel, QLineEdit, QPushButton, QTabWidget, QWidget,
                              QDateEdit, QListWidget, QListWidgetItem, QInputDialog,
-                             QMessageBox, QTextEdit)
+                             QMessageBox, QTextEdit, QComboBox, QFrame)
 from PyQt6.QtCore import Qt, QDate, pyqtSignal
 from utils.icon_loader import icon_manager
 from datetime import datetime
@@ -25,6 +25,7 @@ class AtaDetailsDialog(QDialog):
         self.create_general_tab()
         self.create_registros_tab()
         self.create_links_tab()
+        self.create_status_tab()
 
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -75,6 +76,50 @@ class AtaDetailsDialog(QDialog):
         layout.addRow(QLabel("<b>Data de Término:</b>"), self.termino_de)
 
         self.tabs.addTab(general_tab, "Informações Gerais")
+
+    def create_status_tab(self):
+        """Cria a aba 'Status' que agora contém o dropdown e os registros."""
+        status_tab = QWidget()
+        main_layout = QVBoxLayout(status_tab)
+
+        # Dropdown de Status
+        status_layout = QHBoxLayout()
+        status_layout.addStretch()
+        status_label = QLabel("Status:")
+        status_layout.addWidget(status_label)
+
+        self.status_dropdown = QComboBox()
+        self.status_dropdown.addItems([
+            "SEÇÃO ATAS", "EMPRESA", "SIGDEM", "ASSINADO", "PUBLICADO",
+            "ALERTA PRAZO", "ATA GERADA", "NOTA TÉCNICA", "AGU", "PRORROGADO"
+        ])
+        self.status_dropdown.setFixedWidth(220)
+        status_layout.addWidget(self.status_dropdown)
+        main_layout.addLayout(status_layout)
+
+        # Frame com a lista de registros
+        registros_frame = QFrame()
+        registros_frame.setFrameShape(QFrame.Shape.StyledPanel)
+        registros_list_layout = QVBoxLayout(registros_frame)
+
+        self.registro_list = QListWidget()
+        registros_list_layout.addWidget(self.registro_list)
+        main_layout.addWidget(registros_frame)
+
+        # Botões de registro
+        registro_buttons_layout = QHBoxLayout()
+        add_button = QPushButton("Adicionar Registro")
+        add_button.setIcon(icon_manager.get_icon("add_comment"))
+        add_button.clicked.connect(self.add_registro)
+        registro_buttons_layout.addWidget(add_button)
+
+        delete_button = QPushButton("Excluir Selecionado")
+        delete_button.setIcon(icon_manager.get_icon("delete"))
+        delete_button.clicked.connect(self.delete_registro)
+        registro_buttons_layout.addWidget(delete_button)
+
+        main_layout.addLayout(registro_buttons_layout)
+        self.tabs.addTab(status_tab, "Status")
 
     def create_registros_tab(self):
         registros_tab = QWidget()
@@ -141,6 +186,9 @@ class AtaDetailsDialog(QDialog):
         self.registro_list.clear()
         self.registro_list.addItems(self.ata_data.registros)
 
+        # Status
+        self.status_dropdown.setCurrentText(self.ata_data.status)
+
     def get_updated_data(self):
         """Retorna um dicionário com os dados atualizados da interface."""
         return {
@@ -153,6 +201,7 @@ class AtaDetailsDialog(QDialog):
             'portaria_fiscalizacao': self.portaria_le.text(),
             'celebracao': self.celebracao_de.date().toString("yyyy-MM-dd"),
             'termino': self.termino_de.date().toString("yyyy-MM-dd"),
+            'status': self.status_dropdown.currentText(),
             'serie_ata_link': self.serie_ata_link_le.text(),
             'portaria_link': self.portaria_link_le.text(),
             'ta_link': self.ta_link_le.text()

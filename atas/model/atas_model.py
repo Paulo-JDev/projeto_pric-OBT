@@ -23,11 +23,17 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+class StatusAta(Base):
+    __tablename__ = "status_atas"
+    # Chave primária é a mesma da ata para garantir relação 1-para-1
+    ata_parecer = Column(String, ForeignKey("atas.contrato_ata_parecer"), primary_key=True)
+    status = Column(String)
+    ata = relationship("Ata", back_populates="status_info")
+
 # --- NOVA TABELA PARA REGISTROS ---
 class RegistroAta(Base):
     __tablename__ = "registros_atas"
     id = Column(Integer, primary_key=True, index=True)
-    # A ligação agora é feita através da coluna de texto, que é única
     ata_parecer = Column(String, ForeignKey("atas.contrato_ata_parecer"), nullable=False) 
     texto = Column(Text, nullable=False)
     ata = relationship("Ata", back_populates="registros")
@@ -57,6 +63,7 @@ class Ata(Base):
     observacoes = Column(Text)
     termo_aditivo = Column(String)
     portaria_fiscalizacao = Column(String)
+    status_info = relationship("StatusAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     links = relationship("LinksAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     registros = relationship("RegistroAta", back_populates="ata", cascade="all, delete-orphan")
 
@@ -79,6 +86,9 @@ class AtaData:
         self.portaria_fiscalizacao = ata_db_object.portaria_fiscalizacao
         self.termo_aditivo = ata_db_object.termo_aditivo
 
+        # Aba status
+        self.status = ata_db_object.status_info.status if ata_db_object.status_info else "SEÇÃO ATAS"
+
         # Aba registros
         self.registros = [reg.texto for reg in ata_db_object.registros] if ata_db_object.registros else []
 
@@ -99,10 +109,12 @@ class AtasModel:
         session = self._get_session()
         try:
             # --- ALTERAÇÃO AQUI ---
-            # options(joinedload(Ata.links)) força o carregamento dos links
-            # na mesma consulta, evitando o erro de sessão fechada.
-            atas = session.query(Ata).options(joinedload(Ata.links)).all()
-
+            # Adicionado o joinedload para status_info para evitar o erro de lazy load
+            atas = session.query(Ata).options(
+                joinedload(Ata.links), 
+                joinedload(Ata.status_info)
+            ).all()
+            
             atas_ordenadas = sorted(
                 atas, 
                 key=lambda x: datetime.strptime(x.termino, '%Y-%m-%d') if x.termino else datetime.min
@@ -166,6 +178,10 @@ class AtasModel:
                 ata.links.serie_ata_link = updated_data.get('serie_ata_link', '')
                 ata.links.portaria_link = updated_data.get('portaria_link', '')
                 ata.links.ta_link = updated_data.get('ta_link', '')
+
+                if not ata.status_info:
+                    ata.status_info = StatusAta(ata_parecer=parecer_value)
+                ata.status_info.status = updated_data.get('status', 'SEÇÃO ATAS')
 
                 # Atualiza os registros
                 session.query(RegistroAta).filter(RegistroAta.ata_parecer == parecer_value).delete(synchronize_session=False)
