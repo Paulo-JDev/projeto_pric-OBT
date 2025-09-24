@@ -23,7 +23,6 @@ class AtaDetailsDialog(QDialog):
         main_layout.addWidget(self.tabs)
 
         self.create_general_tab()
-        self.create_registros_tab()
         self.create_links_tab()
         self.create_status_tab()
 
@@ -120,27 +119,6 @@ class AtaDetailsDialog(QDialog):
 
         main_layout.addLayout(registro_buttons_layout)
         self.tabs.addTab(status_tab, "Status")
-
-    def create_registros_tab(self):
-        registros_tab = QWidget()
-        layout = QVBoxLayout(registros_tab)
-        
-        self.registro_list = QListWidget()
-        layout.addWidget(self.registro_list)
-        
-        button_layout = QHBoxLayout()
-        add_button = QPushButton("Adicionar Registro")
-        add_button.setIcon(icon_manager.get_icon("add_comment"))
-        add_button.clicked.connect(self.add_registro)
-        button_layout.addWidget(add_button)
-        
-        delete_button = QPushButton("Excluir Selecionado")
-        delete_button.setIcon(icon_manager.get_icon("delete"))
-        delete_button.clicked.connect(self.delete_registro)
-        button_layout.addWidget(delete_button)
-        
-        layout.addLayout(button_layout)
-        self.tabs.addTab(registros_tab, "Registros")
 
     def create_links_tab(self):
         """Cria a aba para inserir os links."""

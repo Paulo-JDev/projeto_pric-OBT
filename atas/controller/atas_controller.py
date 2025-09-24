@@ -63,7 +63,7 @@ class AtasController:
     def _get_status_style(self, status_text):
         """Retorna a cor e a fonte para um determinado status."""
         status_styles = {
-            "SEÇÃO CONTRATOS": (QColor("#FFFFFF"), QFont.Weight.Bold),
+            "SEÇÃO ATAS": (QColor("#FFFFFF"), QFont.Weight.Bold),
             "ATA GERADA": QColor(230, 230, 150),
             "EMPRESA": QColor(230, 230, 150),
             "SIGDEM": QColor(230, 180, 100),
@@ -144,7 +144,7 @@ class AtasController:
                 if termino_date:
                     dias_restantes = (termino_date - today).days
 
-            status_text = ata.status_info.status if ata.status_info else "SEÇÃO CONTRATOS"
+            status_text = ata.status_info.status if ata.status_info else "SEÇÃO ATAS"
             status_item = self._create_centered_item(status_text)
             brush, weight = self._get_status_style(status_text)
             status_item.setForeground(brush)
