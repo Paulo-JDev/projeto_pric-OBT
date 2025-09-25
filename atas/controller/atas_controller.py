@@ -63,16 +63,16 @@ class AtasController:
     def _get_status_style(self, status_text):
         """Retorna a cor e a fonte para um determinado status."""
         status_styles = {
-            "SEÇÃO ATAS": (QColor("#FFFFFF"), QFont.Weight.Bold),
-            "ATA GERADA": QColor(230, 230, 150),
-            "EMPRESA": QColor(230, 230, 150),
-            "SIGDEM": QColor(230, 180, 100),
-            "ASSINADO": QColor(230, 180, 100),
-            "PUBLICADO": QColor(135, 206, 250),
-            "ALERTA PRAZO": QColor(255, 160, 160),
-            "NOTA TÉCNICA": QColor(255, 160, 160),
-            "AGU": QColor(255, 160, 160),
-            "PRORROGADO": QColor(135, 206, 250)
+            "SEÇÃO CONTRATOS": (QColor("#FFFFFF"), QFont.Weight.Bold),
+            "ATA GERADA": (QColor(230, 230, 150), QFont.Weight.Bold),
+            "EMPRESA": (QColor(230, 230, 150), QFont.Weight.Bold),
+            "SIGDEM": (QColor(230, 180, 100), QFont.Weight.Bold),
+            "ASSINADO": (QColor(230, 180, 100), QFont.Weight.Bold),
+            "PUBLICADO": (QColor(135, 206, 250), QFont.Weight.Bold),
+            "ALERTA PRAZO": (QColor(255, 160, 160), QFont.Weight.Bold),
+            "NOTA TÉCNICA": (QColor(255, 160, 160), QFont.Weight.Bold),
+            "AGU": (QColor(255, 160, 160), QFont.Weight.Bold),
+            "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold)
         }
         color, weight = status_styles.get(status_text, (QColor("#FFFFFF"), QFont.Weight.Normal))
         return QBrush(color), weight
@@ -222,8 +222,8 @@ class AtasController:
         """Atualiza uma única linha da tabela com base no parecer."""
         source_model = self.view.proxy_model.sourceModel()
         for row in range(source_model.rowCount()):
-            item = source_model.item(row, 4) # Coluna "Ata" que contém o parecer
-            if item and item.text() == parecer_value:
+            item_parecer = source_model.item(row, 4) # Coluna "Ata"
+            if item_parecer and item_parecer.text() == parecer_value:
                 ata_data = self.model.get_ata_by_parecer(parecer_value)
                 if ata_data:
                     # Atualiza os dados da linha
@@ -234,14 +234,21 @@ class AtasController:
                             dias_restantes = (termino_date - date.today()).days
 
                     source_model.setItem(row, 0, self._create_dias_item(dias_restantes))
-                    source_model.item(row, 1).setText(ata_data.numero)
-                    source_model.item(row, 2).setText(ata_data.ano)
                     source_model.item(row, 3).setText(ata_data.empresa)
                     source_model.item(row, 5).setText(ata_data.objeto)
+
+                    # --- LÓGICA DE ATUALIZAÇÃO DO STATUS CORRIGIDA ---
+                    status_item = source_model.item(row, 6)
+                    status_item.setText(ata_data.status)
+                    brush, weight = self._get_status_style(ata_data.status)
+                    status_item.setForeground(brush)
+                    font = status_item.font()
+                    font.setWeight(weight)
+                    status_item.setFont(font)
+                    # --- FIM DA CORREÇÃO ---
+
                     print(f"✅ Linha da ata {parecer_value} atualizada na tabela.")
                 break
-
-    # (dentro da classe AtasController, substitua o método existente)
 
     def generate_excel_report(self):
         """

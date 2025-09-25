@@ -39,6 +39,7 @@ DB_offline/
 # Arquivos de Sistema Operacional
 .DS_Store
 Thumbs.db
+dist/
 
 # I don't know about this past -> /config
 *.log
