@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdi
                              QPushButton, QMessageBox, QComboBox)
 from PyQt6.QtCore import pyqtSignal
 from utils.icon_loader import icon_manager
+from utils.utils import resource_path
 import os # Necessário para encontrar o JSON
 import sys
 
@@ -59,24 +60,25 @@ class AddAtaDialog(QDialog):
         self.numero_le.setFocus()
 
     def _load_tipos_from_json(self):
+        """Carrega os tipos de ata de um arquivo JSON de forma robusta."""
         try:
-            # Função para encontrar o caminho correto dos recursos
-            def resource_path(relative_path):
-                try:
-                    base_path = sys._MEIPASS
-                except Exception:
-                    base_path = os.path.dirname(__file__)
-                return os.path.join(base_path, relative_path)
+            # Usa a nova função para encontrar o caminho correto
+            json_path = resource_path("utils/json/tipos_ata.json")
 
-            json_path = resource_path("../../utils/tipos_ata.json") # Ajuste o caminho
             with open(json_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
+
             tipos = data.get('tipos', [])
             self.tipo_cb.addItems(tipos)
+
             if "Pregão Eletrônico" in tipos:
                 self.tipo_cb.setCurrentText("Pregão Eletrônico")
+
         except Exception as e:
             print(f"ERRO: Não foi possível carregar tipos_ata.json: {e}")
+            QMessageBox.critical(self, "Erro de Arquivo", 
+                                f"Não foi possível carregar o arquivo de configuração de tipos de ata:\n"
+                                f"{json_path}\n\nVerifique se o arquivo existe.")
             self.tipo_cb.addItem("Erro")
             self.tipo_cb.setEnabled(False)
 
