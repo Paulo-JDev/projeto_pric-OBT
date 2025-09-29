@@ -4,6 +4,8 @@ import os
 from PyQt6.QtWidgets import QApplication, QPushButton, QMessageBox
 from Contratos.view.mensagem_view import MensagemDialog
 from Contratos.model.uasg_model import resource_path
+from datetime import datetime
+import locale
 
 class MensagemController:
     def __init__(self, contract_data, parent=None):
@@ -40,13 +42,50 @@ class MensagemController:
         return templates
 
     def _populate_variables_list(self):
-        """Preenche a lista de variáveis com os dados do contrato."""
-        # ... (código inalterado)
+        """Preenche a lista de variáveis com os dados do contrato e as novas variáveis dinâmicas."""
+        # Define o local para português para garantir a abreviação correta do mês
+        try:
+            locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+        except locale.Error:
+            print("Aviso: Locale 'pt_BR.UTF-8' não encontrado. Usando o padrão do sistema.")
+
         self.view.variables_list.clear()
-        all_data = {**self.contract_data, **self.contract_data.get('fornecedor', {})}
+        
+        # --- PREPARAÇÃO DAS NOVAS VARIÁVEIS ---
+        hoje = datetime.now()
+        
+        # Formata a data de vigência final
+        vigencia_fim_str = self.contract_data.get('vigencia_fim')
+        vigencia_fim_formatada = "N/A"
+        if vigencia_fim_str:
+            try:
+                dt_obj = datetime.strptime(vigencia_fim_str, "%Y-%m-%d")
+                # Formata como DDMESANO (ex: 29SET2025)
+                vigencia_fim_formatada = dt_obj.strftime("%d%b%Y").upper()
+            except ValueError:
+                vigencia_fim_formatada = "Data Inválida"
+
+        # Cria o dicionário com os novos dados
+        novos_dados = {
+            'objeto_completo': self.contract_data.get('objeto', ''),
+            'dia_hoje': hoje.strftime("%d"),
+            'mes_hoje': hoje.strftime("%b").upper(), # %b para abreviação do mês (ex: SET)
+            'vigencia_fim_formatada': vigencia_fim_formatada
+        }
+
+        # Combina os dados originais do contrato, o fornecedor e os novos dados
+        all_data = {
+            **self.contract_data, 
+            **self.contract_data.get('fornecedor', {}),
+            **novos_dados
+        }
+        
+        # Popula a lista da interface
         for key, value in all_data.items():
             if isinstance(value, (str, int, float)) and value:
-                self.view.variables_list.addItem(f"{{{{{key}}}}} : {value}")
+                # Renomeia 'objeto' para 'objeto_editado' na exibição para clareza
+                display_key = "objeto_editado" if key == "objeto" else key
+                self.view.variables_list.addItem(f"{{{{{display_key}}}}} : {value}")
 
     def _create_template_buttons(self):
         """Cria um botão para cada template encontrado."""
@@ -77,17 +116,48 @@ class MensagemController:
     # --- NOVA FUNÇÃO DE ATUALIZAÇÃO ---
     def _update_preview(self):
         """Aplica as variáveis ao texto do editor e exibe na pré-visualização."""
+        try:
+            locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+        except locale.Error:
+            pass # Ignora o erro se o locale não estiver disponível
+
         current_text = self.view.template_text_edit.toPlainText()
         
-        # Substitui as variáveis
-        message = current_text
-        all_data = {**self.contract_data, **self.contract_data.get('fornecedor', {})}
-        for key, value in all_data.items():
-             if isinstance(value, (str, int, float)):
-                message = message.replace(f"{{{{{key}}}}}", str(value))
-        
-        self.view.preview_text_edit.setPlainText(message)
+        # --- LÓGICA DE CRIAÇÃO DE VARIÁVEIS ADICIONADA AQUI ---
+        hoje = datetime.now()
+        vigencia_fim_str = self.contract_data.get('vigencia_fim')
+        vigencia_fim_formatada = "N/A"
+        if vigencia_fim_str:
+            try:
+                dt_obj = datetime.strptime(vigencia_fim_str, "%Y-%m-%d")
+                vigencia_fim_formatada = dt_obj.strftime("%d%b%Y").upper()
+            except ValueError:
+                vigencia_fim_formatada = "Data Inválida"
 
+        novos_dados = {
+            'objeto_completo': self.contract_data.get('objeto', ''),
+            'dia_hoje': hoje.strftime("%d"),
+            'mes_hoje': hoje.strftime("%b").upper(),
+            'vigencia_fim_formatada': vigencia_fim_formatada
+        }
+
+        # Combina todos os dados para a substituição
+        all_data = {
+            **self.contract_data, 
+            **self.contract_data.get('fornecedor', {}),
+            **novos_dados
+        }
+        
+        # --- LÓGICA DE SUBSTITUIÇÃO ATUALIZADA ---
+        message = current_text
+        for key, value in all_data.items():
+            if isinstance(value, (str, int, float)):
+                # Substitui tanto a chave original ('objeto') quanto a chave de exibição ('objeto_editado')
+                message = message.replace(f"{{{{{key}}}}}", str(value))
+                if key == "objeto":
+                    message = message.replace("{{objeto_editado}}", str(value))
+
+        self.view.preview_text_edit.setPlainText(message)
     def _save_current_template(self):
         """Salva o conteúdo atual do editor de texto."""
         # ... (código inalterado)

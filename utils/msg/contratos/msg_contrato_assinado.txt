@@ -1,4 +1,4 @@
-Homologação do Pregão Eletrônico nº{{Processo}}
+Homologação do Pregão Eletrônico nº{{Processo}} {{dia_hoje}}
 
 PTC que o Pregão Eletrônico nº {{Processo}}, cujo objeto é {{material_servico}} {{Objeto}}, foi homologado em {{31JUL2024,}} em favor da empresa {{Empresa}} CNPJ {{cnpj}}, pelo valor mensalde R$ {{Valor}} para um período de {{36 meses,}} perfazendo um total de R$ {{Valor}}.
 
