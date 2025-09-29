@@ -44,6 +44,7 @@ class AtasView(QWidget):
         main_layout.addLayout(toolbar_layout)
 
         self.table_view = QTableView()
+        self.table_view.setStyleSheet("QTableView::item:selected { background-color: rgba(163, 213, 255, 0.4); }")
         self.table_model = QStandardItemModel()
         self.proxy_model = MultiColumnFilterProxyModel()
         self.proxy_model.setSourceModel(self.table_model)

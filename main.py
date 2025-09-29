@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import QApplication
 # Importa os novos componentes principais
 from view.main_shell_view import MainShellView
 from controller.main_controller import MainController
+from utils.utils import resource_path
 
 def setup_logging(base_dir):
     # (Sua função de logging continua a mesma)
@@ -49,12 +50,13 @@ def setup_application():
     logging.info("Aplicação iniciada com a nova estrutura modular.")
 
     # Carrega o estilo antes de criar a janela
-    style_path = os.path.join(base_dir, "style.qss")
+    style_path = resource_path("utils/css/style.qss")
     try:
         with open(style_path, "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
+            #print(f"🎨 Estilo carregado de: {style_path}")
     except FileNotFoundError:
-        print("Arquivo de estilo 'style.qss' não encontrado.")
+        print(f"AVISO: Arquivo de estilo não encontrado em '{style_path}'.")
 
     # 1. Cria a janela principal (Shell)
     main_view = MainShellView()

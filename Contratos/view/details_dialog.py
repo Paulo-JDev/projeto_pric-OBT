@@ -31,7 +31,6 @@ class DetailsDialog(QDialog):
         self.setFixedSize(1100, 600)
         self.pdf_path = None
 
-        self.load_styles()
         self.model = model # Armazena a instância do UASGModel
 
         self.data = data
@@ -116,15 +115,6 @@ class DetailsDialog(QDialog):
         """Copia o texto do campo para a área de transferência"""
         copy_to_clipboard(line_edit)
 
-    def load_styles(self):
-        """Carrega os estilos do arquivo style.qss"""
-        style_path = resource_path("style.qss")  # Usa resource_path para garantir o caminho correto
-
-        if os.path.exists(style_path):
-            with open(style_path, "r", encoding="utf-8") as f:
-                self.setStyleSheet(f.read())
-        else:
-            print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
 
     def generate_empenho_report_to_excel(self):
         """ Instancia o EmpenhoController e delega a ele a criação do relatório. """

@@ -14,7 +14,7 @@ class AtaDetailsDialog(QDialog):
     def __init__(self, ata_data, parent=None):
         super().__init__(parent)
         self.ata_data = ata_data
-        self.setWindowTitle(f"Detalhes da Ata: {ata_data.contrato_ata_parecer}")
+        self.setWindowTitle(f"ATA: {ata_data.empresa} ({ata_data.contrato_ata_parecer})")
         self.setMinimumSize(800, 500)
         self.setWindowIcon(icon_manager.get_icon("edit"))
 
@@ -102,6 +102,7 @@ class AtaDetailsDialog(QDialog):
         registros_list_layout = QVBoxLayout(registros_frame)
 
         self.registro_list = QListWidget()
+        self.registro_list.setWordWrap(True)
         registros_list_layout.addWidget(self.registro_list)
         main_layout.addWidget(registros_frame)
 
@@ -162,7 +163,12 @@ class AtaDetailsDialog(QDialog):
 
         # Registros
         self.registro_list.clear()
-        self.registro_list.addItems(self.ata_data.registros)
+        for record_text in self.ata_data.registros:
+            item = QListWidgetItem(record_text)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Unchecked)
+            self.registro_list.addItem(item)
+        #self.registro_list.addItems(self.ata_data.registros)
 
         # Status
         self.status_dropdown.setCurrentText(self.ata_data.status)
@@ -186,17 +192,15 @@ class AtaDetailsDialog(QDialog):
         }
 
     def add_registro(self):
-        """Abre uma janela de diálogo personalizada para adicionar um novo registro."""
-        # Criação da janela de diálogo
+        """Abre uma janela de diálogo para adicionar um novo registro."""
         dialog = QDialog(self)
         dialog.setWindowTitle("Adicionar Registro")
         dialog.setMinimumSize(400, 250)
-        
+
         layout = QVBoxLayout(dialog)
-        
         text_edit = QTextEdit()
         layout.addWidget(text_edit)
-        
+
         add_button = QPushButton("Fechar e Adicionar Registro")
         add_button.setIcon(icon_manager.get_icon("registrar_status"))
         layout.addWidget(add_button)
@@ -204,21 +208,25 @@ class AtaDetailsDialog(QDialog):
         def accept_and_add():
             text = text_edit.toPlainText().strip()
             if text:
-                # Formata a data (sem hora) e o texto do comentário (sem status)
                 timestamp = datetime.now().strftime("%d/%m/%Y")
                 item_text = f"[{timestamp}] - {text}"
-                
-                self.registro_list.addItem(QListWidgetItem(item_text))
-                dialog.accept() # Fecha a janela
-            else:
-                dialog.accept() # Fecha mesmo se estiver vazio
+
+                # --- ALTERAÇÃO AQUI: Cria o item com checkbox ---
+                item = QListWidgetItem(item_text)
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                self.registro_list.addItem(item)
+                # --- FIM DA ALTERAÇÃO ---
+            dialog.accept()
 
         add_button.clicked.connect(accept_and_add)
         dialog.exec()
 
     def delete_registro(self):
-        for item in self.registro_list.selectedItems():
-            self.registro_list.takeItem(self.registro_list.row(item))
+        for i in range(self.registro_list.count() - 1, -1, -1):
+            item = self.registro_list.item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                self.registro_list.takeItem(i)
 
     # (dentro da classe AtaDetailsDialog, no ficheiro atas/view/ata_details_dialog.py)
 

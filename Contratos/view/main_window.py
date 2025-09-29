@@ -23,7 +23,6 @@ class MainWindow(QWidget):
         self.setMinimumSize(1150, 600)"""
 
         self.set_window_icon()
-        self.load_styles()
 
         self.layout = QVBoxLayout(self) 
 
@@ -190,17 +189,6 @@ class MainWindow(QWidget):
         self.tabs.addTab(self.dashboard_tab, icon_manager.get_icon("dashboard"), "Dashboard")
 
         self.tabs.setCurrentIndex(0)
-
-
-    def load_styles(self):
-        """Carrega os estilos do arquivo style.qss."""
-        style_path = resource_path("style.qss")  # Usa resource_path para garantir o caminho correto
-
-        if os.path.exists(style_path):
-            with open(style_path, "r", encoding="utf-8") as f:
-                self.setStyleSheet(f.read())
-        else:
-            print(f"⚠ Arquivo {style_path} não encontrado. Estilos não foram aplicados.")
 
     def set_window_icon(self):
         """Define o ícone da janela a partir de um arquivo na pasta utils/icons."""
