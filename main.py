@@ -21,6 +21,8 @@ from view.main_shell_view import MainShellView
 from controller.main_controller import MainController
 from utils.utils import resource_path
 
+APP_VERSION = "7.1.0"
+
 def setup_logging(base_dir):
     # (Sua função de logging continua a mesma)
     log_dir = os.path.join(base_dir, "logs")
@@ -44,7 +46,7 @@ def setup_application():
     else:
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    print(f"📦 Versão do APP V7.1.0")
+    print(f"📦 Versão do APP V{APP_VERSION}")
     print(f"📁 Diretório base: {base_dir}")
     setup_logging(base_dir)
     logging.info("Aplicação iniciada com a nova estrutura modular.")
