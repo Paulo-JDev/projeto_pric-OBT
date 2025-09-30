@@ -234,3 +234,30 @@ class AtasModel:
                 session.close()
         except Exception as e:
             return False, f"Erro ao ler o arquivo: {e}"
+        
+
+    def get_atas_with_status_not_default(self):
+        """
+        Busca todas as atas que possuem um status definido e que não seja
+        'SEÇÃO ATAS' (ou que não tenham status definido ainda).
+        """
+        session = self._get_session()
+        try:
+            # Junta Ata com StatusAta e filtra
+            atas_com_status = session.query(Ata).join(Ata.status_info).filter(
+                StatusAta.status != 'SEÇÃO ATAS'
+            ).options(
+                joinedload(Ata.status_info) # Garante que o status seja carregado
+            ).all()
+            
+            # Ordena por data de término
+            atas_ordenadas = sorted(
+                atas_com_status,
+                key=lambda x: datetime.strptime(x.termino, '%Y-%m-%d') if x.termino else datetime.min
+            )
+            return atas_ordenadas
+        except Exception as e:
+            print(f"Erro ao buscar atas com status: {e}")
+            return []
+        finally:
+            session.close()

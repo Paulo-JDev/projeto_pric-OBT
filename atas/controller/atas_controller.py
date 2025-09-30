@@ -31,6 +31,8 @@ class AtasController:
 
         self.view.table_view.doubleClicked.connect(self.show_details_on_double_click)
         self.view.table_view.customContextMenuRequested.connect(self.show_context_menu)
+        self.view.preview_table.doubleClicked.connect(self.show_details_on_preview_double_click)
+        self.view.refresh_preview_button.clicked.connect(self.populate_previsualization_table)
 
     def _parse_date_string(self, date_string):
         if not date_string: return None
@@ -54,16 +56,18 @@ class AtasController:
         return item
 
     def load_initial_data(self):
+        """Carrega os dados e popula ambas as tabelas na inicialização."""
         try:
             atas = self.model.get_all_atas()
             self.populate_table(atas)
+            self.populate_previsualization_table() # Adiciona esta chamada
         except Exception as e:
             QMessageBox.critical(self.view, "Erro", f"Não foi possível carregar os dados:\n{e}")
 
     def _get_status_style(self, status_text):
         """Retorna a cor e a fonte para um determinado status."""
         status_styles = {
-            "SEÇÃO CONTRATOS": (QColor("#FFFFFF"), QFont.Weight.Bold),
+            "SEÇÃO ATAS": (QColor("#FFFFFF"), QFont.Weight.Bold),
             "ATA GERADA": (QColor(230, 230, 150), QFont.Weight.Bold),
             "EMPRESA": (QColor(230, 230, 150), QFont.Weight.Bold),
             "SIGDEM": (QColor(230, 180, 100), QFont.Weight.Bold),
@@ -215,6 +219,7 @@ class AtasController:
 
             # Atualiza a linha específica na tabela principal
             self.update_table_row(parecer_value)
+            self.populate_previsualization_table()
         else:
             QMessageBox.critical(self.view, "Erro", "Não foi possível atualizar a ata.")
 
@@ -452,4 +457,68 @@ class AtasController:
             workbook.save(file_path)
             QMessageBox.information(self.view, "Sucesso", f"Dados exportados com sucesso para:\n{file_path}")
         except Exception as e:
-            QMessageBox.critical(self.view, "Erro", f"Ocorreu um erro ao exportar os dados: {e}")   
+            QMessageBox.critical(self.view, "Erro", f"Ocorreu um erro ao exportar os dados: {e}")
+
+# ================================================================ PRE-VISUALIZAÇÃO ==================================================
+    def populate_previsualization_table(self):
+        """Popula a tabela de pré-visualização com atas que não estão no status padrão."""
+        model = self.view.preview_model
+        model.clear()
+        headers = ["Dias", "Ata", "Empresa", "Objeto", "Status"]
+        model.setHorizontalHeaderLabels(headers)
+
+        atas = self.model.get_atas_with_status_not_default()
+        today = date.today()
+
+        for ata in atas:
+            dias_restantes = "N/A"
+            if ata.termino:
+                termino_date = self._parse_date_string(ata.termino)
+                if termino_date:
+                    dias_restantes = (termino_date - today).days
+
+            dias_item = self._create_dias_item(dias_restantes)
+
+            parecer_item = self._create_centered_item(ata.contrato_ata_parecer)
+            # Guarda o parecer como identificador único
+            parecer_item.setData(ata.contrato_ata_parecer, Qt.ItemDataRole.UserRole)
+
+            status_text = ata.status_info.status if ata.status_info else "SEÇÃO ATAS"
+            status_item = self._create_centered_item(status_text)
+            brush, weight = self._get_status_style(status_text)
+            status_item.setForeground(brush)
+            font = status_item.font()
+            font.setWeight(weight)
+            status_item.setFont(font)
+
+            model.appendRow([
+                dias_item,
+                parecer_item,
+                self._create_centered_item(ata.empresa),
+                self._create_centered_item(ata.objeto),
+                status_item
+            ])
+
+        # Ajusta as colunas da tabela de pré-visualização
+        header = self.view.preview_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed); header.resizeSection(0, 80)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed); header.resizeSection(1, 170)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed); header.resizeSection(4, 180)
+
+    def show_details_on_preview_double_click(self, index):
+        """Abre os detalhes da ata a partir da tabela de pré-visualização."""
+        proxy_model = self.view.preview_proxy_model
+        source_index = proxy_model.mapToSource(index)
+        row = source_index.row()
+
+        # O parecer está na coluna 1 e guardado no UserRole
+        parecer_item = proxy_model.sourceModel().item(row, 1)
+        if not parecer_item: return
+
+        parecer_value = parecer_item.data(Qt.ItemDataRole.UserRole)
+        ata_data = self.model.get_ata_by_parecer(parecer_value)
+
+        if ata_data:
+            self.show_ata_details(ata_data)

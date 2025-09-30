@@ -44,7 +44,7 @@ def setup_application():
     else:
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    print(f"📦 Versão do APP V6.10.9")
+    print(f"📦 Versão do APP V7.0.0")
     print(f"📁 Diretório base: {base_dir}")
     setup_logging(base_dir)
     logging.info("Aplicação iniciada com a nova estrutura modular.")

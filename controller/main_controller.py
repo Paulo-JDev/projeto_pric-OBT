@@ -25,11 +25,11 @@ class MainController:
 
         # 3. Conecta o menu de navegação à função de troca de tela
         self.view.nav_list.currentRowChanged.connect(self.switch_module)
-        self.view.nav_list.setCurrentRow(-1) # Nenhum item selecionado no início
+        self.view.nav_list.setCurrentRow(0)
 
     def switch_module(self, index):
         # O índice do stacked_widget é o índice da lista + 1 (pois o 0 é a tela de boas-vindas)
-        self.view.stacked_widget.setCurrentIndex(index + 1)
+        self.view.stacked_widget.setCurrentIndex(index)
         
     def run(self):
         self.view.show()

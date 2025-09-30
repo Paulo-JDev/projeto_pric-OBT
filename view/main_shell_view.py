@@ -29,6 +29,10 @@ class MainShellView(QMainWindow):
         self.nav_list.setIconSize(QSize(40, 40)) # Ícones maiores
         self.main_layout.addWidget(self.nav_list)
 
+        home_menu = QListWidgetItem(icon_manager.get_icon("dash"), "") # Texto vazio
+        home_menu.setToolTip("Home")  # Dica de ferramenta
+        self.nav_list.addItem(home_menu)
+
         # Adiciona os itens de navegação sem texto e com tooltips
         item_contratos = QListWidgetItem(icon_manager.get_icon("contratos"), "") # Texto vazio
         item_contratos.setToolTip("Contratos")  # Dica de ferramenta
@@ -37,6 +41,18 @@ class MainShellView(QMainWindow):
         item_atas = QListWidgetItem(icon_manager.get_icon("atas"), "") # Texto vazio
         item_atas.setToolTip("Atas")  # Dica de ferramenta
         self.nav_list.addItem(item_atas)
+
+        """item_relatorios = QListWidgetItem(icon_manager.get_icon("edit"), "") # Texto vazio
+        item_relatorios.setToolTip("Relatórios")  # Dica de ferramenta
+        self.nav_list.addItem(item_relatorios)
+
+        item_configuracoes = QListWidgetItem(icon_manager.get_icon("configuracoes"), "") # Texto vazio
+        item_configuracoes.setToolTip("Configurações")  # Dica de ferramenta
+        self.nav_list.addItem(item_configuracoes)
+
+        item_sobre = QListWidgetItem(icon_manager.get_icon("sobre"), "") # Texto vazio
+        item_sobre.setToolTip("Sobre")  # Dica de ferramenta
+        self.nav_list.addItem(item_sobre)"""
         # --- FIM DAS MODIFICAÇÕES ---
 
         # 2. Área de Conteúdo Principal (empilhada)
