@@ -8,4 +8,15 @@
 
 ----------------------------- Geral ---------------------------------------
 
-
+darcula pycharm theme
+dracula theme official
+gitlens
+magicPython
+material Icon Theme
+parquet-viewer
+pylance
+python
+python Debugger
+python Environments
+rainbow CSV
+vscode-pdf
