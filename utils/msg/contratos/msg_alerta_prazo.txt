@@ -9,7 +9,7 @@ BRAVO - Havendo interesse em prorrogar o REF contrato, PTC NEC ENC subsídios pa
 CHARLIE - Informações Adicionais:
 
 UNO - NUP do processo: {{processo}};
-DOIS - Nome da Empresa: {{Empresa}};
+DOIS - Nome da Empresa: {{nome}};
 TRÊS - CNPJ: {{cnpj_cpf_idgener}};
 QUATRO - Valor global: {{Valor}}; 
 CINCO - Término da Vigência: {{vigencia_final}}; e

@@ -1,12 +1,17 @@
 # controller/mensagem_controller.py
 
 import os
-from PyQt6.QtWidgets import QApplication, QPushButton, QMessageBox
+from PyQt6.QtWidgets import (QApplication, QPushButton, QMessageBox, 
+                             QInputDialog, QDialog, QVBoxLayout, QTextEdit, QListWidgetItem)
+from PyQt6.QtCore import Qt # Certifique-se de que Qt está importado
+
 from Contratos.view.mensagem_view import MensagemDialog
-from Contratos.model.uasg_model import resource_path
-from Contratos.model.uasg_model import UASGModel
+from Contratos.model.uasg_model import UASGModel,resource_path
+from Contratos.model.models import RegistroMensagem
+
 from datetime import datetime
 import locale
+import sqlite3
 
 class MensagemController:
     def __init__(self, contract_data, model: UASGModel, parent=None):
@@ -19,14 +24,18 @@ class MensagemController:
         
         self._populate_variables_list()
         self._create_template_buttons()
+
+        self._load_comments()
         
         # Conecta os sinais
         self.view.save_template_button.clicked.connect(self._save_current_template)
         self.view.copy_button.clicked.connect(self._copy_message_to_clipboard)
-        
-        # --- NOVA CONEXÃO ---
-        # Atualiza a pré-visualização toda vez que o texto do editor mudar
         self.view.template_text_edit.textChanged.connect(self._update_preview)
+
+        self.view.add_comment_button.clicked.connect(self._add_comment)
+        self.view.delete_comment_button.clicked.connect(self._delete_comment)
+        self.view.save_comments_button.clicked.connect(self._save_comments)
+        self.view.copy_comment_button.clicked.connect(self._copy_selected_comments)
 
     def show(self):
         """Exibe a janela de diálogo."""
@@ -198,3 +207,122 @@ class MensagemController:
         # Copia o texto da PRÉ-VISUALIZAÇÃO, que já tem as variáveis aplicadas
         clipboard.setText(self.view.preview_text_edit.toPlainText())
         self.view.close()
+
+    # ============================== Registro de Comentários =============================
+    def _load_comments(self):
+        """Carrega os comentários salvos no banco de dados para a lista usando SQLAlchemy."""
+        self.view.comment_list.clear()
+        contrato_id = self.contract_data.get('id')
+        if not contrato_id:
+            return
+
+        # Pega a sessão do SQLAlchemy a partir do modelo
+        db_session = self.model._get_db_session()
+        try:
+            # Busca os registros usando a query do ORM
+            registros = db_session.query(RegistroMensagem).filter(RegistroMensagem.contrato_id == contrato_id).all()
+            
+            for reg in registros:
+                item = QListWidgetItem(reg.texto)
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                self.view.comment_list.addItem(item)
+                
+        except Exception as e:
+            print(f"Erro ao carregar comentários com SQLAlchemy: {e}")
+        finally:
+            db_session.close() # Sempre fecha a sessão
+
+    def _add_comment(self):
+        """Abre uma janela customizada para adicionar um novo comentário."""
+        # Substituímos o QInputDialog.getText por um QDialog customizado
+        dialog = QDialog(self.view)
+        dialog.setWindowTitle("Adicionar Comentário")
+        # Definimos um tamanho similar ao das outras janelas de registro
+        dialog.setMinimumSize(500, 300) 
+
+        layout = QVBoxLayout(dialog)
+        
+        text_edit = QTextEdit()
+        text_edit.setPlaceholderText("Digite seu comentário ou registro aqui...")
+        layout.addWidget(text_edit)
+        
+        add_button = QPushButton("Adicionar e Fechar")
+        layout.addWidget(add_button)
+        
+        # Função para adicionar o texto à lista e fechar a janela
+        def add_and_close():
+            text = text_edit.toPlainText().strip()
+            if text:
+                timestamp = datetime.now().strftime("%d/%m/%Y")
+                full_comment = f"[{timestamp}] - {text}"
+                item = QListWidgetItem(full_comment)
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                self.view.comment_list.addItem(item)
+            dialog.accept()
+
+        add_button.clicked.connect(add_and_close)
+        dialog.exec()
+
+    def _delete_comment(self):
+        """Exclui os comentários que estão com a checkbox marcada."""
+        # Itera de trás para frente para evitar problemas de índice ao remover itens
+        for i in range(self.view.comment_list.count() - 1, -1, -1):
+            item = self.view.comment_list.item(i)
+            # Verifica se a checkbox está marcada
+            if item.checkState() == Qt.CheckState.Checked:
+                self.view.comment_list.takeItem(i)
+    
+    # --- NOVO MÉTODO PARA COPIAR ---
+    def _copy_selected_comments(self):
+        """Copia o texto de todos os comentários com a checkbox marcada."""
+        selected_texts = []
+        for i in range(self.view.comment_list.count()):
+            item = self.view.comment_list.item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                selected_texts.append(item.text())
+        
+        if not selected_texts:
+            QMessageBox.information(self.view, "Nada a Copiar", "Nenhum comentário foi selecionado.")
+            return
+
+        # Junta os textos com uma quebra de linha entre eles
+        text_to_copy = "\n".join(selected_texts)
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text_to_copy)
+        
+        QMessageBox.information(self.view, "Copiado", "O(s) comentário(s) selecionado(s) foi/foram copiado(s) para a área de transferência.")
+            
+    def _save_comments(self):
+        """Salva os comentários da lista no banco de dados usando a sessão SQLAlchemy."""
+        contrato_id = self.contract_data.get('id')
+        if not contrato_id:
+            QMessageBox.warning(self.view, "Erro", "ID do contrato não encontrado.")
+            return
+
+        # Pega a sessão do SQLAlchemy a partir do modelo
+        db_session = self.model._get_db_session()
+        try:
+            # Estratégia "Apaga e Recria" com SQLAlchemy
+            # 1. Deleta todos os registros existentes para este contrato
+            db_session.query(RegistroMensagem).filter(RegistroMensagem.contrato_id == contrato_id).delete(synchronize_session=False)
+
+            # 2. Pega os textos da interface
+            comments_texts = [self.view.comment_list.item(i).text() for i in range(self.view.comment_list.count())]
+            
+            # 3. Adiciona os novos registros à sessão
+            for texto in comments_texts:
+                novo_registro = RegistroMensagem(contrato_id=contrato_id, texto=texto)
+                db_session.add(novo_registro)
+            
+            # 4. Confirma a transação (salva tudo no banco de dados)
+            db_session.commit()
+            
+            QMessageBox.information(self.view, "Sucesso", "Comentários salvos com sucesso!")
+
+        except Exception as e:
+            QMessageBox.critical(self.view, "Erro de Banco de Dados", f"Não foi possível salvar os comentários:\n{e}")
+            db_session.rollback() # Desfaz as alterações em caso de erro
+        finally:
+            db_session.close() # Sempre fecha a sessão

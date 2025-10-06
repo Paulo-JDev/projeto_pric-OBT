@@ -42,6 +42,8 @@ class Contrato(Base):
     status = relationship("StatusContrato", back_populates="contrato", uselist=False, cascade="all, delete-orphan")
     registros = relationship("RegistroStatus", back_populates="contrato", cascade="all, delete-orphan")
     links = relationship("LinksContrato", uselist=False, back_populates="contrato", cascade="all, delete-orphan")
+    # MENSAGENS
+    registros_mensagem = relationship("RegistroMensagem", back_populates="contrato", cascade="all, delete-orphan")
     #comentarios = relationship("ComentarioStatus", back_populates="contrato", cascade="all, delete-orphan")
     
     # Relacionamentos para dados offline
@@ -109,6 +111,13 @@ class LinksContrato(Base):
     link_pncp_espc = Column(String)
     link_portal_marinha = Column(String)
     contrato = relationship("Contrato", back_populates="links")
+
+class RegistroMensagem(Base):
+    __tablename__ = "registro_mensagem"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False, index=True)
+    texto = Column(Text, unique=True) # unique=True pode ser opcional
+    contrato = relationship("Contrato", back_populates="registros_mensagem")
 
 """class ComentarioStatus(Base):
     __tablename__ = "comentarios_status"

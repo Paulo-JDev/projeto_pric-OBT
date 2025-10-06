@@ -8,7 +8,7 @@ from datetime import datetime # Adicionado para comparação de datas
 from pathlib import Path
 
 from .database import init_database
-from .models import Base, Contrato, StatusContrato, RegistroStatus, Uasg
+from .models import Base, Contrato, StatusContrato, RegistroStatus, RegistroMensagem, Uasg
 
 # Adiciona o diretório do script ao sys.path (caminho absoluto)
 def resource_path(relative_path):
@@ -328,6 +328,9 @@ class UASGModel:
                 registros = db.query(RegistroStatus.texto).filter(RegistroStatus.contrato_id == status.contrato_id).all()
                 data_entry['registros'] = [reg[0] for reg in registros]
 
+                registros_msg = db.query(RegistroMensagem.texto).filter(RegistroMensagem.contrato_id == status.contrato_id).all()
+                data_entry['registros_mensagem'] = [reg[0] for reg in registros_msg]
+
                 # Busca os links associados
                 links = self.get_contract_links(status.contrato_id)
                 if links:
@@ -406,6 +409,11 @@ class UASGModel:
                         # --- CORREÇÃO AQUI ---
                         novo_registro = RegistroStatus(contrato_id=contrato_id, uasg_code=uasg_code, texto=texto_reg) # Alterado de RegistrosStatus para RegistroStatus
                         db.add(novo_registro)
+
+                    db.query(RegistroMensagem).filter(RegistroMensagem.contrato_id == contrato_id).delete(synchronize_session=False)
+                    for texto_msg in entry.get('registros_mensagem', []):
+                        novo_registro_msg = RegistroMensagem(contrato_id=contrato_id, texto=texto_msg)
+                        db.add(novo_registro_msg)
 
             db.commit()
             print("Importação de dados concluída com sucesso.")
