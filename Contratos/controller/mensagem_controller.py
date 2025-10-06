@@ -4,6 +4,7 @@ import os
 from PyQt6.QtWidgets import QApplication, QPushButton, QMessageBox
 from Contratos.view.mensagem_view import MensagemDialog
 from Contratos.model.uasg_model import resource_path
+from Contratos.model.uasg_model import UASGModel
 from datetime import datetime
 import locale
 
@@ -43,7 +44,6 @@ class MensagemController:
 
     def _populate_variables_list(self):
         """Preenche a lista de variáveis com os dados do contrato e as novas variáveis dinâmicas."""
-        # Define o local para português para garantir a abreviação correta do mês
         try:
             locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
         except locale.Error:
@@ -51,41 +51,49 @@ class MensagemController:
 
         self.view.variables_list.clear()
         
-        # --- PREPARAÇÃO DAS NOVAS VARIÁVEIS ---
         hoje = datetime.now()
         
-        # Formata a data de vigência final
+        # --- LÓGICA REPETIDA PARA CONSISTÊNCIA ---
+        objeto_editado_db = ""
+        model = UASGModel(base_dir=os.path.abspath("."))
+        conn = model._get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT objeto_editado FROM status_contratos WHERE contrato_id = ?", (self.contract_data.get('id'),))
+            result = cursor.fetchone()
+            if result and result['objeto_editado']:
+                objeto_editado_db = result['objeto_editado']
+        finally:
+            conn.close()
+            
+        objeto_completo_original = self.contract_data.get('objeto', '')
+        objeto_editado_final = objeto_editado_db if objeto_editado_db else objeto_completo_original
+        
         vigencia_fim_str = self.contract_data.get('vigencia_fim')
         vigencia_fim_formatada = "N/A"
         if vigencia_fim_str:
             try:
                 dt_obj = datetime.strptime(vigencia_fim_str, "%Y-%m-%d")
-                # Formata como DDMESANO (ex: 29SET2025)
                 vigencia_fim_formatada = dt_obj.strftime("%d%b%Y").upper()
             except ValueError:
                 vigencia_fim_formatada = "Data Inválida"
 
-        # Cria o dicionário com os novos dados
-        novos_dados = {
-            'objeto_completo': self.contract_data.get('objeto', ''),
-            'dia_hoje': hoje.strftime("%d"),
-            'mes_hoje': hoje.strftime("%b").upper(), # %b para abreviação do mês (ex: SET)
-            'vigencia_fim_formatada': vigencia_fim_formatada
-        }
-
-        # Combina os dados originais do contrato, o fornecedor e os novos dados
         all_data = {
             **self.contract_data, 
             **self.contract_data.get('fornecedor', {}),
-            **novos_dados
+            'objeto_completo': objeto_completo_original,
+            'objeto_editado': objeto_editado_final,
+            'dia_hoje': hoje.strftime("%d"),
+            'mes_hoje': hoje.strftime("%b").upper(),
+            'vigencia_fim_formatada': vigencia_fim_formatada
         }
         
-        # Popula a lista da interface
+        # REMOVIDA A LÓGICA QUE RENOMEAVA 'objeto' PARA 'objeto_editado'
         for key, value in all_data.items():
             if isinstance(value, (str, int, float)) and value:
-                # Renomeia 'objeto' para 'objeto_editado' na exibição para clareza
-                display_key = "objeto_editado" if key == "objeto" else key
-                self.view.variables_list.addItem(f"{{{{{display_key}}}}} : {value}")
+                # Oculta o 'objeto' original para não confundir, já que temos as duas novas variáveis
+                if key != 'objeto':
+                    self.view.variables_list.addItem(f"{{{{{key}}}}} : {value}")
 
     def _create_template_buttons(self):
         """Cria um botão para cada template encontrado."""
@@ -125,6 +133,24 @@ class MensagemController:
         
         # --- LÓGICA DE CRIAÇÃO DE VARIÁVEIS ADICIONADA AQUI ---
         hoje = datetime.now()
+        objeto_editado_db = ""
+        # Precisamos de uma instância do model para acessar o DB
+        model = UASGModel(base_dir=os.path.abspath(".")) 
+        conn = model._get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT objeto_editado FROM status_contratos WHERE contrato_id = ?", (self.contract_data.get('id'),))
+            result = cursor.fetchone()
+            if result and result['objeto_editado']:
+                objeto_editado_db = result['objeto_editado']
+        finally:
+            conn.close()
+
+        # O objeto completo sempre virá do dado original do contrato
+        objeto_completo_original = self.contract_data.get('objeto', '')
+        # Se não houver objeto editado no DB, use o original como fallback
+        objeto_editado_final = objeto_editado_db if objeto_editado_db else objeto_completo_original
+        
         vigencia_fim_str = self.contract_data.get('vigencia_fim')
         vigencia_fim_formatada = "N/A"
         if vigencia_fim_str:
@@ -134,28 +160,23 @@ class MensagemController:
             except ValueError:
                 vigencia_fim_formatada = "Data Inválida"
 
-        novos_dados = {
-            'objeto_completo': self.contract_data.get('objeto', ''),
+        # ALTERADO: Dicionário de dados agora tem as duas versões do objeto
+        all_data = {
+            **self.contract_data, 
+            **self.contract_data.get('fornecedor', {}),
+            'objeto_completo': objeto_completo_original,
+            'objeto_editado': objeto_editado_final,
             'dia_hoje': hoje.strftime("%d"),
             'mes_hoje': hoje.strftime("%b").upper(),
             'vigencia_fim_formatada': vigencia_fim_formatada
         }
-
-        # Combina todos os dados para a substituição
-        all_data = {
-            **self.contract_data, 
-            **self.contract_data.get('fornecedor', {}),
-            **novos_dados
-        }
         
-        # --- LÓGICA DE SUBSTITUIÇÃO ATUALIZADA ---
+        # --- LÓGICA DE SUBSTITUIÇÃO SIMPLIFICADA E CORRIGIDA ---
         message = current_text
         for key, value in all_data.items():
+            # A verificação 'isinstance' previne erros com valores nulos ou de outros tipos
             if isinstance(value, (str, int, float)):
-                # Substitui tanto a chave original ('objeto') quanto a chave de exibição ('objeto_editado')
                 message = message.replace(f"{{{{{key}}}}}", str(value))
-                if key == "objeto":
-                    message = message.replace("{{objeto_editado}}", str(value))
 
         self.view.preview_text_edit.setPlainText(message)
     def _save_current_template(self):
