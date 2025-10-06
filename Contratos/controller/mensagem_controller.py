@@ -9,8 +9,9 @@ from datetime import datetime
 import locale
 
 class MensagemController:
-    def __init__(self, contract_data, parent=None):
+    def __init__(self, contract_data, model: UASGModel, parent=None):
         self.contract_data = contract_data
+        self.model = model
         self.templates = self._load_templates()
         self.current_template_path = None
         
@@ -55,8 +56,7 @@ class MensagemController:
         
         # --- LÓGICA REPETIDA PARA CONSISTÊNCIA ---
         objeto_editado_db = ""
-        model = UASGModel(base_dir=os.path.abspath("."))
-        conn = model._get_db_connection()
+        conn = self.model._get_db_connection()
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT objeto_editado FROM status_contratos WHERE contrato_id = ?", (self.contract_data.get('id'),))
@@ -135,8 +135,7 @@ class MensagemController:
         hoje = datetime.now()
         objeto_editado_db = ""
         # Precisamos de uma instância do model para acessar o DB
-        model = UASGModel(base_dir=os.path.abspath(".")) 
-        conn = model._get_db_connection()
+        conn = self.model._get_db_connection()
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT objeto_editado FROM status_contratos WHERE contrato_id = ?", (self.contract_data.get('id'),))

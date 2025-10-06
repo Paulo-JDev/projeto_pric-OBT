@@ -241,7 +241,7 @@ class UASGController:
         contract_data = self.current_data[selected_row]
         
         # Cria e exibe a nova janela de mensagens
-        mensagem_controller = MensagemController(contract_data, parent=self.view)
+        mensagem_controller = MensagemController(contract_data, self.model, parent=self.view)
         mensagem_controller.show()
 
     # =========================================== Método para abrir a janela de configurações =================================================
