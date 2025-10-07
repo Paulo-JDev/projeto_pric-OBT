@@ -56,6 +56,8 @@ class DetailsDialog(QDialog):
         self.tabs.addTab(create_empenhos_tab(self), "Empenhos")
         self.tabs.addTab(create_itens_tab(self), "Itens")
         self.tabs.addTab(aba_extras_link(self), "Extras")
+
+        self.copy_registro_button.clicked.connect(self.copy_registro_def)
         
 
         # Layout dos botões de salvar e cancelar
@@ -85,6 +87,10 @@ class DetailsDialog(QDialog):
     def delete_registro(self):
         """Remove os registros selecionados"""
         delete_registro(self.registro_list)
+
+    def copy_registro_def(self):
+        """Chama a função para copiar os registros selecionados."""
+        copy_registros(self, self.registro_list)
     
     def func_save(self):
         """Salva o status e os comentários ao fechar a janela"""

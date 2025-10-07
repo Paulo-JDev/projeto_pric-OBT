@@ -198,3 +198,22 @@ def copy_to_clipboard(line_edit):
     """Copia o texto do campo para a área de transferência"""
     clipboard = QApplication.clipboard()
     clipboard.setText(line_edit.text())
+
+def copy_registros(parent_view, registro_list):
+    """Copia o texto de todos os registros com a checkbox marcada."""
+    selected_texts = []
+    for i in range(registro_list.count()):
+        item = registro_list.item(i)
+        if item.checkState() == Qt.CheckState.Checked:
+            selected_texts.append(item.text())
+    
+    if not selected_texts:
+        QMessageBox.information(parent_view, "Nada a Copiar", "Nenhum registro foi selecionado.")
+        return
+
+    # Junta os textos com uma quebra de linha entre eles
+    text_to_copy = "\n".join(selected_texts)
+    clipboard = QApplication.clipboard()
+    clipboard.setText(text_to_copy)
+    
+    QMessageBox.information(parent_view, "Copiado", "O(s) registro(s) selecionado(s) foi/foram copiado(s) para a área de transferência.")

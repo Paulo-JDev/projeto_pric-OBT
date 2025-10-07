@@ -61,6 +61,10 @@ def create_status_tab(self):
     registro_buttons_layout.addWidget(self.delete_registro_button)
     registros_section.addLayout(registro_buttons_layout) # Adiciona botões à seção
 
+    self.copy_registro_button = QPushButton("Copiar Registro")
+    self.copy_registro_button.setIcon(icon_manager.get_icon("copy"))
+    registro_buttons_layout.addWidget(self.copy_registro_button)
+
     content_layout.addLayout(registros_section) # Adiciona seção de registros ao layout principal
 
     # Adiciona o layout de conteúdo (com as duas colunas) ao layout da aba
