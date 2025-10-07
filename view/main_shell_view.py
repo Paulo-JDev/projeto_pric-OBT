@@ -32,13 +32,15 @@ class MainShellView(QMainWindow):
         home_menu.setToolTip("Home")
         self.nav_list.addItem(home_menu)
 
-        item_contratos = QListWidgetItem(icon_manager.get_icon("contratos"), "")
+        item_contratos = QListWidgetItem(icon_manager.get_icon("contrato"), "")
         item_contratos.setToolTip("Contratos")
         self.nav_list.addItem(item_contratos)
 
         item_atas = QListWidgetItem(icon_manager.get_icon("atas"), "")
         item_atas.setToolTip("Atas")
         self.nav_list.addItem(item_atas)
+
+        # fazer mais duas entradas um para GERAR ATAS E GERAR CONTRATOS
         
         # --- ÁREA DE CONTEÚDO PRINCIPAL ---
         self.stacked_widget = QStackedWidget()

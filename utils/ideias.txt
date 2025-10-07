@@ -8,15 +8,8 @@
 
 ----------------------------- Geral ---------------------------------------
 
-darcula pycharm theme
-dracula theme official
-gitlens
-magicPython
-material Icon Theme
-parquet-viewer
-pylance
-python
-python Debugger
-python Environments
-rainbow CSV
-vscode-pdf
+FAZER DOIS NOVAS ENTRADAS UMA PARA GERAR ATAS E OUTRA Contratos
+UM ICONE PARA CADA E NA ORGANIZAÇÃO DAS PASTAS COLOCAR 
+gerar_ata e gerar_contrato
+
+( O PROJETO VAI FICAR MEGA GIGANTE)
