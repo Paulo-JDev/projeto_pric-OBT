@@ -5,11 +5,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 import os
-#from dotenv import load_dotenv
-#from Contratos.model.uasg_model import resource_path
+from dotenv import load_dotenv
+from Contratos.model.uasg_model import resource_path
 
-#dotenv_path = resource_path(os.path.join('Contratos', 'config', '.env'))
-#load_dotenv(dotenv_path=dotenv_path)
+dotenv_path = resource_path(os.path.join('config', '.env'))
+load_dotenv(dotenv_path=dotenv_path)
 
 class EmailController:
     def __init__(self, parent_view=None):
