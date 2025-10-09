@@ -33,6 +33,7 @@ class AtasController:
         self.view.table_view.customContextMenuRequested.connect(self.show_context_menu)
         self.view.preview_table.doubleClicked.connect(self.show_details_on_preview_double_click)
         self.view.refresh_preview_button.clicked.connect(self.populate_previsualization_table)
+        self.view.refresh_table_button.clicked.connect(self.load_initial_data)
 
     def _parse_date_string(self, date_string):
         if not date_string: return None
@@ -60,7 +61,7 @@ class AtasController:
         try:
             atas = self.model.get_all_atas()
             self.populate_table(atas)
-            self.populate_previsualization_table() # Adiciona esta chamada
+            self.populate_previsualization_table()
         except Exception as e:
             QMessageBox.critical(self.view, "Erro", f"Não foi possível carregar os dados:\n{e}")
 
@@ -220,6 +221,7 @@ class AtasController:
             # Atualiza a linha específica na tabela principal
             self.update_table_row(parecer_value)
             self.populate_previsualization_table()
+            #self.populate_table(atas=self.model.get_all_atas())
         else:
             QMessageBox.critical(self.view, "Erro", "Não foi possível atualizar a ata.")
 

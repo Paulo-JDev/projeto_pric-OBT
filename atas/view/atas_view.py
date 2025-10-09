@@ -27,11 +27,10 @@ class AtasView(QWidget):
         self.preview_search_container = QVBoxLayout()
         preview_toolbar_layout.addLayout(self.preview_search_container, 1)
 
-        # --- NOVO BOTÃO DE ATUALIZAR ---
+        # --- BOTÃO DE ATUALIZAR ---
         self.refresh_preview_button = QPushButton(" Atualizar")
         self.refresh_preview_button.setIcon(icon_manager.get_icon("refresh"))
         preview_toolbar_layout.addWidget(self.refresh_preview_button)
-        # --- FIM DA ADIÇÃO ---
         
         self.preview_table = QTableView()
         self.preview_table.setStyleSheet("QTableView::item:selected { background-color: rgba(163, 213, 255, 0.4); }")
@@ -79,7 +78,11 @@ class AtasView(QWidget):
         self.export_para_importacao_action = self.dados_menu.addAction(icon_manager.get_icon("excel_up"), "Exportar para Re-importação")
         self.dados_button.setMenu(self.dados_menu)
         toolbar_layout.addWidget(self.dados_button)
-        
+
+        self.refresh_table_button = QPushButton(" Atualizar")
+        self.refresh_table_button.setIcon(icon_manager.get_icon("refresh"))
+        toolbar_layout.addWidget(self.refresh_table_button)
+
         table_layout.addLayout(toolbar_layout)
 
         self.table_view = QTableView()
