@@ -319,6 +319,7 @@ class UASGModel:
                     "status": status.status,
                     "objeto_editado": status.objeto_editado,
                     "portaria_edit": status.portaria_edit,
+                    "termo_aditivo_edit": status.termo_aditivo_edit,
                     "radio_options_json": status.radio_options_json,
                     "data_registro": status.data_registro
                 }
@@ -388,6 +389,7 @@ class UASGModel:
                     existing_status.status = entry.get('status')
                     existing_status.objeto_editado = entry.get('objeto_editado')
                     existing_status.portaria_edit = entry.get('portaria_edit', '')
+                    existing_status.termo_aditivo_edit = entry.get('termo_aditivo_edit', '')
                     existing_status.radio_options_json = entry.get('radio_options_json')
                     existing_status.data_registro = data_registro_import_str
                     print(f"Info: Dados do contrato {contrato_id} preparados para atualização.")

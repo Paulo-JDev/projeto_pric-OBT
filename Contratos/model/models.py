@@ -89,6 +89,7 @@ class StatusContrato(Base):
     status = Column(String)
     objeto_editado = Column(Text)
     portaria_edit = Column(String)
+    termo_aditivo_edit = Column(String)
     radio_options_json = Column(Text)
     data_registro = Column(String)
     contrato = relationship("Contrato", back_populates="status")

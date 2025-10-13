@@ -196,7 +196,7 @@ def create_general_tab(self):
     
     # Campos de gestão
     create_field_row("Sigla OM Resp:", "contratante.orgao_origem.unidade_gestora_origem.nome_resumido", gestao_layout)
-    create_field_row("UASG:", "contratante.orgao_origem.unidade_gestora_origem.codigo", gestao_layout)
+    #create_field_row("UASG:", "contratante.orgao_origem.unidade_gestora_origem.codigo", gestao_layout)
     create_field_row("Órgão Responsável:", "contratante.orgao.unidade_gestora.nome_resumido", gestao_layout)
     create_field_row("Tipo:", "tipo", gestao_layout)
     create_field_row("Modalidade:", "modalidade", gestao_layout)
@@ -217,6 +217,22 @@ def create_general_tab(self):
     copy_btn.clicked.connect(lambda: self.copy_to_clipboard(self.portaria_edit))
     hbox.addWidget(copy_btn, stretch=0)
     gestao_layout.addRow(portaria_label, hbox)
+
+    ta_label = QLabel("Termo Aditivo:")
+    ta_label.setStyleSheet("font-weight: bold; min-width: 140px;")
+    self.termo_aditivo_edit = QLineEdit() # Novo QLineEdit
+    self.termo_aditivo_edit.setPlaceholderText("Digite a informação do Termo Aditivo")
+    self.termo_aditivo_edit.setMinimumWidth(320)
+    self.termo_aditivo_edit.setMaximumWidth(320)
+    hbox_ta = QHBoxLayout()
+    hbox_ta.addWidget(self.termo_aditivo_edit, stretch=1)
+    copy_btn_ta = QPushButton()
+    copy_btn_ta.setIcon(icon_manager.get_icon("copy"))
+    copy_btn_ta.setFixedSize(24, 24)
+    copy_btn_ta.setToolTip("Copiar")
+    copy_btn_ta.clicked.connect(lambda: self.copy_to_clipboard(self.termo_aditivo_edit))
+    hbox_ta.addWidget(copy_btn_ta, stretch=0)
+    gestao_layout.addRow(ta_label, hbox_ta)
 
     right_column.addWidget(gestao_group)
     right_column.addStretch()

@@ -391,12 +391,14 @@ class UASGController:
             header_row = ws[7]
             header_font = Font(bold=True)
             header_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
-            header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            green_font = Font(color="00B050")
+            link_font = Font(color="0000FF", underline="single")
 
             for cell in header_row:
                 cell.font = header_font
                 cell.fill = header_fill
-                cell.alignment = header_alignment
+                cell.alignment = center_align
 
             # --- DADOS E FÓRMULAS ---
             center_alignment = Alignment(horizontal='center', vertical='center')
@@ -407,6 +409,33 @@ class UASGController:
                 all_contracts.extend(uasg_contracts)
 
             for row_idx, contrato in enumerate(all_contracts, start=8):
+                contrato_id = str(contrato.get("id"))
+
+                # 1. BUSCAR DADOS ADICIONAIS DO BANCO DE DADOS
+                links_data = self.model.get_contract_links(contrato_id) or {}
+                portaria_text = "XXX"
+                try:
+                    conn = self.model._get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT portaria_edit FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+                    result = cursor.fetchone()
+                    if result and result['portaria_edit']:
+                        portaria_text = result['portaria_edit']
+                    conn.close()
+                except sqlite3.Error:
+                    pass
+
+                # 2. PREPARAR VALORES DAS CÉLULAS COM HIPERLINKS
+                contrato_display_text = contrato.get("numero", "")
+                link_contrato = links_data.get("link_contrato")
+                contrato_val = f'=HYPERLINK("{link_contrato}", "{contrato_display_text}")' if link_contrato else contrato_display_text
+
+                link_ta = links_data.get("link_ta")
+                termo_aditivo_val = f'=HYPERLINK("{link_ta}", "Veja o TA")' if link_ta else "XXX"
+                
+                link_portaria = links_data.get("link_portaria")
+                portaria_val = f'=HYPERLINK("{link_portaria}", "{portaria_text}")' if link_portaria and portaria_text != "XXX" else portaria_text
+
                 data_termino_str = contrato.get("vigencia_fim", "")
                 data_termino_excel = None
                 if data_termino_str:
@@ -415,26 +444,32 @@ class UASGController:
                     except ValueError:
                         data_termino_excel = "Data Inválida"
 
+                # 3. MONTAR A LINHA
                 row_data = [
                     contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "N/A"),
-                    contrato.get("modalidade", "N/A"),
-                    contrato.get("licitacao_numero", "N/A"),
-                    contrato.get("fornecedor", {}).get("nome", ""),
-                    contrato.get("numero", ""),
-                    contrato.get("objeto", ""),
-                    contrato.get("data_assinatura", "N/A"),
-                    "XXX", "XXX", data_termino_excel,
+                    contrato.get("modalidade", "N/A"), contrato.get("licitacao_numero", "N/A"),
+                    contrato.get("fornecedor", {}).get("nome", ""), contrato_val,
+                    contrato.get("objeto", ""), contrato.get("data_assinatura", "N/A"),
+                    termo_aditivo_val, portaria_val, data_termino_excel,
                     f'=IF(ISBLANK(J{row_idx}), "N/A", J{row_idx}-TODAY())', ""
                 ]
                 ws.append(row_data)
 
-                for col_idx, cell in enumerate(ws[row_idx], 1):
+                current_row = ws[row_idx]
+                for cell in current_row:
                     cell.alignment = center_alignment
-                    if col_idx in [7, 10] and isinstance(cell.value, datetime):
-                        cell.number_format = 'DD/MM/YYYY'
-                    if col_idx == 11:
-                        cell.font = green_font
-                        cell.number_format = '0'
+                    if link_contrato:
+                        current_row[4].font = link_font
+                    if link_ta:
+                        current_row[7].font = link_font
+                    if link_portaria:
+                        current_row[8].font = link_font
+
+                    # Formatação de datas e dias
+                    current_row[6].number_format = 'DD/MM/YYYY'
+                    current_row[9].number_format = 'DD/MM/YYYY'
+                    current_row[10].font = green_font
+                    current_row[10].number_format = '0'          
 
             # --- AJUSTE FINAL DAS LARGURAS DAS COLUNAS ---
             ws.column_dimensions['A'].width = 10; ws.column_dimensions['B'].width = 12
