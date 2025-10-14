@@ -81,6 +81,11 @@ class MainWindow(QWidget):
         self.export_button.setIcon(icon_manager.get_icon("excel_down"))
         self.export_button.clicked.connect(self.controller.export_table_to_excel)
         left_layout.addWidget(self.export_button)
+
+        self.import_links_button = QPushButton("Importar Links da Planilha")
+        self.import_links_button.setIcon(icon_manager.get_icon("link")) # Ícone de link
+        self.import_links_button.clicked.connect(self.controller.import_links_from_spreadsheet) # Conecta à nova função
+        left_layout.addWidget(self.import_links_button)
         
         left_layout.addStretch() # Empurra tudo para cima
         

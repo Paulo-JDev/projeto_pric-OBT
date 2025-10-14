@@ -538,3 +538,23 @@ class UASGModel:
             return None
         finally:
             db.close()
+
+    # Importação da tabela para links
+    def save_status_field(self, contrato_id, field_name, value):
+        """Atualiza um campo específico na tabela status_contratos."""
+        db = self._get_db_session()
+        try:
+            status = db.query(StatusContrato).filter(StatusContrato.contrato_id == contrato_id).first()
+            if not status:
+                # Se não existir, cria um novo status para não perder a informação
+                status = StatusContrato(contrato_id=contrato_id)
+                db.add(status)
+            
+            # Define o valor do campo dinamicamente
+            setattr(status, field_name, value)
+            db.commit()
+        except Exception as e:
+            print(f"Erro ao salvar o campo '{field_name}' para o contrato {contrato_id}: {e}")
+            db.rollback()
+        finally:
+            db.close()

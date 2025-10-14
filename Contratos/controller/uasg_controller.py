@@ -17,11 +17,12 @@ import requests
 import sqlite3
 import json
 import os # Adicionado para os.path.expanduser
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
 from datetime import datetime
+import re
 
 class UASGController:
     def __init__(self, base_dir, parent_view=None): # Adicionamos parent_view por boas práticas
@@ -522,6 +523,120 @@ class UASGController:
         if folder_path:
             self.model.save_setting("pdf_download_path", folder_path)
             QMessageBox.information(self.view, "Pasta Definida", f"Os PDFs serão salvos em:\n{folder_path}")'''
+    
+    def import_links_from_spreadsheet(self):
+        """
+        Abre uma planilha Excel e importa os links para os contratos correspondentes.
+        """
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.view, "Selecionar Planilha de Links", "", "Planilhas Excel (*.xlsx)"
+        )
+        if not file_path:
+            return
+
+        try:
+            workbook = load_workbook(file_path, data_only=True)
+            sheet = workbook.active
+            
+            header_row = [cell.value for cell in sheet[1]]
+            expected_headers = ['link_contrato', 'termo_aditivo', 'portaria']
+            if not all(h in header_row for h in expected_headers):
+                QMessageBox.critical(self.view, "Erro de Formato", f"A planilha deve conter as colunas: {', '.join(expected_headers)}")
+                return
+
+            # Mapeia os índices das colunas
+            col_indices = {name: header_row.index(name) for name in expected_headers}
+            
+            sucesso_count = 0
+            falha_count = 0
+            
+            # Mapeia contratos do programa para fácil acesso
+            program_contracts = {}
+            for uasg_data in self.loaded_uasgs.values():
+                for contract in uasg_data:
+                    numero_ano = self._normalize_contract_number(contract.get('numero', ''))
+                    if numero_ano:
+                        program_contracts[numero_ano] = contract
+
+            print("--- Iniciando Importação de Links ---")
+            for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                key_cell_value = row[col_indices['link_contrato']]
+                if not key_cell_value:
+                    continue
+
+                # Extrai número e ano da planilha
+                planilha_num_ano = self._normalize_spreadsheet_key(key_cell_value)
+                if not planilha_num_ano:
+                    print(f"Linha {row_idx}: Formato inválido '{key_cell_value}', pulando.")
+                    falha_count += 1
+                    continue
+                
+                # Tenta encontrar o contrato correspondente no programa
+                if planilha_num_ano in program_contracts:
+                    contrato = program_contracts[planilha_num_ano]
+                    contrato_id = str(contrato.get("id"))
+                    
+                    # Prepara os dados para salvar
+                    link_data = {
+                        'link_contrato': row[col_indices['link_contrato']],
+                        'link_ta': None,
+                        'link_portaria': None
+                    }
+                    termo_aditivo_text = row[col_indices['termo_aditivo']]
+                    portaria_text = row[col_indices['portaria']]
+                    
+                    # Lógica para Termo Aditivo e Portaria
+                    if termo_aditivo_text and termo_aditivo_text.strip().upper() != 'XXX':
+                        # Se houver um hyperlink na célula, o openpyxl o associa ao objeto da célula
+                        cell_obj_ta = sheet.cell(row=row_idx, column=col_indices['termo_aditivo'] + 1)
+                        if cell_obj_ta.hyperlink:
+                            link_data['link_ta'] = cell_obj_ta.hyperlink.target
+                        self.model.save_status_field(contrato_id, 'termo_aditivo_edit', termo_aditivo_text)
+
+                    if portaria_text and portaria_text.strip().upper() != 'XXX':
+                        cell_obj_portaria = sheet.cell(row=row_idx, column=col_indices['portaria'] + 1)
+                        if cell_obj_portaria.hyperlink:
+                            link_data['link_portaria'] = cell_obj_portaria.hyperlink.target
+                        self.model.save_status_field(contrato_id, 'portaria_edit', portaria_text)
+                    
+                    self.model.save_contract_links(contrato_id, link_data)
+                    sucesso_count += 1
+                    print(f"Linha {row_idx}: Links para o contrato '{planilha_num_ano}' atualizados.")
+                else:
+                    print(f"Linha {row_idx}: Contrato '{planilha_num_ano}' não encontrado no programa.")
+                    falha_count += 1
+            
+            print("--- Importação Finalizada ---")
+            QMessageBox.information(self.view, "Importação Concluída", f"Importação finalizada!\n\nSucessos: {sucesso_count}\nFalhas: {falha_count}")
+            # Atualiza a tabela para refletir as mudanças
+            self.update_table(self.view.uasg_info_label.text().split(" ")[1])
+
+        except Exception as e:
+            QMessageBox.critical(self.view, "Erro ao Importar", f"Ocorreu um erro ao processar a planilha:\n{e}")
+
+    # --- ADICIONE ESTES DOIS MÉTODOS AUXILIARES À CLASSE ---
+    def _normalize_spreadsheet_key(self, key_string):
+        """Extrai (número, ano) do formato da planilha 'UASG/ANO-NUM/00'."""
+        match = re.search(r'/(\d{2,4})-(\d+)/', key_string)
+        if match:
+            year = match.group(1)
+            number = int(match.group(2))
+            # Converte ano de 2 dígitos para 4 dígitos
+            if len(year) == 2:
+                year = f"20{year}"
+            return f"{number:05d}/{year}" # Formato padronizado: 00001/2025
+        return None
+
+    def _normalize_contract_number(self, contract_string):
+        """Extrai (número, ano) do formato do programa 'NUMERO/ANO'."""
+        if isinstance(contract_string, str) and '/' in contract_string:
+            parts = contract_string.split('/')
+            if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                number = int(parts[0])
+                year = parts[1]
+                return f"{number:05d}/{year}" # Formato padronizado: 00001/2025
+        return None
+
     
     # ======================================== Funções da Tabela-de-Pré-Visualização ==============================================================
     def populate_previsualization_table(self):
