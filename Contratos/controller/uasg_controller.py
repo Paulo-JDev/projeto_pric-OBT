@@ -396,7 +396,8 @@ class UASGController:
             green_font = Font(color="00B050")
             link_font = Font(color="0000FF", underline="single")
 
-            for cell in header_row:
+            header_row_num = ws.max_row
+            for cell in ws[header_row_num]:
                 cell.font = header_font
                 cell.fill = header_fill
                 cell.alignment = center_align
@@ -405,72 +406,80 @@ class UASGController:
             center_alignment = Alignment(horizontal='center', vertical='center')
             green_font = Font(color="00B050") # Tom de verde padrão do Excel
 
-            all_contracts = []
-            for uasg_contracts in self.loaded_uasgs.values():
-                all_contracts.extend(uasg_contracts)
+            today = datetime.now().date()
+            valid_contracts = []
+            for uasg_list in self.loaded_uasgs.values():
+                for contrato in uasg_list:
+                    vigencia_fim_str = contrato.get("vigencia_fim")
+                    if vigencia_fim_str:
+                        try:
+                            termino_date = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
+                            dias_restantes = (termino_date - today).days
+                            if dias_restantes >= 0:
+                                contrato['dias_restantes'] = dias_restantes # Adiciona para ordenação
+                                valid_contracts.append(contrato)
+                        except (ValueError, TypeError):
+                            continue # Ignora contratos com data inválida
+            
+            # Ordena a lista de contratos válidos pela chave 'dias_restantes' (do menor para o maior)
+            valid_contracts.sort(key=lambda x: x['dias_restantes'])
 
-            for row_idx, contrato in enumerate(all_contracts, start=8):
+            # --- DADOS E FÓRMULAS ---
+            for row_idx, contrato in enumerate(valid_contracts, start=header_row_num + 1):
                 contrato_id = str(contrato.get("id"))
-
-                # 1. BUSCAR DADOS ADICIONAIS DO BANCO DE DADOS
-                links_data = self.model.get_contract_links(contrato_id) or {}
-                portaria_text = "XXX"
-                try:
-                    conn = self.model._get_db_connection()
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT portaria_edit FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
-                    result = cursor.fetchone()
-                    if result and result['portaria_edit']:
-                        portaria_text = result['portaria_edit']
-                    conn.close()
-                except sqlite3.Error:
-                    pass
-
-                # 2. PREPARAR VALORES DAS CÉLULAS COM HIPERLINKS
-                contrato_display_text = contrato.get("numero", "")
-                link_contrato = links_data.get("link_contrato")
-                contrato_val = f'=HYPERLINK("{link_contrato}", "{contrato_display_text}")' if link_contrato else contrato_display_text
-
-                link_ta = links_data.get("link_ta")
-                termo_aditivo_val = f'=HYPERLINK("{link_ta}", "Veja o TA")' if link_ta else "XXX"
                 
+                # 1. BUSCAR DADOS ADICIONAIS
+                links_data = self.model.get_contract_links(contrato_id) or {}
+                termo_aditivo_text = self._get_status_field_from_db(contrato_id, 'termo_aditivo_edit') or "XXX"
+                # (A busca por portaria_edit foi movida para dentro da criação da célula)
+                
+                # 2. INSERIR DADOS E HIPERLINKS NAS CÉLULAS
+                ws.cell(row=row_idx, column=1, value=contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "N/A"))
+                ws.cell(row=row_idx, column=2, value=contrato.get("modalidade", "N/A"))
+                ws.cell(row=row_idx, column=3, value=contrato.get("licitacao_numero", "N/A"))
+                ws.cell(row=row_idx, column=4, value=contrato.get("fornecedor", {}).get("nome", ""))
+                
+                # Célula Contrato (Coluna E)
+                cell_contrato = ws.cell(row=row_idx, column=5, value=contrato.get("numero", ""))
+                link_contrato = links_data.get("link_contrato")
+                if link_contrato:
+                    cell_contrato.hyperlink = link_contrato
+                    cell_contrato.font = link_font
+                
+                ws.cell(row=row_idx, column=6, value=contrato.get("objeto", ""))
+                
+                # Célula Termo Aditivo (Coluna H)
+                cell_ta = ws.cell(row=row_idx, column=8, value=termo_aditivo_text)
+                link_ta = links_data.get("link_ta")
+                if link_ta:
+                    cell_ta.hyperlink = link_ta
+                    cell_ta.font = link_font
+
+                # Célula Portaria (Coluna I)
+                portaria_text = self._get_status_field_from_db(contrato_id, 'portaria_edit') or "XXX"
+                cell_portaria = ws.cell(row=row_idx, column=9, value=portaria_text)
                 link_portaria = links_data.get("link_portaria")
-                portaria_val = f'=HYPERLINK("{link_portaria}", "{portaria_text}")' if link_portaria and portaria_text != "XXX" else portaria_text
-
+                if link_portaria:
+                    cell_portaria.hyperlink = link_portaria
+                    cell_portaria.font = link_font
+                
+                # Datas e Fórmulas
+                data_celebracao_str = contrato.get("data_assinatura")
+                if data_celebracao_str: ws.cell(row=row_idx, column=7, value=datetime.strptime(data_celebracao_str, "%Y-%m-%d"))
+                
                 data_termino_str = contrato.get("vigencia_fim", "")
-                data_termino_excel = None
-                if data_termino_str:
-                    try:
-                        data_termino_excel = datetime.strptime(data_termino_str, "%Y-%m-%d")
-                    except ValueError:
-                        data_termino_excel = "Data Inválida"
+                if data_termino_str: ws.cell(row=row_idx, column=10, value=datetime.strptime(data_termino_str, "%Y-%m-%d"))
+                
+                ws.cell(row=row_idx, column=11, value=contrato['dias_restantes'])
 
-                # 3. MONTAR A LINHA
-                row_data = [
-                    contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "N/A"),
-                    contrato.get("modalidade", "N/A"), contrato.get("licitacao_numero", "N/A"),
-                    contrato.get("fornecedor", {}).get("nome", ""), contrato_val,
-                    contrato.get("objeto", ""), contrato.get("data_assinatura", "N/A"),
-                    termo_aditivo_val, portaria_val, data_termino_excel,
-                    f'=IF(ISBLANK(J{row_idx}), "N/A", J{row_idx}-TODAY())', ""
-                ]
-                ws.append(row_data)
-
+                # Formatação da linha
                 current_row = ws[row_idx]
                 for cell in current_row:
-                    cell.alignment = center_alignment
-                    if link_contrato:
-                        current_row[4].font = link_font
-                    if link_ta:
-                        current_row[7].font = link_font
-                    if link_portaria:
-                        current_row[8].font = link_font
-
-                    # Formatação de datas e dias
-                    current_row[6].number_format = 'DD/MM/YYYY'
-                    current_row[9].number_format = 'DD/MM/YYYY'
-                    current_row[10].font = green_font
-                    current_row[10].number_format = '0'          
+                    cell.alignment = center_align
+                current_row[6].number_format = 'DD/MM/YYYY'
+                current_row[9].number_format = 'DD/MM/YYYY'
+                current_row[10].font = green_font
+                current_row[10].number_format = '0'
 
             # --- AJUSTE FINAL DAS LARGURAS DAS COLUNAS ---
             ws.column_dimensions['A'].width = 10; ws.column_dimensions['B'].width = 12
@@ -510,6 +519,20 @@ class UASGController:
             except sqlite3.Error:
                 return "Erro DB"
         return "SEÇÃO CONTRATOS"
+    
+    def _get_status_field_from_db(self, contrato_id, field_name):
+        """Busca um campo específico da tabela status_contratos para um contrato."""
+        try:
+            conn = self.model._get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT {field_name} FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+            result = cursor.fetchone()
+            conn.close()
+            if result and result[field_name]:
+                return result[field_name]
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar campo '{field_name}' do DB: {e}")
+        return None
 
     '''def set_pdf_download_folder(self):
         """Permite ao usuário definir a pasta de download para PDFs."""
@@ -526,7 +549,8 @@ class UASGController:
     
     def import_links_from_spreadsheet(self):
         """
-        Abre uma planilha Excel e importa os links para os contratos correspondentes.
+        Abre uma planilha Excel e importa os links para os contratos correspondentes,
+        aplicando filtros por UASG e vigência.
         """
         file_path, _ = QFileDialog.getOpenFileName(
             self.view, "Selecionar Planilha de Links", "", "Planilhas Excel (*.xlsx)"
@@ -544,89 +568,116 @@ class UASGController:
                 QMessageBox.critical(self.view, "Erro de Formato", f"A planilha deve conter as colunas: {', '.join(expected_headers)}")
                 return
 
-            # Mapeia os índices das colunas
             col_indices = {name: header_row.index(name) for name in expected_headers}
             
             sucesso_count = 0
             falha_count = 0
             
-            # Mapeia contratos do programa para fácil acesso
+            # --- LÓGICA DE FILTRAGEM E MAPEAMENTO DOS CONTRATOS DO PROGRAMA ---
             program_contracts = {}
-            for uasg_data in self.loaded_uasgs.values():
+            today = datetime.now().date()
+            for uasg_code, uasg_data in self.loaded_uasgs.items():
                 for contract in uasg_data:
+                    # Filtra por vigência: apenas contratos que não expiraram há mais de 40 dias
+                    vigencia_fim_str = contract.get("vigencia_fim")
+                    if vigencia_fim_str:
+                        try:
+                            termino_date = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
+                            dias_restantes = (termino_date - today).days
+                            if dias_restantes < -40:
+                                continue # Pula este contrato
+                        except (ValueError, TypeError):
+                            continue # Pula se a data for inválida
+                    
+                    # Cria a chave composta (UASG, NUMERO/ANO)
                     numero_ano = self._normalize_contract_number(contract.get('numero', ''))
                     if numero_ano:
-                        program_contracts[numero_ano] = contract
+                        chave = (str(uasg_code), numero_ano)
+                        program_contracts[chave] = contract
 
             print("--- Iniciando Importação de Links ---")
-            for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-                key_cell_value = row[col_indices['link_contrato']]
+            for row_idx, row in enumerate(sheet.iter_rows(min_row=2), start=2):
+                key_cell_obj = row[col_indices['link_contrato']]
+                key_cell_value = key_cell_obj.value
+                
                 if not key_cell_value:
                     continue
 
-                # Extrai número e ano da planilha
-                planilha_num_ano = self._normalize_spreadsheet_key(key_cell_value)
-                if not planilha_num_ano:
-                    print(f"Linha {row_idx}: Formato inválido '{key_cell_value}', pulando.")
+                # Extrai a chave (UASG, NUMERO/ANO) da planilha
+                chave_planilha = self._normalize_spreadsheet_key(key_cell_value)
+                if not chave_planilha:
+                    print(f"Linha {row_idx}: Formato inválido na coluna 'link_contrato' ('{key_cell_value}'), pulando.")
                     falha_count += 1
                     continue
                 
-                # Tenta encontrar o contrato correspondente no programa
-                if planilha_num_ano in program_contracts:
-                    contrato = program_contracts[planilha_num_ano]
+                # Tenta encontrar o contrato correspondente usando a chave composta
+                if chave_planilha in program_contracts:
+                    contrato = program_contracts[chave_planilha]
                     contrato_id = str(contrato.get("id"))
                     
                     # Prepara os dados para salvar
                     link_data = {
-                        'link_contrato': row[col_indices['link_contrato']],
+                        'link_contrato': None,
                         'link_ta': None,
                         'link_portaria': None
                     }
-                    termo_aditivo_text = row[col_indices['termo_aditivo']]
-                    portaria_text = row[col_indices['portaria']]
-                    
+
+                    if key_cell_obj.hyperlink:
+                        link_data['link_contrato'] = key_cell_obj.hyperlink.target
+                    else:
+                        link_data['link_contrato'] = key_cell_value
+
                     # Lógica para Termo Aditivo e Portaria
-                    if termo_aditivo_text and termo_aditivo_text.strip().upper() != 'XXX':
-                        # Se houver um hyperlink na célula, o openpyxl o associa ao objeto da célula
-                        cell_obj_ta = sheet.cell(row=row_idx, column=col_indices['termo_aditivo'] + 1)
+                    cell_obj_ta = row[col_indices['termo_aditivo']]
+                    termo_aditivo_text = cell_obj_ta.value
+                    if termo_aditivo_text and str(termo_aditivo_text).strip().upper() != 'XXX':
                         if cell_obj_ta.hyperlink:
                             link_data['link_ta'] = cell_obj_ta.hyperlink.target
-                        self.model.save_status_field(contrato_id, 'termo_aditivo_edit', termo_aditivo_text)
+                        self.model.save_status_field(contrato_id, 'termo_aditivo_edit', str(termo_aditivo_text))
 
-                    if portaria_text and portaria_text.strip().upper() != 'XXX':
-                        cell_obj_portaria = sheet.cell(row=row_idx, column=col_indices['portaria'] + 1)
+                    cell_obj_portaria = row[col_indices['portaria']]
+                    portaria_text = cell_obj_portaria.value
+                    if portaria_text and str(portaria_text).strip().upper() != 'XXX':
                         if cell_obj_portaria.hyperlink:
                             link_data['link_portaria'] = cell_obj_portaria.hyperlink.target
-                        self.model.save_status_field(contrato_id, 'portaria_edit', portaria_text)
+                        self.model.save_status_field(contrato_id, 'portaria_edit', str(portaria_text))
                     
                     self.model.save_contract_links(contrato_id, link_data)
                     sucesso_count += 1
-                    print(f"Linha {row_idx}: Links para o contrato '{planilha_num_ano}' atualizados.")
+                    print(f"Linha {row_idx}: Links para o contrato '{chave_planilha}' atualizados.")
                 else:
-                    print(f"Linha {row_idx}: Contrato '{planilha_num_ano}' não encontrado no programa.")
+                    print(f"Linha {row_idx}: Contrato '{chave_planilha}' não encontrado no programa (ou filtrado por vigência).")
                     falha_count += 1
             
             print("--- Importação Finalizada ---")
             QMessageBox.information(self.view, "Importação Concluída", f"Importação finalizada!\n\nSucessos: {sucesso_count}\nFalhas: {falha_count}")
-            # Atualiza a tabela para refletir as mudanças
             self.update_table(self.view.uasg_info_label.text().split(" ")[1])
 
         except Exception as e:
             QMessageBox.critical(self.view, "Erro ao Importar", f"Ocorreu um erro ao processar a planilha:\n{e}")
 
-    # --- ADICIONE ESTES DOIS MÉTODOS AUXILIARES À CLASSE ---
+    # SUBSTITUA A FUNÇÃO AUXILIAR PELO CÓDIGO ABAIXO
     def _normalize_spreadsheet_key(self, key_string):
-        """Extrai (número, ano) do formato da planilha 'UASG/ANO-NUM/00'."""
-        match = re.search(r'/(\d{2,4})-(\d+)/', key_string)
+        """Extrai (UASG, 'NUMERO/ANO') do formato da planilha 'UASG/ANO-NUM/00'."""
+        match = re.search(r'(\d{5})/(\d{2,4})-(\d+)/', key_string)
         if match:
-            year = match.group(1)
-            number = int(match.group(2))
+            uasg = match.group(1)
+            year = match.group(2)
+            number = int(match.group(3))
+
+            # Mapeamento de UASG
+            if uasg == '87000': uasg = '787000'
+            elif uasg == '87010': uasg = '787010'
+            
             # Converte ano de 2 dígitos para 4 dígitos
             if len(year) == 2:
                 year = f"20{year}"
-            return f"{number:05d}/{year}" # Formato padronizado: 00001/2025
+            
+            numero_ano_formatado = f"{number:05d}/{year}" # Formato padronizado: 00001/2025
+            return (uasg, numero_ano_formatado)
         return None
 
+    # O método _normalize_contract_number permanece o mesmo.
     def _normalize_contract_number(self, contract_string):
         """Extrai (número, ano) do formato do programa 'NUMERO/ANO'."""
         if isinstance(contract_string, str) and '/' in contract_string:
@@ -634,7 +685,7 @@ class UASGController:
             if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
                 number = int(parts[0])
                 year = parts[1]
-                return f"{number:05d}/{year}" # Formato padronizado: 00001/2025
+                return f"{number:05d}/{year}"
         return None
 
     
