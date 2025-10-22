@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
 from PyQt6.QtCore import Qt, QDate, pyqtSignal
 from utils.icon_loader import icon_manager
 from datetime import datetime
+from Contratos.view.abas_detalhes.pdfs_view import create_link_input_row, open_link_in_browser
 
 class AtaDetailsDialog(QDialog):
     ata_updated = pyqtSignal()
@@ -89,7 +90,7 @@ class AtaDetailsDialog(QDialog):
 
         self.status_dropdown = QComboBox()
         self.status_dropdown.addItems([
-            "SEÇÃO ATAS", "EMPRESA", "SIGDEM", "ASSINADO", "PUBLICADO",
+            "SEÇÃO ATAS", "EMPRESA", "SIGDEM", "ASSINADO", "PUBLICADO", "PORTARIA",
             "ALERTA PRAZO", "ATA GERADA", "NOTA TÉCNICA", "AGU", "PRORROGADO"
         ])
         self.status_dropdown.setFixedWidth(220)
@@ -131,13 +132,13 @@ class AtaDetailsDialog(QDialog):
         self.portaria_link_le = QLineEdit()
         self.ta_link_le = QLineEdit()
 
-        self.serie_ata_link_le.setPlaceholderText("Cole aqui o link da Série da Ata (opcional)")
-        self.portaria_link_le.setPlaceholderText("Cole aqui o link da Portaria (opcional)")
-        self.ta_link_le.setPlaceholderText("Cole aqui o link do Termo Aditivo (opcional)")
+        self.serie_ata_link_le, hbox_ata = create_link_input_row(self, "Link Série Ata:", "Cole aqui o link da Série da Ata (opcional)")
+        self.portaria_link_le, hbox_portaria_ata = create_link_input_row(self, "Link Portaria:", "Cole aqui o link da Portaria (opcional)")
+        self.ta_link_le, hox_ta_ata = create_link_input_row(self, "Link Termo Aditivo:", "Cole aqui o link do Termo Aditivo (opcional)")
 
-        layout.addRow(QLabel("<b>Link Série Ata:</b>"), self.serie_ata_link_le)
-        layout.addRow(QLabel("<b>Link Portaria:</b>"), self.portaria_link_le)
-        layout.addRow(QLabel("<b>Link Termo Aditivo:</b>"), self.ta_link_le)
+        layout.addRow(QLabel("<b>Link Série Ata:</b>"), hbox_ata)
+        layout.addRow(QLabel("<b>Link Portaria:</b>"), hbox_portaria_ata)
+        layout.addRow(QLabel("<b>Link Termo Aditivo:</b>"), hox_ta_ata)
 
         self.tabs.addTab(links_tab, "Links Atas")
 

@@ -52,7 +52,7 @@ class DetailsDialog(QDialog):
 
         # Criar abas
         self.tabs.addTab(create_general_tab(self), "Informações Gerais")
-        self.tabs.addTab(create_object_tab(self), "PDF do contrato")
+        self.tabs.addTab(create_object_tab(self), "LINKS do Contrato")
         self.tabs.addTab(create_status_tab(self), "Status")
         self.tabs.addTab(create_empenhos_tab(self), "Empenhos")
         self.tabs.addTab(create_itens_tab(self), "Itens")

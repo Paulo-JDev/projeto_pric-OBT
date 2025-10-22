@@ -385,7 +385,7 @@ class UASGController:
             headers = [
                 "SETOR", "MODALIDADE", "N°/ANO", "EMPRESA", "CONTRATOS",
                 "OBJETO", "CELEBRAÇÃO", "TERMO\nADITIVO", "PORTARIA DE\nFISCALIZAÇÃO", 
-                "TÉRMINO", "DIAS P/\nVENCIMENTO", "OBS"
+                "TÉRMINO", "DIAS P/\nVENCIMENTO"
             ]
             ws.append(headers)
             
@@ -441,9 +441,9 @@ class UASGController:
                 
                 # Célula Contrato (Coluna E)
                 cell_contrato = ws.cell(row=row_idx, column=5, value=contrato.get("numero", ""))
-                link_contrato = links_data.get("link_contrato")
-                if link_contrato:
-                    cell_contrato.hyperlink = link_contrato
+                link_pncp_espc = links_data.get("link_pncp_espc")
+                if link_pncp_espc:
+                    cell_contrato.hyperlink = link_pncp_espc
                     cell_contrato.font = link_font
                 
                 ws.cell(row=row_idx, column=6, value=contrato.get("objeto", ""))
@@ -656,7 +656,6 @@ class UASGController:
         except Exception as e:
             QMessageBox.critical(self.view, "Erro ao Importar", f"Ocorreu um erro ao processar a planilha:\n{e}")
 
-    # SUBSTITUA A FUNÇÃO AUXILIAR PELO CÓDIGO ABAIXO
     def _normalize_spreadsheet_key(self, key_string):
         """Extrai (UASG, 'NUMERO/ANO') do formato da planilha 'UASG/ANO-NUM/00'."""
         match = re.search(r'(\d{5})/(\d{2,4})-(\d+)/', key_string)

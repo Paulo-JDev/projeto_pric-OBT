@@ -1,15 +1,21 @@
 ----------------------------------- ATAS ----------------------------- 
 
-
+colocar dois btn ao lado dos campos de links um para copiar e outro para ser como um clicavel dele OKOK
+adicionar "portaria" nos status OKOK
 
 ----------------------------- Contratos --------------------------------
 
-
+deixar alguns lugares com outros nomes (para deicxar mais intuitivo) OKOK
+fazer a trocar do link na hora de gerar a tabela, inves de pegar o link do pdf pegar o linl_pncp_esp OKOK
+colocar dois btn ao lado dos campos de links um para copiar e outro para ser como um clicavel dele OKOK
 
 ----------------------------- Geral ---------------------------------------
 
-FAZER DOIS NOVAS ENTRADAS UMA PARA GERAR ATAS E OUTRA Contratos
+
+colocar a ussabilidade de poder fazer outra janela e poder mexer em outras coisas
+
+[FAZER DOIS NOVAS ENTRADAS UMA PARA GERAR ATAS E OUTRA Contratos
 UM ICONE PARA CADA E NA ORGANIZAÇÃO DAS PASTAS COLOCAR 
 gerar_ata e gerar_contrato
 
-( O PROJETO VAI FICAR MEGA GIGANTE)
+( O PROJETO VAI FICAR MEGA GIGANTE)]

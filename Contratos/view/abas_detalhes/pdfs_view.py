@@ -1,9 +1,11 @@
 # Contratos/view/abas_detalhes/pdfs_view.py
 
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QFrame, QPushButton, 
-                             QHBoxLayout, QLineEdit, QFormLayout, QGroupBox)
-from PyQt6.QtCore import Qt
+                             QHBoxLayout, QLineEdit, QFormLayout, QGroupBox, QMessageBox)
+from PyQt6.QtCore import Qt, QSize
 from urllib.parse import quote
+import webbrowser
+from utils.icon_loader import icon_manager
 
 def create_link_section(title, url, link_text):
     """Cria uma seção de link com título e URL clicável."""
@@ -18,6 +20,47 @@ def create_link_section(title, url, link_text):
     link_label.setTextFormat(Qt.TextFormat.RichText)
     layout.addWidget(link_label)
     return frame
+
+def create_link_input_row(parent_dialog, label_text, placeholder_text):
+    """Cria um QHBoxLayout contendo um QLineEdit e botões de Copiar/Abrir."""
+    line_edit = QLineEdit()
+    line_edit.setPlaceholderText(placeholder_text)
+    
+    copy_button = QPushButton()
+    copy_button.setIcon(icon_manager.get_icon("copy"))
+    copy_button.setFixedSize(QSize(24, 24)) # Tamanho pequeno
+    copy_button.setToolTip("Copiar Link")
+    # Conecta ao método copy_to_clipboard da DetailsDialog
+    copy_button.clicked.connect(lambda: parent_dialog.copy_to_clipboard(line_edit))
+
+    open_button = QPushButton()
+    open_button.setIcon(icon_manager.get_icon("external-link")) # Ícone de link externo
+    open_button.setFixedSize(QSize(24, 24)) # Tamanho pequeno
+    open_button.setToolTip("Abrir Link no Navegador")
+    # Conecta a uma nova função lambda que abre o link
+    open_button.clicked.connect(lambda: open_link_in_browser(line_edit.text()))
+    
+    hbox = QHBoxLayout()
+    hbox.addWidget(line_edit)
+    hbox.addWidget(copy_button)
+    hbox.addWidget(open_button)
+    
+    return line_edit, hbox # Retorna o QLineEdit e o QHBoxLayout
+
+# --- NOVA FUNÇÃO PARA ABRIR O LINK ---
+def open_link_in_browser(url):
+    """Abre a URL fornecida no navegador padrão."""
+    if url and (url.startswith('http://') or url.startswith('https://')):
+        try:
+            webbrowser.open(url)
+        except Exception as e:
+            print(f"Erro ao abrir link '{url}': {e}")
+            # Opcional: Mostrar uma QMessageBox de erro
+            QMessageBox.warning(None, "Erro ao Abrir Link", f"Não foi possível abrir o link:\n{url}\n\nErro: {e}")
+    elif url:
+        print(f"Link inválido ou não suportado: {url}")
+        # Opcional: Mostrar uma QMessageBox de aviso
+        QMessageBox.warning(None, "Link Inválido", f"O link inserido não é válido ou não começa com http/https:\n{url}")
 
 def create_object_tab(self):
     """
@@ -59,17 +102,17 @@ def create_object_tab(self):
     form_layout = QFormLayout(links_group)
     form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
-    self.link_contrato_le = QLineEdit()
-    self.link_ta_le = QLineEdit()
-    self.link_portaria_le = QLineEdit()
-    self.link_pncp_espc_le = QLineEdit()
-    self.link_portal_marinha_le = QLineEdit()
+    self.link_contrato_le, hbox_contrato = create_link_input_row(self, "Link Contrato (PDF):", "Cole o link do PDF do contrato")
+    self.link_ta_le, hbox_ta = create_link_input_row(self, "Link Termo Aditivo (TA):", "Cole o link do Termo Aditivo")
+    self.link_portaria_le, hbox_portaria = create_link_input_row(self, "Link Portaria:", "Cole o link da Portaria")
+    self.link_pncp_espc_le, hbox_pncp = create_link_input_row(self, "Link PNCP Específico:", "Cole o link específico do contrato no PNCP")
+    self.link_portal_marinha_le, hbox_marinha = create_link_input_row(self, "Link Portal Marinha:", "Cole o link do Portal da Marinha")
 
-    form_layout.addRow(QLabel("<b>Link Contrato (PDF):</b>"), self.link_contrato_le)
-    form_layout.addRow(QLabel("<b>Link Termo Aditivo (TA):</b>"), self.link_ta_le)
-    form_layout.addRow(QLabel("<b>Link Portaria:</b>"), self.link_portaria_le)
-    form_layout.addRow(QLabel("<b>Link PNCP Específico:</b>"), self.link_pncp_espc_le)
-    form_layout.addRow(QLabel("<b>Link Portal Marinha:</b>"), self.link_portal_marinha_le)
+    form_layout.addRow(QLabel("<b>Link PDF do Contrato:</b>"), hbox_contrato)
+    form_layout.addRow(QLabel("<b>Link Termo Aditivo (TA):</b>"), hbox_ta)
+    form_layout.addRow(QLabel("<b>Link Portaria:</b>"), hbox_portaria)
+    form_layout.addRow(QLabel("<b>Link PNCP Específico:</b>"), hbox_pncp)
+    form_layout.addRow(QLabel("<b>Link Portal Marinha:</b>"), hbox_marinha)
     
     main_layout.addWidget(links_group)
     main_layout.addStretch()
