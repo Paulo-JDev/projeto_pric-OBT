@@ -299,53 +299,82 @@ class UASGModel:
             db.close()
 
     def get_all_status_data(self):
-        """REFATORADO COM SQLALCHEMY: Busca todos os dados de status, registros e links para exportação."""
-        # --- CORREÇÃO AQUI ---
-        # Importa os modelos necessários com o nome correto
-        from .models import StatusContrato, RegistroStatus, LinksContrato
+        """
+        Busca todos os contratos e seus dados de status associados (status, registros, links, etc.)
+        para exportação. Inclui contratos mesmo que não tenham status explicitamente salvo.
+        """
+        from .models import StatusContrato, RegistroStatus, LinksContrato, RegistroMensagem, Contrato # Reimporta localmente se necessário
         
         db = self._get_db_session()
-        all_data = []
+        all_export_data = []
 
         try:
-            # Busca todos os status_contratos usando o ORM
-            all_statuses = db.query(StatusContrato).all()
+            # 1. Busca TODOS os contratos primeiro
+            all_contracts = db.query(Contrato).all()
+            print(f"[get_all_status_data] Encontrados {len(all_contracts)} contratos no total.") # Depuração
 
-            for status in all_statuses:
-                # Constrói a entrada de dados base
+            for contrato in all_contracts:
+                contrato_id = contrato.id
+                uasg_code = contrato.uasg_code
+               
+                status_info = db.query(StatusContrato).filter(StatusContrato.contrato_id == contrato_id).first()
+                registros_status = db.query(RegistroStatus.texto).filter(RegistroStatus.contrato_id == contrato_id).all()
+                lista_registros_status = [reg[0] for reg in registros_status]
+                registros_msg = db.query(RegistroMensagem.texto).filter(RegistroMensagem.contrato_id == contrato_id).all()
+                lista_registros_msg = [reg[0] for reg in registros_msg]
+
+                # 5. Busca os Links
+                links_info = db.query(LinksContrato).filter(LinksContrato.contrato_id == contrato_id).first()
+                links_dict = {}
+                if links_info:
+                    links_dict = {
+                        "link_contrato": links_info.link_contrato,
+                        "link_ta": links_info.link_ta,
+                        "link_portaria": links_info.link_portaria,
+                        "link_pncp_espc": links_info.link_pncp_espc,
+                        "link_portal_marinha": links_info.link_portal_marinha
+                    }
+
+                # 6. Monta a entrada de dados para este contrato
                 data_entry = {
-                    "contrato_id": status.contrato_id,
-                    "uasg_code": status.uasg_code,
-                    "status": status.status,
-                    "objeto_editado": status.objeto_editado,
-                    "portaria_edit": status.portaria_edit,
-                    "termo_aditivo_edit": status.termo_aditivo_edit,
-                    "radio_options_json": status.radio_options_json,
-                    "data_registro": status.data_registro
+                    "contrato_id": contrato_id,
+                    "uasg_code": uasg_code,
+                    # Usa dados do status_info se existir, senão usa defaults
+                    "status": status_info.status if status_info else "SEÇÃO CONTRATOS", # Default
+                    "objeto_editado": status_info.objeto_editado if status_info else contrato.objeto, # Default: objeto original
+                    "portaria_edit": status_info.portaria_edit if status_info else "",
+                    "termo_aditivo_edit": status_info.termo_aditivo_edit if status_info else "",
+                    "radio_options_json": status_info.radio_options_json if status_info else "{}", # Default: JSON vazio
+                    "data_registro": status_info.data_registro if status_info else "",
+                    # Adiciona listas de registros e links
+                    "registros": lista_registros_status,
+                    "registros_mensagem": lista_registros_msg,
+                    **links_dict # Adiciona os links ao dicionário principal
                 }
-
-                # --- CORREÇÃO AQUI ---
-                # Busca os registros associados usando o nome correto do modelo
-                registros = db.query(RegistroStatus.texto).filter(RegistroStatus.contrato_id == status.contrato_id).all()
-                data_entry['registros'] = [reg[0] for reg in registros]
-
-                registros_msg = db.query(RegistroMensagem.texto).filter(RegistroMensagem.contrato_id == status.contrato_id).all()
-                data_entry['registros_mensagem'] = [reg[0] for reg in registros_msg]
-
-                # Busca os links associados
-                links = self.get_contract_links(status.contrato_id)
-                if links:
-                    data_entry.update(links)
                 
-                all_data.append(data_entry)
+                # Só adiciona à exportação se houver alguma informação de status relevante
+                # (status diferente do padrão, registros, links, objeto editado, etc.)
+                is_relevant = (
+                    data_entry["status"] != "SEÇÃO CONTRATOS" or
+                    data_entry["registros"] or
+                    data_entry["registros_mensagem"] or
+                    links_dict or
+                    (status_info and (status_info.objeto_editado or status_info.portaria_edit or status_info.termo_aditivo_edit))
+                )
+                
+                if is_relevant:
+                    all_export_data.append(data_entry)
+            
+            print(f"[get_all_status_data] {len(all_export_data)} contratos com dados relevantes encontrados para exportação.") # Depuração
                 
         except Exception as e:
             print(f"Erro ao buscar todos os dados de status com SQLAlchemy: {e}")
-            return []
+            return [] # Retorna lista vazia em caso de erro grave
         finally:
             db.close()
         
-        return all_data
+        # Retorna a lista de dados relevantes
+        return all_export_data
 
     def import_statuses(self, data_to_import):
         """REFATORADO COM SQLALCHEMY: Importa status, registros e links de um JSON usando uma única sessão."""

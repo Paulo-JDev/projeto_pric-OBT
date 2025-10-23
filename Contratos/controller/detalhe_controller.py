@@ -178,13 +178,18 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
 
         # Carregar registros_status
         if registro_list is not None:
-            registro_list.clear()
+            registro_list.clear() # Limpa a lista antes de adicionar
             cursor.execute("SELECT texto FROM registros_status WHERE contrato_id = ?", (id_contrato,))
-            for row in cursor.fetchall():
+            registros_encontrados = cursor.fetchall() # Busca todos
+            print(f"[load_status] Encontrados {len(registros_encontrados)} registros para o contrato {id_contrato}") # Depuração
+            for row in registros_encontrados:
                 item = QListWidgetItem(row['texto'])
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 item.setCheckState(Qt.CheckState.Unchecked)
                 registro_list.addItem(item)
-            registro_list.clearSelection()
+            registro_list.clearSelection() # Remove qualquer seleção residual
+        else:
+            print("[load_status] Aviso: registro_list é None.")
         
         if status_row:
             print(f"Status, registros e comentários para o contrato {id_contrato} carregados do banco de dados.")
