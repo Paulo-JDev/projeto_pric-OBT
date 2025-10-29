@@ -5,6 +5,7 @@ import sqlite3 # Adicionado
 from datetime import datetime
 from utils.icon_loader import icon_manager
 from Contratos.model.uasg_model import UASGModel # Para _get_db_connection se necessário, ou usar o model passado
+from Contratos.controller.controller_fiscal import load_fiscalizacao, save_fiscalizacao
 
 SUCCESS_MSG_TIMEOUT_MS = 300
 
@@ -113,6 +114,8 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         conn.rollback()
     finally:
         conn.close()
+
+    save_fiscalizacao(model, id_contrato, parent)
     
     return id_contrato, uasg
 
@@ -197,6 +200,8 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
         print(f"Erro inesperado ao carregar status para contrato {id_contrato}, UASG {uasg}: {e}")
     finally:
         conn.close()
+    
+    load_fiscalizacao(model, id_contrato, parent_dialog)
 
 def copy_to_clipboard(line_edit):
     """Copia o texto do campo para a área de transferência"""

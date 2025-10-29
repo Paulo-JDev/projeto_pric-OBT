@@ -49,3 +49,4 @@ dist-linux/
 teste.json
 *.spec
 LICENSE.txt
+testes.py

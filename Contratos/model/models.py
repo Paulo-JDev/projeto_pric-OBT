@@ -42,9 +42,9 @@ class Contrato(Base):
     status = relationship("StatusContrato", back_populates="contrato", uselist=False, cascade="all, delete-orphan")
     registros = relationship("RegistroStatus", back_populates="contrato", cascade="all, delete-orphan")
     links = relationship("LinksContrato", uselist=False, back_populates="contrato", cascade="all, delete-orphan")
-    # MENSAGENS
+    fiscalizacao = relationship("Fiscalizacao", uselist=False, back_populates="contrato", cascade="all, delete-orphan")
     registros_mensagem = relationship("RegistroMensagem", back_populates="contrato", cascade="all, delete-orphan")
-    #comentarios = relationship("ComentarioStatus", back_populates="contrato", cascade="all, delete-orphan")
+    
     
     # Relacionamentos para dados offline
     historicos = relationship("Historico", back_populates="contrato", cascade="all, delete-orphan")
@@ -119,6 +119,32 @@ class RegistroMensagem(Base):
     contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False, index=True)
     texto = Column(Text, unique=True) # unique=True pode ser opcional
     contrato = relationship("Contrato", back_populates="registros_mensagem")
+
+class Fiscalizacao(Base):
+    """
+    Tabela para armazenar dados de fiscalização de contratos.
+    Relacionamento 1:1 com Contrato.
+    """
+    __tablename__ = "fiscalizacao"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False, unique=True, index=True)
+    
+    # 6 Campos de fiscalização
+    gestor = Column(String)                    # Gestor do Contrato
+    fiscal_titular = Column(String)            # Fiscal Titular
+    fiscal_substituto = Column(String)         # Fiscal Substituto
+    setor_responsavel = Column(String)         # Setor Responsável
+    data_fiscalizacao = Column(String)        
+    observacoes = Column(Text)                 # Observações (campo longo)
+    acoes_corretivas = Column(Text)            # Ações Corretivas (campo longo)
+    
+    # Timestamps para auditoria
+    data_criacao = Column(String)              # Data de criação do registro
+    data_atualizacao = Column(String)          # Última atualização
+    
+    # Relacionamento com Contrato
+    contrato = relationship("Contrato", back_populates="fiscalizacao")
 
 """class ComentarioStatus(Base):
     __tablename__ = "comentarios_status"
