@@ -303,7 +303,7 @@ class UASGModel:
         Busca todos os contratos e seus dados de status associados (status, registros, links, etc.)
         para exportação. Inclui contratos mesmo que não tenham status explicitamente salvo.
         """
-        from .models import StatusContrato, RegistroStatus, LinksContrato, RegistroMensagem, Contrato # Reimporta localmente se necessário
+        from .models import StatusContrato, RegistroStatus, LinksContrato, RegistroMensagem, Contrato,  Fiscalizacao # Reimporta localmente se necessário
         
         db = self._get_db_session()
         all_export_data = []
@@ -335,6 +335,21 @@ class UASGModel:
                         "link_portal_marinha": links_info.link_portal_marinha
                     }
 
+                fiscalizacao_info = db.query(Fiscalizacao).filter(Fiscalizacao.contrato_id == contrato_id).first()
+                fiscalizacao_dict = {}
+                if fiscalizacao_info:
+                    fiscalizacao_dict = {
+                        "fiscal_gestor": fiscalizacao_info.gestor or "",
+                        "fiscal_titular": fiscalizacao_info.fiscal_titular or "",
+                        "fiscal_substituto": fiscalizacao_info.fiscal_substituto or "",
+                        "fiscal_setor_responsavel": fiscalizacao_info.setor_responsavel or "",
+                        "fiscal_data": fiscalizacao_info.data_fiscalizacao or "",
+                        "fiscal_observacoes": fiscalizacao_info.observacoes or "",
+                        "fiscal_acoes_corretivas": fiscalizacao_info.acoes_corretivas or "",
+                        "fiscal_data_criacao": fiscalizacao_info.data_criacao or "",
+                        "fiscal_data_atualizacao": fiscalizacao_info.data_atualizacao or ""
+                    }
+
                 # 6. Monta a entrada de dados para este contrato
                 data_entry = {
                     "contrato_id": contrato_id,
@@ -349,7 +364,8 @@ class UASGModel:
                     # Adiciona listas de registros e links
                     "registros": lista_registros_status,
                     "registros_mensagem": lista_registros_msg,
-                    **links_dict # Adiciona os links ao dicionário principal
+                    **links_dict, # Adiciona os links ao dicionário principal
+                    **fiscalizacao_dict
                 }
                 
                 # Só adiciona à exportação se houver alguma informação de status relevante
@@ -359,6 +375,7 @@ class UASGModel:
                     data_entry["registros"] or
                     data_entry["registros_mensagem"] or
                     links_dict or
+                    fiscalizacao_dict or
                     (status_info and (status_info.objeto_editado or status_info.portaria_edit or status_info.termo_aditivo_edit))
                 )
                 
@@ -380,7 +397,7 @@ class UASGModel:
         """REFATORADO COM SQLALCHEMY: Importa status, registros e links de um JSON usando uma única sessão."""
         # Importa os modelos e datetime
         # --- CORREÇÃO AQUI ---
-        from .models import StatusContrato, RegistroStatus # Alterado de RegistrosStatus para RegistroStatus
+        from .models import StatusContrato, RegistroStatus, RegistroMensagem, Fiscalizacao # Alterado de RegistrosStatus para RegistroStatus
         from datetime import datetime
         
         db = self._get_db_session() # Inicia a sessão SQLAlchemy UMA ÚNICA VEZ para toda a operação
@@ -432,6 +449,37 @@ class UASGModel:
                     }
                     self.save_contract_links(contrato_id, link_data, db_session=db)
                     print(f"Info: Links para o contrato {contrato_id} preparados para importação.")
+
+                    fiscalizacao_existing = db.query(Fiscalizacao).filter(Fiscalizacao.contrato_id == contrato_id).first()
+                
+                    # Verifica se há dados de fiscalização no JSON importado
+                    has_fiscal_data = any([
+                        entry.get('fiscal_gestor'),
+                        entry.get('fiscal_titular'),
+                        entry.get('fiscal_substituto'),
+                        entry.get('fiscal_data'),
+                        entry.get('fiscal_setor_responsavel'),
+                        entry.get('fiscal_observacoes'),
+                        entry.get('fiscal_acoes_corretivas')
+                    ])
+
+                    if has_fiscal_data:
+                        if not fiscalizacao_existing:
+                            fiscalizacao_existing = Fiscalizacao(contrato_id=contrato_id)
+                            fiscalizacao_existing.data_criacao = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                            db.add(fiscalizacao_existing)
+                        
+                        # Atualiza os campos
+                        fiscalizacao_existing.gestor = entry.get('fiscal_gestor', '')
+                        fiscalizacao_existing.fiscal_titular = entry.get('fiscal_titular', '')
+                        fiscalizacao_existing.fiscal_substituto = entry.get('fiscal_substituto', '')
+                        fiscalizacao_existing.setor_responsavel = entry.get('fiscal_setor_responsavel', '')
+                        fiscalizacao_existing.data_fiscalizacao = entry.get('fiscal_data', '')
+                        fiscalizacao_existing.observacoes = entry.get('fiscal_observacoes', '')
+                        fiscalizacao_existing.acoes_corretivas = entry.get('fiscal_acoes_corretivas', '')
+                        fiscalizacao_existing.data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                        
+                        print(f"Info: Dados de fiscalização para o contrato {contrato_id} preparados para importação.")
 
                     # --- CORREÇÃO AQUI ---
                     # Deleta registros antigos e insere os novos
