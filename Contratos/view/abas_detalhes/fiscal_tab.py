@@ -109,25 +109,25 @@ def create_fiscal_tab(parent):
     # ==================== 6 CAMPOS DE FISCALIZAÇÃO ====================
     
     # Campo 1: Gestor do Contrato
-    create_text_field("Gestor do Contrato:", "fiscal_gestor", multiline=False)
+    create_text_field("Gestor:", "fiscal_gestor", multiline=False)
     
-    # Campo 2: Fiscal Titular
-    create_text_field("Fiscal Titular:", "fiscal_titular", multiline=False)
-    
-    # Campo 3: Fiscal Substituto
-    create_text_field("Fiscal Substituto:", "fiscal_substituto", multiline=False)
-    
-    # Campo 4: Setor Responsável
-    create_text_field("Setor Responsável:", "fiscal_setor", multiline=False)
+    # Campo 2: Gestor Substituto
+    create_text_field("Gestor Substituto:", "fiscal_gestor_substituto", multiline=False)
 
-    # Campo (5.1): Data da Fiscalização
-    create_text_field("Data da Fiscalização:", "fiscal_data", multiline=False)
+    # Campo 3: Fiscal tecnico
+    create_text_field("Fiscal Tecnico:", "fiscalizacao_tecnico", multiline=False)
     
-    # Campo 5: Observações da Fiscalização (multiline)
+    # Campo 4: Fiscal Substituto
+    create_text_field("Fiscal Tecnico Substituto:", "fiscalizacao_tec_substituto", multiline=False)
+    
+    # Campo 5: Setor Responsável
+    create_text_field("Fiscal Administrativo:", "fiscalizacao_administrativo", multiline=False)
+    
+    # 6. Fiscal Administrativo Subs (antes: "Data da Fiscalização")
+    create_text_field("Fiscal Administrativo Subs:", "fiscalizacao_admin_substituto", multiline=False)
+    
+    # 7. Observações (mantido)
     create_text_field("Observações:", "fiscal_observacoes", multiline=True)
-    
-    # Campo 6: Ações Corretivas (multiline)
-    create_text_field("Ações Corretivas:", "fiscal_acoes_corretivas", multiline=True)
 
     main_layout.addWidget(fiscal_group)
     main_layout.addStretch()

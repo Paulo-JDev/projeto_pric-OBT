@@ -340,12 +340,12 @@ class UASGModel:
                 if fiscalizacao_info:
                     fiscalizacao_dict = {
                         "fiscal_gestor": fiscalizacao_info.gestor or "",
-                        "fiscal_titular": fiscalizacao_info.fiscal_titular or "",
-                        "fiscal_substituto": fiscalizacao_info.fiscal_substituto or "",
-                        "fiscal_setor_responsavel": fiscalizacao_info.setor_responsavel or "",
-                        "fiscal_data": fiscalizacao_info.data_fiscalizacao or "",
+                        "fiscal_gestor_substituto": fiscalizacao_info.gestor_substituto or "",
+                        "fiscalizacao_tecnico": fiscalizacao_info.fiscal_tecnico or "",
+                        "fiscalizacao_tec_substituto": fiscalizacao_info.fiscal_tec_substituto or "",
+                        "fiscalizacao_administrativo": fiscalizacao_info.fiscal_administrativo or "",
+                        "fiscalizacao_admin_substituto": fiscalizacao_info.fiscal_admin_substituto or "",
                         "fiscal_observacoes": fiscalizacao_info.observacoes or "",
-                        "fiscal_acoes_corretivas": fiscalizacao_info.acoes_corretivas or "",
                         "fiscal_data_criacao": fiscalizacao_info.data_criacao or "",
                         "fiscal_data_atualizacao": fiscalizacao_info.data_atualizacao or ""
                     }
@@ -455,12 +455,12 @@ class UASGModel:
                     # Verifica se há dados de fiscalização no JSON importado
                     has_fiscal_data = any([
                         entry.get('fiscal_gestor'),
-                        entry.get('fiscal_titular'),
-                        entry.get('fiscal_substituto'),
-                        entry.get('fiscal_data'),
-                        entry.get('fiscal_setor_responsavel'),
-                        entry.get('fiscal_observacoes'),
-                        entry.get('fiscal_acoes_corretivas')
+                        entry.get('fiscal_gestor_substituto'),
+                        entry.get('fiscalizacao_tecnico'),
+                        entry.get('fiscalizacao_tec_substituto'),
+                        entry.get('fiscalizacao_administrativo'),
+                        entry.get('fiscalizacao_admin_substituto'),
+                        entry.get('fiscal_observacoes')
                     ])
 
                     if has_fiscal_data:
@@ -471,12 +471,12 @@ class UASGModel:
                         
                         # Atualiza os campos
                         fiscalizacao_existing.gestor = entry.get('fiscal_gestor', '')
-                        fiscalizacao_existing.fiscal_titular = entry.get('fiscal_titular', '')
-                        fiscalizacao_existing.fiscal_substituto = entry.get('fiscal_substituto', '')
-                        fiscalizacao_existing.setor_responsavel = entry.get('fiscal_setor_responsavel', '')
-                        fiscalizacao_existing.data_fiscalizacao = entry.get('fiscal_data', '')
+                        fiscalizacao_existing.gestor_substituto = entry.get('fiscal_gestor_substituto', '')  # ✅ NOVO
+                        fiscalizacao_existing.fiscal_tecnico = entry.get('fiscalizacao_tecnico', '')
+                        fiscalizacao_existing.fiscal_tec_substituto = entry.get('fiscalizacao_tec_substituto', '')
+                        fiscalizacao_existing.fiscal_administrativo = entry.get('fiscalizacao_administrativo', '')
+                        fiscalizacao_existing.fiscal_admin_substituto = entry.get('fiscalizacao_admin_substituto', '')
                         fiscalizacao_existing.observacoes = entry.get('fiscal_observacoes', '')
-                        fiscalizacao_existing.acoes_corretivas = entry.get('fiscal_acoes_corretivas', '')
                         fiscalizacao_existing.data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                         
                         print(f"Info: Dados de fiscalização para o contrato {contrato_id} preparados para importação.")

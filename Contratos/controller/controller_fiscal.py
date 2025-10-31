@@ -34,12 +34,12 @@ def save_fiscalizacao(model, contrato_id: str, parent_dialog) -> bool:
     # Coleta dados dos campos do dialog
     fiscalizacao_data = {
         'gestor': getattr(parent_dialog, 'fiscal_gestor', None),
-        'fiscal_titular': getattr(parent_dialog, 'fiscal_titular', None),
-        'fiscal_substituto': getattr(parent_dialog, 'fiscal_substituto', None),
-        'setor_responsavel': getattr(parent_dialog, 'fiscal_setor', None),
-        'data_fiscalizacao' : getattr(parent_dialog, 'fiscal_data', None),
+        'gestor_substituto': getattr(parent_dialog, 'fiscal_gestor_substituto', None),
+        'fiscal_tecnico': getattr(parent_dialog, 'fiscalizacao_tecnico', None),
+        'fiscal_tec_substituto': getattr(parent_dialog, 'fiscalizacao_tec_substituto', None),
+        'fiscal_administrativo': getattr(parent_dialog, 'fiscalizacao_administrativo', None),
+        'fiscal_admin_substituto': getattr(parent_dialog, 'fiscalizacao_admin_substituto', None),
         'observacoes': getattr(parent_dialog, 'fiscal_observacoes', None),
-        'acoes_corretivas': getattr(parent_dialog, 'fiscal_acoes_corretivas', None)
 
     }
     
@@ -130,12 +130,12 @@ def _save_fiscalizacao_to_db(model, contrato_id: str, fiscalizacao_data: Dict[st
         
         # Atualiza os campos
         fiscalizacao.gestor = fiscalizacao_data.get('gestor', '')
-        fiscalizacao.fiscal_titular = fiscalizacao_data.get('fiscal_titular', '')
-        fiscalizacao.fiscal_substituto = fiscalizacao_data.get('fiscal_substituto', '')
-        fiscalizacao.setor_responsavel = fiscalizacao_data.get('setor_responsavel', '')
-        fiscalizacao.data_fiscalizacao = fiscalizacao_data.get('data_fiscalizacao', '')
+        fiscalizacao.gestor_substituto = fiscalizacao_data.get('gestor_substituto', '')
+        fiscalizacao.fiscal_tecnico = fiscalizacao_data.get('fiscal_tecnico', '')
+        fiscalizacao.fiscal_tec_substituto = fiscalizacao_data.get('fiscal_tec_substituto', '')
+        fiscalizacao.fiscal_administrativo = fiscalizacao_data.get('fiscal_administrativo', '')
+        fiscalizacao.fiscal_admin_substituto = fiscalizacao_data.get('fiscal_admin_substituto', '')
         fiscalizacao.observacoes = fiscalizacao_data.get('observacoes', '')
-        fiscalizacao.acoes_corretivas = fiscalizacao_data.get('acoes_corretivas', '')
         fiscalizacao.data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         
         db.commit()
@@ -171,12 +171,12 @@ def _get_fiscalizacao_from_db(model, contrato_id: str) -> Optional[Dict[str, str
         if fiscalizacao:
             return {
                 'gestor': fiscalizacao.gestor or '',
-                'fiscal_titular': fiscalizacao.fiscal_titular or '',
-                'fiscal_substituto': fiscalizacao.fiscal_substituto or '',
-                'setor_responsavel': fiscalizacao.setor_responsavel or '',
-                'data_fiscalizacao': fiscalizacao.data_fiscalizacao or '',
+                'gestor_substituto': fiscalizacao.gestor_substituto or '',
+                'fiscal_tecnico': fiscalizacao.fiscal_tecnico or '',
+                'fiscal_tec_substituto': fiscalizacao.fiscal_tec_substituto or '',
+                'fiscal_administrativo': fiscalizacao.fiscal_administrativo or '',
+                'fiscal_admin_substituto': fiscalizacao.fiscal_admin_substituto or '',
                 'observacoes': fiscalizacao.observacoes or '',
-                'acoes_corretivas': fiscalizacao.acoes_corretivas or '',
                 'data_criacao': fiscalizacao.data_criacao,
                 'data_atualizacao': fiscalizacao.data_atualizacao
             }
@@ -201,12 +201,12 @@ def _populate_fiscal_fields(parent_dialog, fiscalizacao_data: Dict[str, str]) ->
     # Mapeamento de campos: nome_atributo -> chave_dados
     field_mapping = {
         'fiscal_gestor': 'gestor',
-        'fiscal_titular': 'fiscal_titular',
-        'fiscal_substituto': 'fiscal_substituto',
-        'fiscal_setor': 'setor_responsavel',
-        'fiscal_data': 'data_fiscalizacao',
+        'fiscal_gestor_substituto': 'gestor_substituto',
+        'fiscalizacao_tecnico': 'fiscal_tecnico',            # ✅ CORRIGIDO (invertido)
+        'fiscalizacao_tec_substituto': 'fiscal_tec_substituto',  # ✅ CORRIGIDO (invertido)
+        'fiscalizacao_administrativo': 'fiscal_administrativo',  # ✅ CORRIGIDO (invertido)
+        'fiscalizacao_admin_substituto': 'fiscal_admin_substituto',  # ✅ CORRIGIDO (invertido)
         'fiscal_observacoes': 'observacoes',
-        'fiscal_acoes_corretivas': 'acoes_corretivas'
     }
     
     for attr_name, data_key in field_mapping.items():

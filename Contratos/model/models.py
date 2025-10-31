@@ -131,13 +131,13 @@ class Fiscalizacao(Base):
     contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False, unique=True, index=True)
     
     # 6 Campos de fiscalização
-    gestor = Column(String)                    # Gestor do Contrato
-    fiscal_titular = Column(String)            # Fiscal Titular
-    fiscal_substituto = Column(String)         # Fiscal Substituto
-    setor_responsavel = Column(String)         # Setor Responsável
-    data_fiscalizacao = Column(String)        
+    gestor = Column(String)
+    gestor_substituto = Column(String)                   # Gestor do Contrato
+    fiscal_tecnico = Column(String)            # Fiscal Titular
+    fiscal_tec_substituto = Column(String)         # Fiscal Substituto
+    fiscal_administrativo = Column(String)         # Setor Responsável
+    fiscal_admin_substituto = Column(String)        
     observacoes = Column(Text)                 # Observações (campo longo)
-    acoes_corretivas = Column(Text)            # Ações Corretivas (campo longo)
     
     # Timestamps para auditoria
     data_criacao = Column(String)              # Data de criação do registro
