@@ -87,9 +87,10 @@ class DetailsDialog(QDialog):
         self.tabs.addTab(create_object_tab(self), "LINKS do Contrato")
         self.tabs.addTab(create_fiscal_tab(self), "Fiscalização")  # ✅ NOVA ABA
         self.tabs.addTab(create_status_tab(self), "Status")
-        self.tabs.addTab(create_empenhos_tab(self), "Empenhos")
-        self.tabs.addTab(create_itens_tab(self), "Itens")
-        self.tabs.addTab(aba_extras_link(self), "Extras")
+        if not self.data.get("manual", False):
+            self.tabs.addTab(create_empenhos_tab(self), "Empenhos")
+            self.tabs.addTab(create_itens_tab(self), "Itens")
+            self.tabs.addTab(aba_extras_link(self), "Extras")
         
         # Conecta botão de copiar registros (criado em status_tab)
         if hasattr(self, 'copy_registro_button'):

@@ -86,6 +86,12 @@ class MainWindow(QWidget):
         self.import_links_button.setIcon(icon_manager.get_icon("link")) # Ícone de link
         self.import_links_button.clicked.connect(self.controller.import_links_from_spreadsheet) # Conecta à nova função
         left_layout.addWidget(self.import_links_button)
+
+        self.manual_contract_button = QPushButton("Contrato Manual")
+        self.manual_contract_button.setIcon(icon_manager.get_icon("add"))
+        self.manual_contract_button.setToolTip("Gerenciar contratos manuais")
+        self.manual_contract_button.clicked.connect(self.controller.open_manual_contract_window)
+        left_layout.addWidget(self.manual_contract_button)
         
         left_layout.addStretch() # Empurra tudo para cima
         

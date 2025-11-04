@@ -1,6 +1,6 @@
 # model/models.py
 
-from sqlalchemy import Column, String, Integer, Text, ForeignKey
+from sqlalchemy import Column, String, Integer, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -35,6 +35,7 @@ class Contrato(Base):
     modalidade = Column(String)
     contratante_orgao_unidade_gestora_codigo = Column(String)
     contratante_orgao_unidade_gestora_nome_resumido = Column(String)
+    manual = Column(Boolean, default=False)  # True = Manual, False = API
     raw_json = Column(Text)
 
     # --- RELACIONAMENTOS ---

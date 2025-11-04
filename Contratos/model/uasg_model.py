@@ -195,6 +195,7 @@ class UASGModel:
                     modalidade=contrato_data.get("modalidade"),
                     contratante_orgao_unidade_gestora_codigo=contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo"),
                     contratante_orgao_unidade_gestora_nome_resumido=contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido"),
+                    manual=contrato_data.get("manual", False),
                     raw_json=json.dumps(contrato_data)
                 )
                 db.merge(novo_contrato)

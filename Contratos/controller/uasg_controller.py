@@ -9,6 +9,7 @@ from Contratos.controller.controller_table import populate_table, update_row_fro
 from Contratos.controller.mensagem_controller import MensagemController
 from Contratos.controller.settings_controller import SettingsController
 from Contratos.view.record_popup import RecordPopup
+from Contratos.controller.manual_contract_controller import ManualContractController
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog, QApplication, QHeaderView
 from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
@@ -33,6 +34,7 @@ class UASGController:
         self.dashboard_controller = DashboardController(self.model, self.view)
         
         self.view.settings_button.clicked.connect(self.show_settings_dialog)
+        self.manual_contract_ctrl = ManualContractController(self.model, self.view)
 
         self.loaded_uasgs = {}
         self.current_data = []
@@ -747,3 +749,8 @@ class UASGController:
             self.show_details_dialog(contract_data_found)
         else:
             QMessageBox.warning(self.view, "Erro", f"Não foi possível encontrar os dados completos para o contrato ID: {contrato_id}")
+
+# ====================== Contratos Manuais ==========================
+    def open_manual_contract_window(self):
+            """Abre a janela de contratos manuais"""
+            self.manual_contract_ctrl.open_manual_contract_window()
