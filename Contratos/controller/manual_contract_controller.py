@@ -8,9 +8,8 @@ Responsável por adicionar, exportar e importar contratos manuais.
 import json
 from datetime import datetime
 from PyQt6.QtWidgets import QMessageBox, QFileDialog, QDialog
-from Contratos.view.manual_contract_dialog import ManualContractDialog
-from Contratos.view.manual_contract_form import ManualContractForm
-
+from Contratos.view.detalhes_manual.manual_contract_dialog import ManualContractDialog
+from Contratos.view.detalhes_manual.manual_contract_form import ManualContractForm
 
 class ManualContractController:
     """Controla operações de contratos manuais"""

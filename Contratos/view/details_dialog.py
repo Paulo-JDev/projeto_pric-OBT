@@ -11,7 +11,7 @@ from PyQt6.QtCore import pyqtSignal
 from Contratos.model.uasg_model import resource_path
 from utils.icon_loader import icon_manager
 
-# Imports das abas
+# ==================== IMPORTS PARA CONTRATOS NORMAIS ====================
 from Contratos.view.abas_detalhes.general_tab import create_general_tab
 from Contratos.view.abas_detalhes.pdfs_view import create_object_tab
 from Contratos.view.abas_detalhes.status_tab import create_status_tab
@@ -21,6 +21,10 @@ from Contratos.view.abas_detalhes.itens_tab import create_itens_tab
 from Contratos.view.abas_detalhes.fiscal_tab import create_fiscal_tab
 from Contratos.view.abas_detalhes.edit_object_dialog import EditObjectDialog
 from Contratos.view.abas_detalhes.email_dialog import EmailDialog
+
+# ==================== IMPORTS PARA CONTRATOS MANUAIS ====================
+from Contratos.view.detalhes_manual.general_tab_manual import create_general_tab_manual
+from Contratos.view.detalhes_manual.links_tab_manual import create_links_tab_manual
 
 # Imports dos controllers
 from Contratos.controller.itens_controller import ItensController
@@ -33,7 +37,15 @@ from Contratos.controller.detalhe_controller import (
 
 
 class DetailsDialog(QDialog):
-    # Sinal que será emitido quando o botão de salvar for pressionado
+    """
+    Dialog de detalhes do contrato com múltiplas abas.
+    
+    ✅ ATUALIZADO: Detecta se é contrato manual e carrega abas apropriadas
+    
+    Signals:
+        data_saved: Emitido quando dados são salvos com sucesso
+    """
+    
     data_saved = pyqtSignal(dict)
     
     def __init__(self, data, model, parent=None):
@@ -47,6 +59,9 @@ class DetailsDialog(QDialog):
         self.data = data
         self.model = model
         
+        # ==================== ✅ DETECTA SE É MANUAL ====================
+        self.is_manual = data.get("manual", False)
+        
         # Variáveis de controle
         self.pdf_path = None
         self.json_cache = {}
@@ -55,7 +70,7 @@ class DetailsDialog(QDialog):
         self.radio_groups = {}
         self.radio_buttons = {}
         
-        # Referências de widgets importantes (inicializadas pelas abas)
+        # Referências de widgets importantes
         self.objeto_edit = None
         self.portaria_edit = None
         self.termo_aditivo_edit = None
@@ -70,24 +85,33 @@ class DetailsDialog(QDialog):
         # ==================== CRIAR ABAS ====================
         self.tabs = QTabWidget()
         self.main_layout.addWidget(self.tabs)
-        
-        # Adiciona todas as abas
-        self.create_tabs()
+        self._create_tabs()
         
         # ==================== BOTÕES DE AÇÃO ====================
-        self.create_action_buttons()
+        self._create_action_buttons()
         
         # ==================== CARREGA DADOS SALVOS ====================
-        # Chama após todas as abas serem criadas
         self.load_all_data()
     
-    def create_tabs(self):
-        """Cria todas as abas do dialog"""
-        self.tabs.addTab(create_general_tab(self), "Informações Gerais")
-        self.tabs.addTab(create_object_tab(self), "LINKS do Contrato")
-        self.tabs.addTab(create_fiscal_tab(self), "Fiscalização")  # ✅ NOVA ABA
-        self.tabs.addTab(create_status_tab(self), "Status")
-        if not self.data.get("manual", False):
+    def _create_tabs(self):
+        """
+        Cria abas apropriadas baseado no tipo de contrato.
+        
+        ✅ MANUAL: Informações Gerais (editável) + Links (sem automáticos) + Fiscalização + Status
+        ✅ NORMAL: Todas as abas (Empenhos, Itens, Extras incluídos)
+        """
+        if self.is_manual:
+            # ==================== ABAS PARA CONTRATO MANUAL ====================
+            self.tabs.addTab(create_general_tab_manual(self), "Informações Gerais")
+            self.tabs.addTab(create_links_tab_manual(self), "LINKS do Contrato")
+            self.tabs.addTab(create_fiscal_tab(self), "Fiscalização")  # ✅ REUTILIZA
+            self.tabs.addTab(create_status_tab(self), "Status")        # ✅ REUTILIZA
+        else:
+            # ==================== ABAS PARA CONTRATO NORMAL ====================
+            self.tabs.addTab(create_general_tab(self), "Informações Gerais")
+            self.tabs.addTab(create_object_tab(self), "LINKS do Contrato")
+            self.tabs.addTab(create_fiscal_tab(self), "Fiscalização")
+            self.tabs.addTab(create_status_tab(self), "Status")
             self.tabs.addTab(create_empenhos_tab(self), "Empenhos")
             self.tabs.addTab(create_itens_tab(self), "Itens")
             self.tabs.addTab(aba_extras_link(self), "Extras")
@@ -96,7 +120,7 @@ class DetailsDialog(QDialog):
         if hasattr(self, 'copy_registro_button'):
             self.copy_registro_button.clicked.connect(self.copy_registro_def)
     
-    def create_action_buttons(self):
+    def _create_action_buttons(self):
         """Cria os botões de ação (Salvar e Cancelar)"""
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -121,14 +145,13 @@ class DetailsDialog(QDialog):
         """
         Carrega todos os dados salvos do banco de dados.
         
-        ✅ Inclui automaticamente: status, links, registros e fiscalização
+        ✅ Funciona tanto para contratos manuais quanto normais
         """
-        # Verifica se os widgets necessários foram inicializados
         if not hasattr(self, 'status_dropdown') or self.status_dropdown is None:
             print("⚠️ Widgets de status não inicializados ainda")
             return
         
-        # Chama load_status que agora também carrega fiscalização
+        # Chama load_status que carrega: status, links, registros, fiscalização
         load_status(
             self.data,
             self.model,
@@ -138,7 +161,7 @@ class DetailsDialog(QDialog):
             self.termo_aditivo_edit,
             self.radio_buttons,
             self.registro_list,
-            self  # parent_dialog
+            self
         )
         
         print(f"✅ Dados carregados para o contrato {self.data.get('numero', 'N/A')}")
@@ -147,16 +170,19 @@ class DetailsDialog(QDialog):
         """
         Salva todos os dados e fecha o dialog.
         
-        ✅ Inclui automaticamente: status, links, registros e fiscalização
+        ✅ Para contratos manuais, também salva os campos editáveis
         """
-        # Verifica se os widgets necessários existem
         if not hasattr(self, 'status_dropdown') or self.status_dropdown is None:
             QMessageBox.warning(self, "Erro", "Widgets de status não inicializados")
             return
         
-        # Chama save_status que agora também salva fiscalização
+        # ==================== SALVA CAMPOS EDITÁVEIS (SE MANUAL) ====================
+        if self.is_manual:
+            self._save_manual_fields()
+        
+        # ==================== SALVA STATUS, LINKS, REGISTROS, FISCALIZAÇÃO ====================
         result = save_status(
-            self,  # parent
+            self,
             self.data,
             self.model,
             self.status_dropdown,
@@ -167,18 +193,93 @@ class DetailsDialog(QDialog):
             self.radio_buttons
         )
         
-        if result and result[0]:  # Se salvou com sucesso
+        if result and result[0]:
             # Emite sinal com informações atualizadas
             details_info = {
                 'status': self.status_dropdown.currentText(),
                 'objeto': self.objeto_edit.text() if self.objeto_edit else ''
             }
             self.data_saved.emit(details_info)
-            
-            # Mostra mensagem de sucesso
             show_success_message(self)
-            
             print(f"✅ Dados salvos para o contrato {self.data.get('numero', 'N/A')}")
+    
+    def _save_manual_fields(self):
+        """
+        Salva campos editáveis de contratos manuais no banco.
+        
+        ✅ Atualiza a tabela `contratos` com os novos valores
+        """
+        from Contratos.model.models import Contrato
+        
+        db = self.model._get_db_session()
+        
+        try:
+            contrato_id = self.data.get('id')
+            contrato = db.query(Contrato).filter(Contrato.id == contrato_id).first()
+            
+            if not contrato:
+                print(f"⚠️ Contrato {contrato_id} não encontrado no banco")
+                return
+            
+            # Atualiza campos editáveis
+            if hasattr(self, 'manual_numero'):
+                contrato.numero = self.manual_numero.text()
+            if hasattr(self, 'manual_licitacao'):
+                contrato.licitacao_numero = self.manual_licitacao.text()
+            if hasattr(self, 'manual_nup'):
+                contrato.processo = self.manual_nup.text()
+            if hasattr(self, 'manual_valor'):
+                contrato.valor_global = self.manual_valor.text()
+            if hasattr(self, 'manual_cnpj'):
+                contrato.fornecedor_cnpj = self.manual_cnpj.text()
+            if hasattr(self, 'manual_empresa'):
+                contrato.fornecedor_nome = self.manual_empresa.text()
+            if hasattr(self, 'manual_vigencia_inicio'):
+                contrato.vigencia_inicio = self.manual_vigencia_inicio.text()
+            if hasattr(self, 'manual_vigencia_fim'):
+                contrato.vigencia_fim = self.manual_vigencia_fim.text()
+            if hasattr(self, 'manual_tipo'):
+                contrato.tipo = self.manual_tipo.text()
+            if hasattr(self, 'manual_modalidade'):
+                contrato.modalidade = self.manual_modalidade.text()
+            if hasattr(self, 'manual_sigla_om'):
+                contrato.contratante_orgao_unidade_gestora_nome_resumido = self.manual_sigla_om.text()
+            if hasattr(self, 'manual_orgao'):
+                # Pode criar um campo adicional no model se necessário
+                pass
+            
+            # Atualiza objeto
+            if self.objeto_edit:
+                contrato.objeto = self.objeto_edit.text()
+            
+            # Atualiza raw_json com os novos dados
+            import json
+            contrato.raw_json = json.dumps({
+                "id": contrato.id,
+                "numero": contrato.numero,
+                "licitacao_numero": contrato.licitacao_numero,
+                "processo": contrato.processo,
+                "fornecedor": {
+                    "nome": contrato.fornecedor_nome,
+                    "cnpj_cpf_idgener": contrato.fornecedor_cnpj
+                },
+                "objeto": contrato.objeto,
+                "valor_global": contrato.valor_global,
+                "vigencia_inicio": contrato.vigencia_inicio,
+                "vigencia_fim": contrato.vigencia_fim,
+                "tipo": contrato.tipo,
+                "modalidade": contrato.modalidade,
+                "manual": True
+            })
+            
+            db.commit()
+            print(f"✅ Campos editáveis do contrato manual {contrato_id} salvos")
+            
+        except Exception as e:
+            print(f"❌ Erro ao salvar campos editáveis: {e}")
+            db.rollback()
+        finally:
+            db.close()
     
     # ==================== MÉTODOS DE REGISTROS (STATUS) ====================
     
@@ -187,7 +288,7 @@ class DetailsDialog(QDialog):
         registro_def(self, self.registro_list, self.status_dropdown)
     
     def delete_registro(self):
-        """Remove os registros selecionados (com checkbox marcado)"""
+        """Remove os registros selecionados"""
         delete_registro(self.registro_list)
     
     def copy_registro_def(self):
@@ -204,12 +305,7 @@ class DetailsDialog(QDialog):
         editor_dialog.exec()
     
     def update_object_text(self, new_text):
-        """
-        Atualiza o texto do campo Objeto.
-        
-        Args:
-            new_text (str): Novo texto do objeto
-        """
+        """Atualiza o texto do campo Objeto"""
         if self.objeto_edit:
             self.objeto_edit.setText(new_text)
             print("✅ Objeto atualizado na interface")
@@ -217,96 +313,86 @@ class DetailsDialog(QDialog):
     # ==================== MÉTODOS DE CLIPBOARD ====================
     
     def copy_to_clipboard(self, line_edit):
-        """
-        Copia texto de um QLineEdit para a área de transferência.
-        
-        Args:
-            line_edit (QLineEdit): Widget contendo o texto
-        """
+        """Copia texto de um QLineEdit para a área de transferência"""
         copy_to_clipboard(line_edit)
     
     def copy_text_edit_to_clipboard(self, text_edit):
-        """
-        Copia texto de um QTextEdit para a área de transferência.
-        
-        Args:
-            text_edit (QTextEdit): Widget contendo o texto
-        """
+        """Copia texto de um QTextEdit para a área de transferência"""
         clipboard = QApplication.clipboard()
         clipboard.setText(text_edit.toPlainText())
         print("✅ Texto copiado para a área de transferência")
+    
+    def open_link(self, url):
+        """Abre um link no navegador padrão"""
+        if url:
+            import webbrowser
+            webbrowser.open(url)
     
     # ==================== MÉTODOS DE RELATÓRIOS ====================
     
     def generate_empenho_report_to_excel(self):
         """Gera relatório de empenhos em Excel"""
-        empenho_controller = EmpenhoController(self.model, self)
-        empenho_controller.generate_report_to_excel(self.data)
+        if not self.is_manual:  # Só funciona para contratos normais
+            empenho_controller = EmpenhoController(self.model, self)
+            empenho_controller.generate_report_to_excel(self.data)
     
     def generate_itens_report_to_excel(self):
         """Gera relatório de itens em Excel"""
-        itens_controller = ItensController(self.model, self)
-        itens_controller.generate_report_to_excel(self.data)
+        if not self.is_manual:  # Só funciona para contratos normais
+            itens_controller = ItensController(self.model, self)
+            itens_controller.generate_report_to_excel(self.data)
     
     # ==================== MÉTODO DE ENVIO DE E-MAIL ====================
     
     def open_email_dialog(self):
-        """
-        Abre dialog para enviar relatório por e-mail.
-        
-        Permite correções sem fechar a janela desnecessariamente.
-        """
-        email_dialog = EmailDialog(self)
-        
-        while True:
-            # Abre o dialog e aguarda resposta
-            if not email_dialog.exec():
-                # Usuário cancelou
-                return
+        """Abre dialog para enviar relatório por e-mail"""
+        if not self.is_manual:  # Só funciona para contratos normais
+            email_dialog = EmailDialog(self)
             
-            # Valida dados inseridos
-            email_data = email_dialog.get_data()
-            recipient = email_data.get('recipient_email', '').strip()
-            file_path = email_data.get('file_path', '').strip()
-            
-            if not recipient or not file_path:
-                QMessageBox.warning(
+            while True:
+                if not email_dialog.exec():
+                    return
+                
+                email_data = email_dialog.get_data()
+                recipient = email_data.get('recipient_email', '').strip()
+                file_path = email_data.get('file_path', '').strip()
+                
+                if not recipient or not file_path:
+                    QMessageBox.warning(
+                        self,
+                        "Dados Incompletos",
+                        "Por favor, preencha o e-mail e selecione um arquivo."
+                    )
+                    continue
+                
+                contrato_numero = self.data.get('numero', 'N/A')
+                reply = QMessageBox.question(
                     self,
-                    "Dados Incompletos",
-                    "Por favor, preencha o e-mail e selecione um arquivo."
+                    "Confirmar Envio",
+                    f"O e-mail será enviado com as informações do contrato <b>{contrato_numero}</b>.\n\n"
+                    "Verifique se a planilha e o contrato selecionado estão corretos antes de continuar.",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                    QMessageBox.StandardButton.Cancel
                 )
-                continue
-            
-            # Confirmação final
-            contrato_numero = self.data.get('numero', 'N/A')
-            reply = QMessageBox.question(
-                self,
-                "Confirmar Envio",
-                f"O e-mail será enviado com as informações do contrato <b>{contrato_numero}</b>.\n\n"
-                "Verifique se a planilha e o contrato selecionado estão corretos antes de continuar.",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Cancel
-            )
-            
-            if reply != QMessageBox.StandardButton.Yes:
-                continue
-            
-            # Prepara e envia e-mail
-            licitacao_numero = self.data.get('licitacao_numero', 'N/A')
-            nome_resumido = self.data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "N/A")
-            
-            subject = f"Relatório de Empenhos do Contrato {contrato_numero}"
-            body = (
-                f"Segue em anexo o relatório de execução de empenhos para o contrato nº {contrato_numero} "
-                f"referente ao Processo nº {licitacao_numero} do órgão {nome_resumido}."
-            )
-            
-            email_controller = EmailController(self)
-            success, message = email_controller.send_email(recipient, subject, body, file_path)
-            
-            if success:
-                QMessageBox.information(self, "Sucesso", message)
-            else:
-                QMessageBox.critical(self, "Falha no Envio", message)
-            
-            break
+                
+                if reply != QMessageBox.StandardButton.Yes:
+                    continue
+                
+                licitacao_numero = self.data.get('licitacao_numero', 'N/A')
+                nome_resumido = self.data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("nome_resumido", "N/A")
+                
+                subject = f"Relatório de Empenhos do Contrato {contrato_numero}"
+                body = (
+                    f"Segue em anexo o relatório de execução de empenhos para o contrato nº {contrato_numero} "
+                    f"referente ao Processo nº {licitacao_numero} do órgão {nome_resumido}."
+                )
+                
+                email_controller = EmailController(self)
+                success, message = email_controller.send_email(recipient, subject, body, file_path)
+                
+                if success:
+                    QMessageBox.information(self, "Sucesso", message)
+                else:
+                    QMessageBox.critical(self, "Falha no Envio", message)
+                
+                break
