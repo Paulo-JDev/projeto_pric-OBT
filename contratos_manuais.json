@@ -1,0 +1,28 @@
+[
+    {
+        "id": "MANUAL-001/2025",
+        "numero": "001/2025",
+        "licitacao_numero": "09973/2022",
+        "processo": "123456789",
+        "fornecedor": {
+            "nome": "Teste nome da empresa manual",
+            "cnpj_cpf_idgener": "345345347895"
+        },
+        "objeto": "OBJETO TESTE manual",
+        "valor_global": "23456.56",
+        "vigencia_inicio": "2025-11-05",
+        "vigencia_fim": "2026-11-05",
+        "tipo": "Contrato manual",
+        "modalidade": "PE manual",
+        "contratante": {
+            "orgao": {
+                "unidade_gestora": {
+                    "codigo": "787320",
+                    "nome_resumido": "CFB manual"
+                }
+            }
+        },
+        "manual": true,
+        "raw_json": "{\"numero\": \"001/2025\", \"licitacao_numero\": \"\", \"nup\": \"\", \"cnpj\": \"\", \"uasg\": \"787320\"}"
+    }
+]

@@ -175,18 +175,51 @@ class UASGController:
         self.load_saved_uasgs()
 
     def clear_table(self):
-        """Limpa o conteúdo da tabela."""
-        self.view.search_bar.clear()
-        model = self.view.table.model()
-        model.removeRows(0, model.rowCount())
+        # Verifica se há dados carregados
+        if not self.current_data or len(self.current_data) == 0:
+            QMessageBox.warning(
+                self.view,
+                "Nenhuma UASG Carregada",
+                "Não há contratos carregados no momento.\n\n"
+                "Por favor, busque uma UASG antes de atualizar a tabela."
+            )
+            return
         
-        # Limpa o rótulo da UASG
-        self.view.uasg_info_label.setText("UASG: -")
+        # Pega o código da UASG do primeiro contrato carregado
+        primeiro_contrato = self.current_data[0]
+        uasg_code = primeiro_contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo")
         
-        # Limpa o dashboard
-        self.dashboard_controller.clear_dashboard()
+        if not uasg_code:
+            QMessageBox.warning(
+                self.view,
+                "UASG Não Identificada",
+                "Não foi possível identificar a UASG dos contratos carregados."
+            )
+            return
         
-        QMessageBox.information(self.view, "Limpeza", "A tabela foi limpa com sucesso!")
+        try:
+            print(f"🔄 Recarregando tabela da UASG {uasg_code}...")
+            
+            # ==================== ✅ USA O MÉTODO update_table ====================
+            self.update_table(uasg_code)
+            
+            # Mensagem de sucesso
+            QMessageBox.information(
+                self.view, 
+                "Atualização Concluída", 
+                f"Tabela da UASG {uasg_code} recarregada com sucesso!\n\n"
+                f"Total de contratos: {len(self.current_data)}"
+            )
+            
+            print(f"✅ Tabela recarregada: {len(self.current_data)} contratos")
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self.view,
+                "Erro ao Atualizar",
+                f"Erro ao recarregar a tabela:\n{str(e)}"
+            )
+            print(f"❌ Erro ao recarregar tabela: {e}")
 
     def show_context_menu(self, position):
         """Exibe o menu de contexto ao clicar com o botão direito na tabela."""

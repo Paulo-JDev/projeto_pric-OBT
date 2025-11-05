@@ -12,18 +12,15 @@ class ManualContractForm(QDialog):
     """
     Formulário para adicionar contrato manual.
     
-    Campos:
-    - Número (obrigatório) - será usado como ID
-    - Número Licitação
-    - NUP
-    - CNPJ
-    - UASG (obrigatório)
+    ✅ ATUALIZADO: Validação de duplicidade em tempo real
     """
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, model=None):
         super().__init__(parent)
         self.setWindowTitle("Adicionar Contrato Manual")
-        self.setFixedSize(500, 300)
+        self.setFixedSize(500, 350)  # Aumentado para caber aviso
+        
+        self.model = model  # ✅ Recebe model para validação
         
         main_layout = QVBoxLayout(self)
         main_layout.setSpacing(20)
@@ -41,6 +38,7 @@ class ManualContractForm(QDialog):
         # Campo 1: Número (obrigatório)
         self.numero_le = QLineEdit()
         self.numero_le.setPlaceholderText("Ex: 001/2025 (obrigatório)")
+        self.numero_le.textChanged.connect(self._check_duplicate)  # ✅ Validação em tempo real
         form_layout.addRow("Número *:", self.numero_le)
         
         # Campo 2: Número Licitação
@@ -61,9 +59,20 @@ class ManualContractForm(QDialog):
         # Campo 5: UASG (obrigatório)
         self.uasg_le = QLineEdit()
         self.uasg_le.setPlaceholderText("Ex: 787010 (obrigatório)")
+        self.uasg_le.textChanged.connect(self._check_duplicate)  # ✅ Validação em tempo real
         form_layout.addRow("UASG *:", self.uasg_le)
         
         main_layout.addLayout(form_layout)
+        
+        # ==================== ✅ LABEL DE AVISO ====================
+        self.warning_label = QLabel("")
+        self.warning_label.setStyleSheet(
+            "color: red; font-weight: bold; padding: 5px; "
+            "background-color: #ffe6e6; border: 1px solid red; border-radius: 3px;"
+        )
+        self.warning_label.setWordWrap(True)
+        self.warning_label.setVisible(False)
+        main_layout.addWidget(self.warning_label)
         
         # ==================== BOTÕES ====================
         button_layout = QHBoxLayout()
@@ -84,6 +93,47 @@ class ManualContractForm(QDialog):
         button_layout.addWidget(self.btn_cancel)
         
         main_layout.addLayout(button_layout)
+    
+    def _check_duplicate(self):
+        """
+        ✅ Verifica duplicidade em tempo real enquanto o usuário digita.
+        """
+        if not self.model:
+            return
+        
+        numero = self.numero_le.text().strip()
+        uasg = self.uasg_le.text().strip()
+        
+        if not numero or not uasg:
+            self.warning_label.setVisible(False)
+            self.btn_save.setEnabled(True)
+            return
+        
+        contrato_id = f"MANUAL-{numero}"
+        
+        # Verifica se existe
+        from Contratos.model.models import Contrato
+        db = self.model._get_db_session()
+        
+        try:
+            existe = db.query(Contrato).filter(
+                Contrato.id == contrato_id,
+                Contrato.uasg_code == uasg
+            ).first()
+            
+            if existe:
+                self.warning_label.setText(
+                    f"⚠️ Contrato {numero} já cadastrado na UASG {uasg}!"
+                )
+                self.warning_label.setVisible(True)
+                self.btn_save.setEnabled(False)  # Desabilita botão salvar
+            else:
+                self.warning_label.setVisible(False)
+                self.btn_save.setEnabled(True)
+        except:
+            pass
+        finally:
+            db.close()
     
     def get_data(self):
         """Retorna os dados preenchidos no formulário"""

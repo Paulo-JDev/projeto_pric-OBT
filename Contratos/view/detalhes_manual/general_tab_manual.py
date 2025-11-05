@@ -1,22 +1,16 @@
 # Contratos/view/detalhes_manual/general_tab_manual.py
 
-"""
-Aba de Informações Gerais para CONTRATOS MANUAIS.
-Todos os campos são editáveis.
-"""
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLabel, QLineEdit, QPushButton, QGroupBox, QRadioButton, QButtonGroup
 )
-from PyQt6.QtCore import QSize
+from PyQt6.QtCore import QSize, QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
 from utils.icon_loader import icon_manager
 
+
 def create_general_tab_manual(parent):
-    """
-    Cria a aba de Informações Gerais para contratos manuais.
-    TODOS os campos são editáveis.
-    """
+    """Cria a aba de Informações Gerais para contratos manuais."""
     general_tab = QWidget()
     main_layout = QVBoxLayout(general_tab)
     main_layout.setContentsMargins(10, 10, 10, 10)
@@ -36,7 +30,7 @@ def create_general_tab_manual(parent):
     
     numero_contrato = parent.data.get('numero', 'N/A')
     title_label = QLabel(f"Contrato Manual {numero_contrato}")
-    title_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #FFD700;")  # Dourado para destacar
+    title_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #FFD700;")
     title_layout.addWidget(title_label)
     title_layout.addStretch(1)
     
@@ -65,7 +59,6 @@ def create_general_tab_manual(parent):
         line_edit.setStyleSheet("min-width: 300px; max-width: 300px;")
         line_edit.setPlaceholderText(f"Digite {label_text.lower()}")
         
-        # Armazena referência no parent
         setattr(parent, field_name, line_edit)
         
         copy_btn = QPushButton()
@@ -82,6 +75,101 @@ def create_general_tab_manual(parent):
         info_layout.addRow(label, hbox)
         return line_edit
 
+    # ==================== ✅ CAMPO DE MOEDA ====================
+    def create_currency_field(label_text, field_name, initial_value=""):
+        """Cria campo de moeda com formatação automática"""
+        label = QLabel(label_text)
+        label.setStyleSheet("font-weight: bold; min-width: 140px;")
+        
+        hbox = QHBoxLayout()
+        
+        line_edit = QLineEdit()
+        line_edit.setStyleSheet("min-width: 300px; max-width: 300px;")
+        line_edit.setPlaceholderText("R$ 0,00")
+        
+        # Formata valor inicial
+        if initial_value:
+            try:
+                valor_float = float(str(initial_value).replace(',', '.'))
+                line_edit.setText(f"R$ {valor_float:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
+            except:
+                line_edit.setText(initial_value)
+        
+        # Conecta evento de formatação
+        def format_currency():
+            texto = line_edit.text().replace('R$', '').replace('.', '').replace(',', '.').strip()
+            try:
+                if texto:
+                    valor = float(texto)
+                    line_edit.setText(f"R$ {valor:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
+            except:
+                pass
+        
+        line_edit.editingFinished.connect(format_currency)
+        
+        setattr(parent, field_name, line_edit)
+        
+        copy_btn = QPushButton()
+        copy_btn.setIcon(icon_manager.get_icon("copy"))
+        copy_btn.setIconSize(QSize(16, 16))
+        copy_btn.setFixedSize(24, 24)
+        copy_btn.setToolTip("Copiar")
+        copy_btn.clicked.connect(lambda: parent.copy_to_clipboard(line_edit))
+        
+        hbox.addWidget(line_edit, stretch=0)
+        hbox.addWidget(copy_btn, stretch=0)
+        hbox.addStretch(1)
+        
+        info_layout.addRow(label, hbox)
+        return line_edit
+
+    # ==================== ✅ CAMPO DE DATA ====================
+    def create_date_field(label_text, field_name, initial_value=""):
+        """Cria campo de data com QDateEdit"""
+        from PyQt6.QtWidgets import QDateEdit
+        from PyQt6.QtCore import QDate
+        
+        label = QLabel(label_text)
+        label.setStyleSheet("font-weight: bold; min-width: 140px;")
+        
+        hbox = QHBoxLayout()
+        
+        date_edit = QDateEdit()
+        date_edit.setCalendarPopup(True)
+        date_edit.setDisplayFormat("dd/MM/yyyy")
+        date_edit.setStyleSheet("min-width: 300px; max-width: 300px;")
+        
+        # Define data inicial
+        if initial_value:
+            try:
+                # Converte "YYYY-MM-DD" para QDate
+                parts = initial_value.split('-')
+                if len(parts) == 3:
+                    qdate = QDate(int(parts[0]), int(parts[1]), int(parts[2]))
+                    date_edit.setDate(qdate)
+                else:
+                    date_edit.setDate(QDate.currentDate())
+            except:
+                date_edit.setDate(QDate.currentDate())
+        else:
+            date_edit.setDate(QDate.currentDate())
+        
+        setattr(parent, field_name, date_edit)
+        
+        copy_btn = QPushButton()
+        copy_btn.setIcon(icon_manager.get_icon("copy"))
+        copy_btn.setIconSize(QSize(16, 16))
+        copy_btn.setFixedSize(24, 24)
+        copy_btn.setToolTip("Copiar")
+        copy_btn.clicked.connect(lambda: parent.copy_to_clipboard_date(date_edit))
+        
+        hbox.addWidget(date_edit, stretch=0)
+        hbox.addWidget(copy_btn, stretch=0)
+        hbox.addStretch(1)
+        
+        info_layout.addRow(label, hbox)
+        return date_edit
+
     # ==================== CAMPOS EDITÁVEIS ====================
     parent.line_edits = {}
     
@@ -97,7 +185,8 @@ def create_general_tab_manual(parent):
         "NUP:", "manual_nup", parent.data.get('processo', '')
     )
     
-    parent.line_edits["valor_global"] = create_editable_field(
+    # ✅ CAMPO DE MOEDA
+    parent.line_edits["valor_global"] = create_currency_field(
         "Valor Global:", "manual_valor", parent.data.get('valor_global', '')
     )
     
@@ -111,17 +200,18 @@ def create_general_tab_manual(parent):
         parent.data.get('fornecedor', {}).get('nome', '')
     )
     
-    parent.line_edits["vigencia_inicio"] = create_editable_field(
+    # ✅ CAMPOS DE DATA
+    parent.line_edits["vigencia_inicio"] = create_date_field(
         "Início Vigência:", "manual_vigencia_inicio", 
         parent.data.get('vigencia_inicio', '')
     )
     
-    parent.line_edits["vigencia_fim"] = create_editable_field(
+    parent.line_edits["vigencia_fim"] = create_date_field(
         "Fim Vigência:", "manual_vigencia_fim", 
         parent.data.get('vigencia_fim', '')
     )
 
-    # Campo Objeto (editável com botão de edição)
+    # Campo Objeto (editável)
     objeto_label = QLabel("Objeto:")
     objeto_label.setStyleSheet("font-weight: bold; min-width: 140px;")
     
@@ -154,11 +244,10 @@ def create_general_tab_manual(parent):
     
     left_column.addWidget(info_group)
 
-    # ==================== COLUNA DIREITA ====================
+    # ==================== COLUNA DIREITA (sem alterações) ====================
     right_column = QVBoxLayout()
     right_column.setSpacing(15)
 
-    # Seção de Opções
     options_group = QGroupBox("OPÇÕES")
     options_layout = QFormLayout(options_group)
     options_layout.setVerticalSpacing(10)
@@ -192,11 +281,9 @@ def create_general_tab_manual(parent):
     
     right_column.addWidget(options_group)
 
-    # Seção de Gestão/Fiscalização
     gestao_group = QGroupBox("GESTÃO/FISCALIZAÇÃO")
     gestao_layout = QFormLayout(gestao_group)
 
-    # Campos editáveis de gestão
     def create_gestao_field(label_text, field_name, initial_value=""):
         label = QLabel(label_text)
         label.setStyleSheet("font-weight: bold; min-width: 140px;")
@@ -222,8 +309,8 @@ def create_general_tab_manual(parent):
         gestao_layout.addRow(label, hbox)
         return line_edit
 
-    create_gestao_field("Sigla OM Resp:", "manual_sigla_om", "")
-    create_gestao_field("Órgão Responsável:", "manual_orgao", "")
+    create_gestao_field("Sigla OM Resp:", "manual_sigla_om", parent.data.get('sigla_om_resp', ''))
+    create_gestao_field("Órgão Responsável:", "manual_orgao", parent.data.get('orgao_responsavel', ''))
     create_gestao_field("Tipo:", "manual_tipo", parent.data.get('tipo', ''))
     create_gestao_field("Modalidade:", "manual_modalidade", parent.data.get('modalidade', ''))
     
@@ -233,7 +320,6 @@ def create_general_tab_manual(parent):
     right_column.addWidget(gestao_group)
     right_column.addStretch()
 
-    # Adiciona colunas ao layout principal
     content_layout.addLayout(left_column, 60)
     content_layout.addLayout(right_column, 40)
     

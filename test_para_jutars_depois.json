@@ -1,0 +1,58 @@
+[
+    {
+        "contrato_id": "355369",
+        "uasg_code": "787320",
+        "status": "NOTA TÉCNICA",
+        "objeto_editado": "CONSTRUÇÃO DA NOVA SEDE DA CAPITANIA FLUVIAL DE BRASÍLIA (CFB)",
+        "portaria_edit": "teste para juntos com manual e api",
+        "termo_aditivo_edit": "testseta e afhkasa",
+        "radio_options_json": "{\"Pode Renovar?\": \"Sim\", \"Custeio?\": \"N\\u00e3o\", \"Natureza Continuada?\": \"N\\u00e3o\", \"Material/Servi\\u00e7o:\": \"Servi\\u00e7o\"}",
+        "data_registro": "05/11/2025 08:45:17",
+        "registros": [
+            "05/11/2025 - s.jdfhslbfbskdlnçsdçofsd - NOTA TÉCNICA"
+        ],
+        "registros_mensagem": [],
+        "link_contrato": "https://www.youtube.com/watch?v=XzsiUn0Ah-Y&list=RDXzsiUn0Ah-Y&start_radio=1",
+        "link_ta": "https://www.youtube.com/watch?v=XzsiUn0Ah-Y&list=RDXzsiUn0Ah-Y&start_radio=1",
+        "link_portaria": "https://www.youtube.com/watch?v=XzsiUn0Ah-Y&list=RDXzsiUn0Ah-Y&start_radio=1",
+        "link_pncp_espc": "https://www.youtube.com/watch?v=XzsiUn0Ah-Y&list=RDXzsiUn0Ah-Y&start_radio=1",
+        "link_portal_marinha": "https://www.youtube.com/watch?v=XzsiUn0Ah-Y&list=RDXzsiUn0Ah-Y&start_radio=1",
+        "fiscal_gestor": "sadasd",
+        "fiscal_gestor_substituto": "kvydtydtou",
+        "fiscalizacao_tecnico": "ljkgjkfkyv",
+        "fiscalizacao_tec_substituto": "vuy",
+        "fiscalizacao_administrativo": "jhvhfctycuvo",
+        "fiscalizacao_admin_substituto": "ftifyfypguiguo",
+        "fiscal_observacoes": "ytfytiffouygouo",
+        "fiscal_data_criacao": "05/11/2025 08:44:47",
+        "fiscal_data_atualizacao": "05/11/2025 08:45:17"
+    },
+    {
+        "contrato_id": "MANUAL-001/2025",
+        "uasg_code": "787320",
+        "status": "PORTARIA",
+        "objeto_editado": "OBJETO TESTE manual",
+        "portaria_edit": "portaria teste",
+        "termo_aditivo_edit": "termo aditivo teste",
+        "radio_options_json": "{\"Pode Renovar?\": \"Sim\", \"Custeio?\": \"N\\u00e3o\", \"Natureza Continuada?\": \"Sim\", \"Material/Servi\\u00e7o:\": \"Servi\\u00e7o\"}",
+        "data_registro": "05/11/2025 08:43:02",
+        "registros": [
+            "05/11/2025 - tetse dos registros para os contratos em manual - PORTARIA"
+        ],
+        "registros_mensagem": [],
+        "link_contrato": "https://www.youtube.com/watch?v=XzsiUn0Ah-Y&list=RDXzsiUn0Ah-Y&start_radio=1",
+        "link_ta": "https://github.com/Paulo-JDev/projeto_pric-OBT.git",
+        "link_portaria": "https://www.youtube.com/watch?v=x7fGTGMYYOY&list=RDMM&index=5",
+        "link_pncp_espc": "https://www.youtube.com/watch?v=x7fGTGMYYOY&list=RDMM&index=5",
+        "link_portal_marinha": "https://github.com/Paulo-JDev/projeto_pric-OBT.git",
+        "fiscal_gestor": "teste manual gestor",
+        "fiscal_gestor_substituto": "getsor substituitot",
+        "fiscalizacao_tecnico": "fiasclla atecnico oteste",
+        "fiscalizacao_tec_substituto": "fiscal tecnico teste subdtruitjat",
+        "fiscalizacao_administrativo": "fiscal asdmicnisttraticov eteste",
+        "fiscalizacao_admin_substituto": "fiscal adsmkiniistratiovo subs teste",
+        "fiscal_observacoes": "teste obbservcvaça~sdo manual",
+        "fiscal_data_criacao": "05/11/2025 08:37:19",
+        "fiscal_data_atualizacao": "05/11/2025 08:43:02"
+    }
+]

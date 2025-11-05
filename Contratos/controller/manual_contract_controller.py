@@ -32,15 +32,17 @@ class ManualContractController:
     
     # ==================== ADICIONAR CONTRATO ====================
     def add_manual_contract(self):
-        """Abre formulário e adiciona contrato manual"""
-        form = ManualContractForm(self.main_window)
+        """
+        Abre formulário e adiciona contrato manual.
+        """
+        form = ManualContractForm(self.main_window, self.model)
         
         if form.exec() != QDialog.DialogCode.Accepted:
             return
         
         data = form.get_data()
         
-        # Validação de campos obrigatórios
+        # ==================== VALIDAÇÃO 1: CAMPOS OBRIGATÓRIOS ====================
         if not data["numero"] or not data["uasg"]:
             QMessageBox.warning(
                 self.main_window,
@@ -52,17 +54,30 @@ class ManualContractController:
         # Cria ID único para contrato manual
         contrato_id = f"MANUAL-{data['numero']}"
         
+        # ==================== ✅ VALIDAÇÃO 2: CONTRATO DUPLICADO ====================
+        if self._check_contract_exists(contrato_id, data["uasg"]):
+            QMessageBox.warning(
+                self.main_window,
+                "Contrato já Cadastrado",
+                f"⚠️ Já existe um contrato com o número <b>{data['numero']}</b> "
+                f"cadastrado na UASG <b>{data['uasg']}</b>.\n\n"
+                f"ID do contrato: {contrato_id}\n\n"
+                f"Não é possível cadastrar contratos duplicados.\n"
+                f"Use um número diferente ou edite o contrato existente."
+            )
+            return
+        
         # Monta estrutura do contrato
         contrato_dict = {
             "id": contrato_id,
             "numero": data["numero"],
             "licitacao_numero": data["licitacao_numero"],
-            "processo": data["nup"],  # NUP vai para o campo processo
+            "processo": data["nup"],
             "fornecedor": {
-                "nome": "",  # Será preenchido depois
+                "nome": "",
                 "cnpj_cpf_idgener": data["cnpj"]
             },
-            "objeto": "",  # Será preenchido depois
+            "objeto": "",
             "valor_global": "",
             "vigencia_inicio": "",
             "vigencia_fim": "",
@@ -76,7 +91,9 @@ class ManualContractController:
                     }
                 }
             },
-            "manual": True,  # ✅ MARCA COMO MANUAL
+            "manual": True,
+            "sigla_om_resp": "",
+            "orgao_responsavel": "",
             "raw_json": json.dumps(data)
         }
         
@@ -87,22 +104,51 @@ class ManualContractController:
             QMessageBox.information(
                 self.main_window,
                 "Sucesso",
-                f"Contrato {data['numero']} adicionado com sucesso!\n\n"
+                f"✅ Contrato <b>{data['numero']}</b> adicionado com sucesso!\n\n"
                 f"ID: {contrato_id}\n"
-                f"UASG: {data['uasg']}"
+                f"UASG: {data['uasg']}\n\n"
             )
-            
-            # Atualiza a tabela se a UASG já estiver carregada
-            current_uasg = self.main_window.uasg_input.text().strip()
-            if current_uasg == data["uasg"]:
-                self.main_window.controller.fetch_and_create_table()
                 
         except Exception as e:
             QMessageBox.critical(
                 self.main_window,
                 "Erro",
-                f"Erro ao adicionar contrato manual:\n{str(e)}"
+                f"❌ Erro ao adicionar contrato manual:\n{str(e)}"
             )
+
+    def _check_contract_exists(self, contrato_id: str, uasg_code: str) -> bool:
+        """
+        Verifica se já existe um contrato com o mesmo ID na mesma UASG.
+        
+        Args:
+            contrato_id: ID do contrato (ex: "MANUAL-001/2025")
+            uasg_code: Código da UASG (ex: "787010")
+        
+        Returns:
+            True se o contrato já existe, False caso contrário
+        """
+        from Contratos.model.models import Contrato
+        
+        db = self.model._get_db_session()
+        
+        try:
+            # Busca contrato com mesmo ID e mesma UASG
+            contrato_existente = db.query(Contrato).filter(
+                Contrato.id == contrato_id,
+                Contrato.uasg_code == uasg_code
+            ).first()
+            
+            if contrato_existente:
+                print(f"⚠️ Contrato duplicado detectado: {contrato_id} na UASG {uasg_code}")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            print(f"❌ Erro ao verificar duplicidade: {e}")
+            return False  # Em caso de erro, permite a inserção
+        finally:
+            db.close()
     
     # ==================== EXPORTAR CONTRATOS ====================
     def export_manual_contracts(self):

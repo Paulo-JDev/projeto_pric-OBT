@@ -206,8 +206,6 @@ class DetailsDialog(QDialog):
     def _save_manual_fields(self):
         """
         Salva campos editáveis de contratos manuais no banco.
-        
-        ✅ Atualiza a tabela `contratos` com os novos valores
         """
         from Contratos.model.models import Contrato
         
@@ -221,7 +219,7 @@ class DetailsDialog(QDialog):
                 print(f"⚠️ Contrato {contrato_id} não encontrado no banco")
                 return
             
-            # Atualiza campos editáveis
+            # ==================== ATUALIZA CAMPOS NO BANCO ====================
             if hasattr(self, 'manual_numero'):
                 contrato.numero = self.manual_numero.text()
             if hasattr(self, 'manual_licitacao'):
@@ -229,48 +227,73 @@ class DetailsDialog(QDialog):
             if hasattr(self, 'manual_nup'):
                 contrato.processo = self.manual_nup.text()
             if hasattr(self, 'manual_valor'):
-                contrato.valor_global = self.manual_valor.text()
+                # Remove formatação de moeda antes de salvar
+                valor_texto = self.manual_valor.text().replace('R$', '').replace('.', '').replace(',', '.').strip()
+                contrato.valor_global = valor_texto
             if hasattr(self, 'manual_cnpj'):
                 contrato.fornecedor_cnpj = self.manual_cnpj.text()
             if hasattr(self, 'manual_empresa'):
                 contrato.fornecedor_nome = self.manual_empresa.text()
             if hasattr(self, 'manual_vigencia_inicio'):
-                contrato.vigencia_inicio = self.manual_vigencia_inicio.text()
+                # Converte QDateEdit para string
+                data_inicio = self.manual_vigencia_inicio.date().toString("yyyy-MM-dd")
+                contrato.vigencia_inicio = data_inicio
             if hasattr(self, 'manual_vigencia_fim'):
-                contrato.vigencia_fim = self.manual_vigencia_fim.text()
+                # Converte QDateEdit para string
+                data_fim = self.manual_vigencia_fim.date().toString("yyyy-MM-dd")
+                contrato.vigencia_fim = data_fim
             if hasattr(self, 'manual_tipo'):
                 contrato.tipo = self.manual_tipo.text()
             if hasattr(self, 'manual_modalidade'):
                 contrato.modalidade = self.manual_modalidade.text()
+            
+            sigla_om = ""
             if hasattr(self, 'manual_sigla_om'):
-                contrato.contratante_orgao_unidade_gestora_nome_resumido = self.manual_sigla_om.text()
+                sigla_om = self.manual_sigla_om.text()
+                contrato.contratante_orgao_unidade_gestora_nome_resumido = sigla_om
+            
+            orgao_responsavel = ""
             if hasattr(self, 'manual_orgao'):
+                orgao_responsavel = self.manual_orgao.text()
                 # Pode criar um campo adicional no model se necessário
-                pass
+                # Por enquanto, vamos incluir no raw_json
             
             # Atualiza objeto
             if self.objeto_edit:
                 contrato.objeto = self.objeto_edit.text()
             
-            # Atualiza raw_json com os novos dados
-            import json
-            contrato.raw_json = json.dumps({
+            self.data.update({
                 "id": contrato.id,
                 "numero": contrato.numero,
                 "licitacao_numero": contrato.licitacao_numero,
                 "processo": contrato.processo,
                 "fornecedor": {
-                    "nome": contrato.fornecedor_nome,
-                    "cnpj_cpf_idgener": contrato.fornecedor_cnpj
+                    "nome": contrato.fornecedor_nome or "",
+                    "cnpj_cpf_idgener": contrato.fornecedor_cnpj or ""
                 },
-                "objeto": contrato.objeto,
-                "valor_global": contrato.valor_global,
-                "vigencia_inicio": contrato.vigencia_inicio,
-                "vigencia_fim": contrato.vigencia_fim,
-                "tipo": contrato.tipo,
-                "modalidade": contrato.modalidade,
-                "manual": True
+                "objeto": contrato.objeto or "",
+                "valor_global": contrato.valor_global or "",
+                "vigencia_inicio": contrato.vigencia_inicio or "",
+                "vigencia_fim": contrato.vigencia_fim or "",
+                "tipo": contrato.tipo or "",
+                "modalidade": contrato.modalidade or "",
+                "contratante": {
+                    "orgao": {
+                        "unidade_gestora": {
+                            "codigo": contrato.uasg_code,
+                            "nome_resumido": sigla_om
+                        }
+                    },
+                    "orgao_responsavel": orgao_responsavel
+                },
+                "manual": True,
+                "sigla_om_resp": sigla_om,
+                "orgao_responsavel": orgao_responsavel
             })
+            
+            # Atualiza raw_json
+            import json
+            contrato.raw_json = json.dumps(self.data)
             
             db.commit()
             print(f"✅ Campos editáveis do contrato manual {contrato_id} salvos")
@@ -321,6 +344,12 @@ class DetailsDialog(QDialog):
         clipboard = QApplication.clipboard()
         clipboard.setText(text_edit.toPlainText())
         print("✅ Texto copiado para a área de transferência")
+
+    def copy_to_clipboard_date(self, date_edit):
+        """Copia data de um QDateEdit para a área de transferência"""
+        clipboard = QApplication.clipboard()
+        clipboard.setText(date_edit.date().toString("dd/MM/yyyy"))
+        print("✅ Data copiada para a área de transferência")
     
     def open_link(self, url):
         """Abre um link no navegador padrão"""
