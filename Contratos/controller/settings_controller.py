@@ -185,7 +185,7 @@ class SettingsController(QObject):
         )
         
         if reply == QMessageBox.StandardButton.Yes:
-            self.offline_db_model.create_or_update_uasg_offline(uasg)
+            self.offline_db_model.process_and_save_all_data(uasg)
             QMessageBox.information(self.view, "Concluído", f"Banco de dados offline para UASG {uasg} criado/atualizado com sucesso.")
             self.database_updated.emit()
     

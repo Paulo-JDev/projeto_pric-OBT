@@ -24,6 +24,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
 from datetime import datetime
 import re
+import shutil
 
 class UASGController:
     def __init__(self, base_dir, parent_view=None): # Adicionamos parent_view por boas práticas
@@ -222,7 +223,10 @@ class UASGController:
             print(f"❌ Erro ao recarregar tabela: {e}")
 
     def show_context_menu(self, position):
-        """Exibe o menu de contexto ao clicar com o botão direito na tabela."""
+        """
+        ✅ ATUALIZADO: Exibe o menu de contexto ao clicar com o botão direito na tabela.
+        Adiciona a opção de excluir apenas para contratos manuais, seguindo o modelo existente.
+        """
         index = self.view.table.indexAt(position)
         if not index.isValid():
             return
@@ -237,11 +241,101 @@ class UASGController:
         # Verifica se o índice é válido para evitar erro de "index out of range"
         if 0 <= row < len(data_source):
             contrato = data_source[row]
-            menu = QMenu(self.view)
+            menu = QMenu(self.view) # O parent do menu é a view principal
+
             # Adiciona o ícone "init" à ação "Ver Detalhes"
-            details_action = menu.addAction(icon_manager.get_icon("init"), "Ver Detalhes")
-            details_action.triggered.connect(lambda: self.show_details_dialog(contrato))
-            menu.exec(self.view.table.mapToGlobal(position))
+            details_action = menu.addAction(icon_manager.get_icon("init"), "Ver Detalhes") # ✅ Usei "detalhes" para o ícone, se "init" for um ícone válido, pode manter.
+            details_action.triggered.connect(lambda: self.show_details_dialog(contrato.copy())) # ✅ Usando .copy() para segurança
+
+            # ==================== ✅ ADICIONA OPÇÃO DE EXCLUIR SE FOR MANUAL ====================
+            is_manual = contrato.get("manual", False)
+            if is_manual:
+                menu.addSeparator() # Adiciona um separador para organizar
+                
+                delete_action = menu.addAction(icon_manager.get_icon("delete"), "Excluir Contrato Manual")
+                delete_action.triggered.connect(lambda: self._delete_manual_contract(contrato.copy(), row)) # ✅ Usando .copy() para segurança
+            
+            # Exibe o menu na posição do cursor
+            menu.exec(self.view.table.viewport().mapToGlobal(position))
+            # Não adicionamos deleteLater() ou WA_DeleteOnClose aqui,
+            # confiando no comportamento padrão do QMenu.exec() e no gerenciamento de memória do Qt.
+
+    def _delete_manual_contract(self, contrato_data, row):
+        """
+        ✅ NOVO MÉTODO: Exclui um contrato manual do banco de dados.
+        Simplificado e focado na funcionalidade principal.
+        """
+        from Contratos.model.models import Contrato, StatusContrato, RegistroStatus, LinksContrato, Fiscalizacao
+        
+        contrato_id = contrato_data.get("id")
+        contrato_numero = contrato_data.get("numero", "N/A")
+        uasg_code = contrato_data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo")
+        
+        # ==================== CONFIRMAÇÃO ====================
+        reply = QMessageBox.question(
+            self.view, # Usando self.view como parent para a QMessageBox
+            "Confirmar Exclusão",
+            f"⚠️ Tem certeza que deseja excluir o contrato manual?\n\n"
+            f"Número: {contrato_numero}\n"
+            f"ID: {contrato_id}\n"
+            f"UASG: {uasg_code}\n\n"
+            f"❌ Esta ação não pode ser desfeita!",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        
+        # ==================== EXCLUSÃO DO BANCO ====================
+        db = self.model._get_db_session()
+        
+        try:
+            # 1. Busca o contrato no banco
+            contrato_db = db.query(Contrato).filter(Contrato.id == contrato_id).first()
+            
+            if not contrato_db:
+                QMessageBox.warning(self.view, "Contrato Não Encontrado", f"O contrato {contrato_id} não foi encontrado no banco de dados.")
+                return
+            
+            # 2. Deleta registros relacionados (garantindo a integridade)
+            db.query(StatusContrato).filter(StatusContrato.contrato_id == contrato_id).delete(synchronize_session=False)
+            db.query(RegistroStatus).filter(RegistroStatus.contrato_id == contrato_id).delete(synchronize_session=False)
+            db.query(LinksContrato).filter(LinksContrato.contrato_id == contrato_id).delete(synchronize_session=False)
+            db.query(Fiscalizacao).filter(Fiscalizacao.contrato_id == contrato_id).delete(synchronize_session=False)
+            
+            # 3. Deleta o contrato principal
+            db.delete(contrato_db)
+            db.commit()
+            
+            print(f"✅ Contrato manual {contrato_id} excluído com sucesso")
+            
+            # ==================== ATUALIZA A INTERFACE ====================
+            # Remove da lista de dados atuais
+            if row < len(self.current_data):
+                self.current_data.pop(row)
+            
+            # Remove da tabela (usando o modelo da tabela)
+            model = self.view.table.model()
+            if model:
+                model.removeRow(row)
+            
+            # Atualiza o dashboard (se houver um dashboard_controller)
+            if hasattr(self, 'dashboard_controller'):
+                self.dashboard_controller.update_dashboard(self.current_data)
+            
+            QMessageBox.information(
+                self.view,
+                "Exclusão Concluída",
+                f"✅ Contrato manual {contrato_numero} excluído com sucesso!"
+            )
+            
+        except Exception as e:
+            db.rollback()
+            QMessageBox.critical(self.view, "Erro ao Excluir", f"❌ Erro ao excluir o contrato manual:\n\n{str(e)}")
+            print(f"❌ Erro ao excluir contrato manual: {e}")
+        finally:
+            db.close()
 
     def show_details_dialog(self, contrato):
         """Exibe o diálogo de detalhes do contrato."""

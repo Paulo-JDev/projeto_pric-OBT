@@ -106,7 +106,7 @@ def _create_dias_item(dias_restantes_valor):
     if isinstance(dias_restantes_valor, int):
         if dias_restantes_valor < 0:
             dias_item.setForeground(Qt.GlobalColor.red)
-            dias_item.setIcon(icon_manager.get_icon("delete"))
+            dias_item.setIcon(icon_manager.get_icon("head_skull"))
         elif dias_restantes_valor <= 89:
             dias_item.setForeground(QBrush(QColor("#FFA500")))  # Laranja
             dias_item.setIcon(icon_manager.get_icon("alert"))
