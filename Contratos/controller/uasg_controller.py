@@ -287,6 +287,7 @@ class UASGController:
         settings_controller.mode_changed.connect(self.view.update_status_icon)
         settings_controller.mode_changed.connect(self.view.update_clear_button_icon)
         settings_controller.database_updated.connect(self.load_saved_uasgs)
+        settings_controller.database_updated.connect(self._on_database_updated)
         settings_controller.show()
 
     # =========================================== Método para exportar e importar dados de status =================================================
@@ -846,3 +847,44 @@ class UASGController:
     def open_manual_contract_window(self):
             """Abre a janela de contratos manuais"""
             self.manual_contract_ctrl.open_manual_contract_window()
+
+# ====================== Banco de Dados (settings) ==========================
+
+    def _on_database_updated(self):
+        """
+        ✅ NOVO MÉTODO: Chamado quando o banco de dados é alterado nas configurações.
+        
+        Recarrega os dados e atualiza a interface automaticamente.
+        """
+        print("🔄 Banco de dados alterado, recarregando dados...")
+        
+        # 1. Recarrega as UASGs salvas do novo banco
+        self.loaded_uasgs = self.model.load_saved_uasgs()
+        
+        # 2. Atualiza o menu de UASGs
+        self.load_saved_uasgs()
+        
+        # 3. Atualiza a tabela de pré-visualização
+        self.populate_previsualization_table()
+        
+        # 4. Se houver dados carregados na tabela principal, atualiza
+        if self.current_data and len(self.current_data) > 0:
+            primeiro_contrato = self.current_data[0]
+            uasg_code = primeiro_contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo")
+            
+            if uasg_code:
+                # Verifica se a UASG ainda existe no novo banco
+                if uasg_code in self.loaded_uasgs:
+                    print(f"✅ Atualizando tabela da UASG {uasg_code}")
+                    self.update_table(uasg_code)
+                else:
+                    # Se a UASG não existe mais, limpa a tabela
+                    print(f"⚠️ UASG {uasg_code} não encontrada no novo banco, limpando tabela")
+                    model = self.view.table.model()
+                    if model:
+                        model.removeRows(0, model.rowCount())
+                    self.view.uasg_info_label.setText("UASG: -")
+                    self.current_data = []
+                    self.dashboard_controller.clear_dashboard()
+        
+        print("✅ Dados recarregados com sucesso!")

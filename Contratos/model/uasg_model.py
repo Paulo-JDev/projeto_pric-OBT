@@ -10,16 +10,63 @@ from pathlib import Path
 from .database import init_database
 from .models import Base, Contrato, StatusContrato, RegistroStatus, RegistroMensagem, Uasg
 
-# Adiciona o diretório do script ao sys.path (caminho absoluto)
 def resource_path(relative_path):
     """Retorna o caminho absoluto para um recurso, funcionando tanto no desenvolvimento quanto no empacotamento."""
     try:
-        # PyInstaller cria uma pasta temporária e armazena o caminho em _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
-
     return os.path.join(base_path, relative_path)
+
+# Define o caminho base
+try:
+    base_dir = Path(os.environ.get("_MEIPASS", Path.cwd()))
+except Exception:
+    base_dir = Path.cwd()
+
+# Arquivo de configuração
+CONFIG_FILE = base_dir / "utils" / "json" / "config.json"
+
+def load_config():
+    """Carrega as configurações do arquivo JSON."""
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Erro ao carregar config.json: {e}")
+    return {}
+
+def save_config(config_data):
+    """Salva as configurações no arquivo JSON."""
+    try:
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Erro ao salvar config.json: {e}")
+        return False
+
+def get_db_path_from_config():
+    """Retorna o caminho do banco de dados do config.json ou o padrão."""
+    config = load_config()
+    db_path_str = config.get("db_path_contratos")
+    
+    if db_path_str:
+        custom_path = Path(db_path_str)
+        # Verifica se é um diretório ou um arquivo
+        if custom_path.is_dir():
+            return custom_path / "gerenciador_uasg.db"
+        elif custom_path.suffix == '.db':
+            return custom_path
+        else:
+            return custom_path / "gerenciador_uasg.db"
+    
+    # Caminho padrão se não houver configuração
+    DATABASE_DIR = base_dir / "database"
+    DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+    return DATABASE_DIR / "gerenciador_uasg.db"
 
 class UASGModel:
     def __init__(self, base_dir):
@@ -30,17 +77,13 @@ class UASGModel:
         self.config_path = config_dir / "config.json"
        
         # Carrega o caminho do BD do config.json ou usa o padrão
-        default_db_dir = self.base_dir / "database"
-        db_directory_str = self.load_setting("db_path", str(default_db_dir))
-        
-        self.database_dir = Path(db_directory_str) # Converte a string de volta para Path
+        self.db_path = get_db_path_from_config()
+        self.database_dir = self.db_path.parent
         self.database_dir.mkdir(parents=True, exist_ok=True)
-        self.db_path = self.database_dir / "gerenciador_uasg.db"
-
+        
         init_database(self.db_path)
-
-        print(f"📁 Caminho do banco de dados SQLite: {self.db_path}")
-
+        print(f"✅ Banco de dados de Contratos inicializado em: {self.db_path}")
+    
     def _get_db_connection(self):
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
@@ -49,6 +92,52 @@ class UASGModel:
     def _get_db_session(self):
         from .database import SessionLocal
         return SessionLocal()
+    
+    def get_current_db_path(self):
+        """Retorna o caminho atual do banco de dados."""
+        return self.db_path
+    
+    def change_database_path(self, new_path: str):
+        """
+        Altera o caminho do banco de dados, salva no config.json e reconfigura.
+        
+        Args:
+            new_path: Novo caminho completo para o arquivo .db ou diretório
+        
+        Returns:
+            bool: True se a alteração foi bem-sucedida
+        """
+        try:
+            new_path_obj = Path(new_path)
+            
+            # Se for um diretório, adiciona o nome do arquivo
+            if new_path_obj.is_dir() or not new_path_obj.suffix:
+                new_path_obj = new_path_obj / "gerenciador_uasg.db"
+            
+            # Garante que o diretório existe
+            new_path_obj.parent.mkdir(parents=True, exist_ok=True)
+            
+            # ✨ SALVA NO CONFIG.JSON ✨
+            config = load_config()
+            config["db_path_contratos"] = str(new_path_obj.parent)  # Salva só o diretório
+            if not save_config(config):
+                print("⚠️ Aviso: Não foi possível salvar no config.json")
+            
+            # Atualiza o caminho do banco
+            self.db_path = new_path_obj
+            self.database_dir = new_path_obj.parent
+            
+            # Reinicializa o banco de dados no novo local
+            init_database(self.db_path)
+            
+            print(f"✅ Banco de dados alterado para: {self.db_path}")
+            print(f"✅ Configuração salva em: {CONFIG_FILE}")
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Erro ao alterar o banco de dados: {e}")
+            return False
 
     def load_saved_uasgs(self):
         """

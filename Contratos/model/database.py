@@ -1,33 +1,41 @@
 # model/database.py
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+from pathlib import Path
+
+Base = declarative_base()
 
 # 1. Inicializamos as variáveis como None. Elas serão criadas depois.
 engine = None
 SessionLocal = None
 
-def init_database(db_path: str):
+def init_database(db_path: Path):
     """
-    Inicializa o engine e a sessão do SQLAlchemy com o caminho do banco de dados fornecido.
-    Também cria as tabelas se elas não existirem.
+    Inicializa ou reinicializa o banco de dados.
+    
+    ✅ ATUALIZADO: Permite reconfiguração dinâmica do caminho
     """
     global engine, SessionLocal
-
-    # Se já foi inicializado, não faz nada.
-    if engine is not None:
-        return
-
+    
     DATABASE_URL = f"sqlite:///{db_path}"
     
+    # Fecha engine anterior se existir
+    if engine:
+        engine.dispose()
+    
+    # Cria nova engine
     engine = create_engine(
-        DATABASE_URL, connect_args={"check_same_thread": False}
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        echo=False
     )
     
+    # Cria nova session factory
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    # Importamos os modelos aqui dentro para evitar outros ciclos de importação
+    
+    # Importa os modelos e cria as tabelas
     from .models import Base
-    print("Verificando e criando tabelas com SQLAlchemy...")
     Base.metadata.create_all(bind=engine)
-    print("Tabelas prontas.")
+    
+    #print(f"📦 Database inicializado: {db_path}")
