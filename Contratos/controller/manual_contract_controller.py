@@ -34,6 +34,8 @@ class ManualContractController:
     def add_manual_contract(self):
         """
         Abre formulário e adiciona contrato manual.
+        
+        ✅ CORRIGIDO: ID agora inclui UASG para permitir mesmo número em UASGs diferentes
         """
         form = ManualContractForm(self.main_window, self.model)
         
@@ -42,7 +44,7 @@ class ManualContractController:
         
         data = form.get_data()
         
-        # ==================== VALIDAÇÃO 1: CAMPOS OBRIGATÓRIOS ====================
+        # ==================== VALIDAÇÃO: CAMPOS OBRIGATÓRIOS ====================
         if not data["numero"] or not data["uasg"]:
             QMessageBox.warning(
                 self.main_window,
@@ -51,10 +53,12 @@ class ManualContractController:
             )
             return
         
-        # Cria ID único para contrato manual
-        contrato_id = f"MANUAL-{data['numero']}"
+        # ==================== ✅ CORRIGIDO: ID INCLUI UASG ====================
+        # ANTES: contrato_id = f"MANUAL-{data['numero']}"
+        # AGORA: Inclui UASG para permitir mesmo número em UASGs diferentes
+        contrato_id = f"MANUAL-{data['uasg']}-{data['numero']}"
         
-        # ==================== ✅ VALIDAÇÃO 2: CONTRATO DUPLICADO ====================
+        # ==================== VALIDAÇÃO: CONTRATO DUPLICADO (mesma UASG) ====================
         if self._check_contract_exists(contrato_id, data["uasg"]):
             QMessageBox.warning(
                 self.main_window,
@@ -70,7 +74,7 @@ class ManualContractController:
         # Monta estrutura do contrato
         contrato_dict = {
             "id": contrato_id,
-            "numero": data["numero"],
+            "numero": data["numero"],  # ✅ Número SEM prefixo (ex: "001/2025")
             "licitacao_numero": data["licitacao_numero"],
             "processo": data["nup"],
             "fornecedor": {
@@ -107,7 +111,13 @@ class ManualContractController:
                 f"✅ Contrato <b>{data['numero']}</b> adicionado com sucesso!\n\n"
                 f"ID: {contrato_id}\n"
                 f"UASG: {data['uasg']}\n\n"
+                f"💡 A tabela será atualizada automaticamente."
             )
+            
+            # Atualiza automaticamente se a UASG já estiver carregada
+            uasg_label = self.main_window.uasg_info_label.text()
+            if f"UASG: {data['uasg']}" in uasg_label:
+                self.main_window.controller.update_table(data["uasg"])
                 
         except Exception as e:
             QMessageBox.critical(

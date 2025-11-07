@@ -96,7 +96,7 @@ class ManualContractForm(QDialog):
     
     def _check_duplicate(self):
         """
-        ✅ Verifica duplicidade em tempo real enquanto o usuário digita.
+        ✅ CORRIGIDO: Verifica duplicidade usando novo formato de ID
         """
         if not self.model:
             return
@@ -109,7 +109,8 @@ class ManualContractForm(QDialog):
             self.btn_save.setEnabled(True)
             return
         
-        contrato_id = f"MANUAL-{numero}"
+        # ✅ Novo formato de ID
+        contrato_id = f"MANUAL-{uasg}-{numero}"
         
         # Verifica se existe
         from Contratos.model.models import Contrato
@@ -126,7 +127,7 @@ class ManualContractForm(QDialog):
                     f"⚠️ Contrato {numero} já cadastrado na UASG {uasg}!"
                 )
                 self.warning_label.setVisible(True)
-                self.btn_save.setEnabled(False)  # Desabilita botão salvar
+                self.btn_save.setEnabled(False)
             else:
                 self.warning_label.setVisible(False)
                 self.btn_save.setEnabled(True)
