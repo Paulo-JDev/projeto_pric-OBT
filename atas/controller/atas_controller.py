@@ -11,6 +11,7 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
 import os
+import shutil
 
 class AtasController:
     def __init__(self, model: AtasModel, view):
@@ -29,11 +30,101 @@ class AtasController:
         self.view.template_vazio_action.triggered.connect(self.generate_empty_template)
         self.view.export_para_importacao_action.triggered.connect(self.export_for_reimport)
 
+        self.view.change_db_location_action.triggered.connect(self.change_database_location)
+
         self.view.table_view.doubleClicked.connect(self.show_details_on_double_click)
         self.view.table_view.customContextMenuRequested.connect(self.show_context_menu)
         self.view.preview_table.doubleClicked.connect(self.show_details_on_preview_double_click)
         self.view.refresh_preview_button.clicked.connect(self.populate_previsualization_table)
         self.view.refresh_table_button.clicked.connect(self.load_initial_data)
+
+    def change_database_location(self):
+        """Permite ao usuário escolher um novo local para o banco de dados."""
+        from pathlib import Path
+        
+        # Mostra diálogo para selecionar a pasta
+        new_folder = QFileDialog.getExistingDirectory(
+            self.view, 
+            "Selecione a Nova Pasta para o Banco de Dados",
+            str(Path.home())
+        )
+        
+        if not new_folder:
+            return  # Usuário cancelou
+        
+        new_db_path = Path(new_folder) / "atas_controle.db"
+        current_db_path = self.model.get_current_db_path()
+        
+        # Verifica se já existe um DB no novo local
+        if new_db_path.exists():
+            reply = QMessageBox.question(
+                self.view,
+                "Banco de Dados Existente",
+                f"Já existe um banco de dados em:\n{new_db_path}\n\n"
+                "Deseja usar este banco existente?\n\n"
+                "• SIM: Usar o banco existente\n"
+                "• NÃO: Copiar o banco atual para lá (substituindo)",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel
+            )
+            
+            if reply == QMessageBox.StandardButton.Cancel:
+                return
+            elif reply == QMessageBox.StandardButton.No:
+                try:
+                    shutil.copy2(current_db_path, new_db_path)
+                    QMessageBox.information(
+                        self.view, 
+                        "Banco Copiado", 
+                        f"Banco de dados copiado para:\n{new_db_path}"
+                    )
+                except Exception as e:
+                    QMessageBox.critical(
+                        self.view, 
+                        "Erro ao Copiar", 
+                        f"Não foi possível copiar o banco:\n{e}"
+                    )
+                    return
+        else:
+            reply = QMessageBox.question(
+                self.view,
+                "Configurar Novo Local",
+                f"O que deseja fazer?\n\n"
+                f"• SIM: Copiar o banco atual para {new_folder}\n"
+                f"• NÃO: Criar um banco vazio no novo local",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel
+            )
+            
+            if reply == QMessageBox.StandardButton.Cancel:
+                return
+            elif reply == QMessageBox.StandardButton.Yes:
+                try:
+                    shutil.copy2(current_db_path, new_db_path)
+                except Exception as e:
+                    QMessageBox.critical(
+                        self.view, 
+                        "Erro ao Copiar", 
+                        f"Não foi possível copiar o banco:\n{e}"
+                    )
+                    return
+        
+        # Atualiza o caminho no modelo (agora salva no config.json automaticamente)
+        success = self.model.change_database_path(str(new_folder)) 
+        
+        if success:
+            QMessageBox.information(
+                self.view,
+                "Sucesso",
+                f"Banco de dados alterado para:\n{new_db_path}\n\n"
+                "A configuração foi salva e será mantida nas próximas execuções."
+            )
+            # Recarrega os dados
+            self.load_initial_data()
+        else:
+            QMessageBox.critical(
+                self.view,
+                "Erro",
+                "Não foi possível alterar o local do banco de dados."
+            )
 
     def _parse_date_string(self, date_string):
         if not date_string: return None

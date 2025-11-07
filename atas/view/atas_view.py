@@ -76,6 +76,9 @@ class AtasView(QWidget):
         self.dados_menu.addSeparator()
         self.template_vazio_action = self.dados_menu.addAction(icon_manager.get_icon("excel"), "Gerar Tabela Vazia")
         self.export_para_importacao_action = self.dados_menu.addAction(icon_manager.get_icon("excel_up"), "Exportar para Re-importação")
+        #self.dados_menu.addSeparator()
+        self.change_db_location_action = self.dados_menu.addAction(icon_manager.get_icon("database"), "Mudar Local do DB")
+        
         self.dados_button.setMenu(self.dados_menu)
         toolbar_layout.addWidget(self.dados_button)
 

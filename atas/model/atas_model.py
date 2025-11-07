@@ -1,6 +1,7 @@
 # atas/model/atas_model.py
 
 import os
+import json
 import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey
@@ -13,9 +14,52 @@ try:
 except Exception:
     base_dir = Path.cwd()
 
-DATABASE_DIR = base_dir / "database"
-DATABASE_DIR.mkdir(parents=True, exist_ok=True)
-DB_PATH = DATABASE_DIR / "atas_controle.db"
+# ✨ FUNÇÃO PARA LER/ESCREVER NO CONFIG.JSON ✨
+CONFIG_FILE = base_dir / "utils" / "json" / "config.json"
+
+def load_config():
+    """Carrega as configurações do arquivo JSON."""
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Erro ao carregar config.json: {e}")
+    return {}
+
+def save_config(config_data):
+    """Salva as configurações no arquivo JSON."""
+    try:
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Erro ao salvar config.json: {e}")
+        return False
+
+def get_db_path_from_config():
+    """Retorna o caminho do banco de dados do config.json ou o padrão."""
+    config = load_config()
+    db_path_str = config.get("db_path_atas")
+    
+    if db_path_str:
+        custom_path = Path(db_path_str)
+        # Verifica se é um diretório ou um arquivo
+        if custom_path.is_dir():
+            return custom_path / "atas_controle.db"
+        elif custom_path.suffix == '.db':
+            return custom_path
+        else:
+            return custom_path / "atas_controle.db"
+    
+    # Caminho padrão se não houver configuração
+    DATABASE_DIR = base_dir / "database"
+    DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+    return DATABASE_DIR / "atas_controle.db"
+
+# ✨ CARREGA O CAMINHO DO DB DO CONFIG ✨
+DB_PATH = get_db_path_from_config()
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # Configuração do SQLAlchemy
@@ -104,6 +148,60 @@ class AtasModel:
 
     def _get_session(self):
         return SessionLocal()
+
+    def get_current_db_path(self):
+        """Retorna o caminho atual do banco de dados."""
+        return DB_PATH
+
+    def change_database_path(self, new_path: str):
+        """
+        Altera o caminho do banco de dados, salva no config.json e reconfigura a engine.
+        
+        Args:
+            new_path: Novo caminho completo para o arquivo .db ou diretório
+            
+        Returns:
+            bool: True se a alteração foi bem-sucedida
+        """
+        global engine, SessionLocal, DB_PATH, DATABASE_URL
+        
+        try:
+            new_path_obj = Path(new_path)
+            
+            # Se for um diretório, adiciona o nome do arquivo
+            if new_path_obj.is_dir() or not new_path_obj.suffix:
+                new_path_obj = new_path_obj / "atas_controle.db"
+            
+            # Garante que o diretório existe
+            new_path_obj.parent.mkdir(parents=True, exist_ok=True)
+            
+            # ✨ SALVA NO CONFIG.JSON ✨
+            config = load_config()
+            config["db_path_atas"] = str(new_path_obj.parent)  # Salva só o diretório
+            if not save_config(config):
+                print("⚠️ Aviso: Não foi possível salvar no config.json")
+            
+            # Fecha todas as conexões existentes
+            engine.dispose()
+            
+            # Atualiza as variáveis globais
+            DB_PATH = new_path_obj
+            DATABASE_URL = f"sqlite:///{DB_PATH}"
+            
+            # Recria a engine e a session
+            engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+            SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+            
+            # Cria as tabelas se não existirem
+            Base.metadata.create_all(bind=engine)
+            
+            print(f"✅ Banco de dados alterado para: {DB_PATH}")
+            print(f"✅ Configuração salva em: {CONFIG_FILE}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Erro ao alterar o banco de dados: {e}")
+            return False
 
     def get_all_atas(self):
         session = self._get_session()
