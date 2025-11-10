@@ -4,6 +4,7 @@ from PyQt6.QtGui import QStandardItem, QBrush, QColor, QFont
 from PyQt6.QtCore import Qt
 from datetime import date, datetime
 from atas.model.atas_model import AtasModel
+from atas.model.atas_model import Base, engine
 from utils.icon_loader import icon_manager 
 from atas.view.ata_details_dialog import AtaDetailsDialog
 from openpyxl import Workbook
@@ -12,25 +13,32 @@ from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
 import os
 import shutil
+import json
 
 class AtasController:
     def __init__(self, model: AtasModel, view):
         self.model = model
         self.view = view
         self._connect_signals()
-        self.load_initial_data()
+        #self.load_initial_data()
+        self.check_db_status_and_load_data()
 
     def _connect_signals(self):
         self.view.delete_button.clicked.connect(self.delete_selected_ata)
         self.view.add_button.clicked.connect(self.show_add_ata_dialog)
-        
-        # --- SIGNALS DO MENU "DADOS" ---
+
+        # --- SIGNALS DO MENU "PLANILHA" (antigo "DADOS") ---
         self.view.import_action.triggered.connect(self.import_data)
         self.view.export_completo_action.triggered.connect(self.generate_excel_report)
         self.view.template_vazio_action.triggered.connect(self.generate_empty_template)
         self.view.export_para_importacao_action.triggered.connect(self.export_for_reimport)
 
+        # --- SIGNALS DO NOVO MENU "DB" ---
         self.view.change_db_location_action.triggered.connect(self.change_database_location)
+        self.view.export_main_json_action.triggered.connect(self.export_main_data_json)
+        self.view.import_main_json_action.triggered.connect(self.import_main_data_json)
+        self.view.export_complementary_json_action.triggered.connect(self.export_complementary_data_json)
+        self.view.import_complementary_json_action.triggered.connect(self.import_complementary_data_json)
 
         self.view.table_view.doubleClicked.connect(self.show_details_on_double_click)
         self.view.table_view.customContextMenuRequested.connect(self.show_context_menu)
@@ -38,44 +46,91 @@ class AtasController:
         self.view.refresh_preview_button.clicked.connect(self.populate_previsualization_table)
         self.view.refresh_table_button.clicked.connect(self.load_initial_data)
 
+    def check_db_status_and_load_data(self):
+        """Verifica o status do DB e carrega os dados ou inicia o processo de migração."""
+        if not self.model.db_initialized:
+            # Desabilita todas as funções que dependem de um DB funcional
+            self.view.add_button.setEnabled(False)
+            self.view.delete_button.setEnabled(False)
+            self.view.planilha_button.setEnabled(False) # Desabilita o menu de planilhas
+            self.view.refresh_table_button.setEnabled(False)
+            self.view.refresh_preview_button.setEnabled(False)
+            self.view.preview_table.setEnabled(False)
+            self.view.table_view.setEnabled(False)
+
+            # Mantém apenas as funções de exportação JSON e mudança de local do DB ativas
+            self.view.export_main_json_action.setEnabled(True)
+            self.view.export_complementary_json_action.setEnabled(True)
+            self.view.import_main_json_action.setEnabled(False) # Não pode importar antes de criar o novo DB
+            self.view.import_complementary_json_action.setEnabled(False)
+            self.view.change_db_location_action.setEnabled(True)
+
+            QMessageBox.critical(
+                self.view,
+                "Erro de Schema do Banco de Dados",
+                "O banco de dados atual está desatualizado ou corrompido.\n\n"
+                "Para evitar perda de dados, siga os passos:\n"
+                "1. **Exporte** seus dados atuais usando as opções 'Exportar Dados Principais (JSON)' e 'Exportar Dados Complementares (JSON)' no menu 'DB'.\n"
+                "2. **Feche o programa.**\n"
+                "3. **Exclua ou renomeie** o arquivo 'atas_controle.db' na pasta do banco de dados.\n"
+                "4. **Reinicie o programa.** Um novo banco de dados com o schema correto será criado.\n"
+                "5. **Importe** seus dados usando as opções 'Importar Dados Principais (JSON)' e 'Importar Dados Complementares (JSON)' no menu 'DB'."
+            )
+        else:
+            # Se o DB está OK, habilita tudo e carrega os dados
+            self.view.add_button.setEnabled(True)
+            self.view.delete_button.setEnabled(True)
+            self.view.planilha_button.setEnabled(True)
+            self.view.refresh_table_button.setEnabled(True)
+            self.view.refresh_preview_button.setEnabled(True)
+            self.view.preview_table.setEnabled(True)
+            self.view.table_view.setEnabled(True)
+
+            self.view.export_main_json_action.setEnabled(True)
+            self.view.export_complementary_json_action.setEnabled(True)
+            self.view.import_main_json_action.setEnabled(True)
+            self.view.import_complementary_json_action.setEnabled(True)
+            self.view.change_db_location_action.setEnabled(True)
+
+            self.load_initial_data()
+
+     # --- FUNÇÕES PARA GERENCIAR O LOCAL DO DB ---
     def change_database_location(self):
         """Permite ao usuário escolher um novo local para o banco de dados."""
         from pathlib import Path
-        
-        # Mostra diálogo para selecionar a pasta
+
         new_folder = QFileDialog.getExistingDirectory(
             self.view, 
             "Selecione a Nova Pasta para o Banco de Dados",
             str(Path.home())
         )
-        
+
         if not new_folder:
-            return  # Usuário cancelou
-        
-        new_db_path = Path(new_folder) / "atas_controle.db"
-        current_db_path = self.model.get_current_db_path()
-        
-        # Verifica se já existe um DB no novo local
-        if new_db_path.exists():
+            return
+
+        new_db_file_path = Path(new_folder) / "atas_controle.db"
+        current_db_file_path = self.model.get_current_db_path()
+
+        if new_db_file_path.exists():
             reply = QMessageBox.question(
                 self.view,
                 "Banco de Dados Existente",
-                f"Já existe um banco de dados em:\n{new_db_path}\n\n"
+                f"Já existe um banco de dados em:\n{new_db_file_path}\n\n"
                 "Deseja usar este banco existente?\n\n"
                 "• SIM: Usar o banco existente\n"
                 "• NÃO: Copiar o banco atual para lá (substituindo)",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel
             )
-            
+
             if reply == QMessageBox.StandardButton.Cancel:
                 return
             elif reply == QMessageBox.StandardButton.No:
                 try:
-                    shutil.copy2(current_db_path, new_db_path)
+                    shutil.copy2(current_db_file_path, new_db_file_path)
                     QMessageBox.information(
                         self.view, 
                         "Banco Copiado", 
-                        f"Banco de dados copiado para:\n{new_db_path}"
+                        f"Banco de dados copiado para:\n{new_db_file_path}"
                     )
                 except Exception as e:
                     QMessageBox.critical(
@@ -93,12 +148,12 @@ class AtasController:
                 f"• NÃO: Criar um banco vazio no novo local",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel
             )
-            
+
             if reply == QMessageBox.StandardButton.Cancel:
                 return
             elif reply == QMessageBox.StandardButton.Yes:
                 try:
-                    shutil.copy2(current_db_path, new_db_path)
+                    shutil.copy2(current_db_file_path, new_db_file_path)
                 except Exception as e:
                     QMessageBox.critical(
                         self.view, 
@@ -106,25 +161,110 @@ class AtasController:
                         f"Não foi possível copiar o banco:\n{e}"
                     )
                     return
-        
-        # Atualiza o caminho no modelo (agora salva no config.json automaticamente)
-        success = self.model.change_database_path(str(new_folder)) 
-        
+
+        success = self.model.change_database_path(str(new_folder))
+
         if success:
             QMessageBox.information(
                 self.view,
                 "Sucesso",
-                f"Banco de dados alterado para:\n{new_db_path}\n\n"
+                f"Banco de dados alterado para:\n{new_db_file_path}\n\n"
                 "A configuração foi salva e será mantida nas próximas execuções."
             )
-            # Recarrega os dados
-            self.load_initial_data()
+            self.check_db_status_and_load_data() # Re-verifica o status do DB e recarrega
         else:
             QMessageBox.critical(
                 self.view,
                 "Erro",
                 "Não foi possível alterar o local do banco de dados."
             )
+
+    # --- NOVAS FUNÇÕES DE EXPORTAÇÃO/IMPORTAÇÃO JSON ---
+
+    def export_main_data_json(self):
+        """Exporta os dados principais (tabela Ata) para um arquivo JSON."""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view, "Exportar Dados Principais (JSON)", "atas_principais.json",
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if not file_path: return
+
+        success, data = self.model.export_main_data_to_json()
+        if success:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=4, ensure_ascii=False)
+                QMessageBox.information(self.view, "Sucesso", f"Dados principais exportados para:\n{file_path}")
+            except Exception as e:
+                QMessageBox.critical(self.view, "Erro", f"Não foi possível salvar o arquivo JSON:\n{e}")
+        else:
+            QMessageBox.critical(self.view, "Erro na Exportação", f"Ocorreu um erro ao exportar os dados principais:\n{data}")
+
+    def import_main_data_json(self):
+        """Importa os dados principais (tabela Ata) de um arquivo JSON."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.view, "Importar Dados Principais (JSON)", "", "JSON Files (*.json)"
+        )
+        if not file_path: return
+
+        reply = QMessageBox.question(
+            self.view, "Confirmação de Importação",
+            "A importação de dados principais (JSON) irá APAGAR TODOS os dados existentes na tabela 'Atas' "
+            "e substituí-los pelos dados do arquivo JSON. Deseja continuar?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.No: return
+
+        success, message = self.model.import_main_data_from_json(file_path)
+        if success:
+            QMessageBox.information(self.view, "Importação Concluída", message)
+            self.check_db_status_and_load_data() # Re-verifica o status do DB e recarrega
+        else:
+            QMessageBox.critical(self.view, "Erro na Importação", message)
+
+    def export_complementary_data_json(self):
+        """Exporta os dados complementares (Status, Registros, Links) para um arquivo JSON."""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view, "Exportar Dados Complementares (JSON)", "atas_complementares.json",
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if not file_path: return
+
+        success, data = self.model.export_complementary_data_to_json()
+        if success:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=4, ensure_ascii=False)
+                QMessageBox.information(self.view, "Sucesso", f"Dados complementares exportados para:\n{file_path}")
+            except Exception as e:
+                QMessageBox.critical(self.view, "Erro", f"Não foi possível salvar o arquivo JSON:\n{e}")
+        else:
+            QMessageBox.critical(self.view, "Erro na Exportação", f"Ocorreu um erro ao exportar os dados complementares:\n{data}")
+
+    def import_complementary_data_json(self):
+        """Importa os dados complementares (Status, Registros, Links) de um arquivo JSON."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.view, "Importar Dados Complementares (JSON)", "", "JSON Files (*.json)"
+        )
+        if not file_path: return
+
+        reply = QMessageBox.question(
+            self.view, "Confirmação de Importação",
+            "A importação de dados complementares (JSON) irá APAGAR TODOS os dados existentes nas tabelas "
+            "'Status', 'Registros' e 'Links' e substituí-los pelos dados do arquivo JSON. "
+            "Certifique-se de que os dados principais (Atas) já foram importados, pois esta importação depende deles. Deseja continuar?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.No: return
+
+        success, message = self.model.import_complementary_data_from_json(file_path)
+        if success:
+            QMessageBox.information(self.view, "Importação Concluída", message)
+            self.check_db_status_and_load_data() # Re-verifica o status do DB e recarrega
+        else:
+            QMessageBox.critical(self.view, "Erro na Importação", message)
+
+# ========================================= Métodos Auxiliares =========================================
 
     def _parse_date_string(self, date_string):
         if not date_string: return None
@@ -149,6 +289,8 @@ class AtasController:
 
     def load_initial_data(self):
         """Carrega os dados e popula ambas as tabelas na inicialização."""
+        if not self.model.db_initialized: # Não tenta carregar se o DB não está pronto
+            return
         try:
             atas = self.model.get_all_atas()
             self.populate_table(atas)
@@ -292,12 +434,6 @@ class AtasController:
         excluir_action.triggered.connect(lambda: self.delete_ata_by_parecer(parecer))
         menu.exec(self.view.table_view.mapToGlobal(position))
 
-    def show_ata_details(self, ata_data):
-        """Abre a janela de detalhes e conecta o sinal de atualização."""
-        dialog = AtaDetailsDialog(ata_data, self.view)
-        dialog.ata_updated.connect(lambda: self.update_ata_from_dialog(dialog))
-        dialog.exec()
-
     def update_ata_from_dialog(self, dialog):
         """Pega os dados da janela, atualiza o modelo e a linha da tabela."""
         updated_data = dialog.get_updated_data()
@@ -325,20 +461,17 @@ class AtasController:
             if item_parecer and item_parecer.text() == parecer_value:
                 ata_data = self.model.get_ata_by_parecer(parecer_value)
                 if ata_data:
-                    # Atualiza os dados da linha
                     dias_restantes = "N/A"
                     if ata_data.termino:
                         termino_date = self._parse_date_string(ata_data.termino)
                         if termino_date:
                             dias_restantes = (termino_date - date.today()).days
-
                     source_model.setItem(row, 0, self._create_dias_item(dias_restantes))
                     source_model.item(row, 1).setText(ata_data.numero)
                     source_model.item(row, 2).setText(str(ata_data.ano))
                     source_model.item(row, 3).setText(ata_data.empresa)
                     source_model.item(row, 5).setText(ata_data.objeto)
 
-                    # --- LÓGICA DE ATUALIZAÇÃO DO STATUS CORRIGIDA ---
                     status_item = source_model.item(row, 6)
                     status_item.setText(ata_data.status)
                     brush, weight = self._get_status_style(ata_data.status)
@@ -346,10 +479,15 @@ class AtasController:
                     font = status_item.font()
                     font.setWeight(weight)
                     status_item.setFont(font)
-                    # --- FIM DA CORREÇÃO ---
-
                     print(f"✅ Linha da ata {parecer_value} atualizada na tabela.")
-                break
+                    break
+
+    def show_ata_details(self, ata_data):
+        """Abre a janela de detalhes e conecta o sinal de atualização."""
+        # A AtaDetailsDialog precisará ser atualizada para incluir os campos NUP e Portal de Licitações
+        dialog = AtaDetailsDialog(ata_data, self.view)
+        dialog.ata_updated.connect(lambda: self.update_ata_from_dialog(dialog))
+        dialog.exec()
 
     def generate_excel_report(self):
         """
