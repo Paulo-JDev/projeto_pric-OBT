@@ -7,6 +7,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey, inspect
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, joinedload
 from datetime import datetime
+import sqlite3
 
 # Define o caminho base
 try:
@@ -85,11 +86,9 @@ class LinksAta(Base):
     serie_ata_link = Column(String)
     portaria_link = Column(String)
     ta_link = Column(String)
-    # ✨ NOVA COLUNA ADICIONADA ✨
     portal_licitacoes_link = Column(String) 
     ata = relationship("Ata", back_populates="links")
 
-# Modelo da Tabela 'Atas' com o relacionamento
 class Ata(Base):
     __tablename__ = "atas"
     id = Column(Integer, primary_key=True, index=True)
@@ -105,13 +104,11 @@ class Ata(Base):
     observacoes = Column(Text)
     termo_aditivo = Column(String)
     portaria_fiscalizacao = Column(String)
-    # ✨ NOVA COLUNA ADICIONADA ✨
     nup = Column(String) 
     status_info = relationship("StatusAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     links = relationship("LinksAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     registros = relationship("RegistroAta", back_populates="ata", cascade="all, delete-orphan")
 
-# Classe de dados para transferência de informações
 class AtaData:
     def __init__(self, ata_db_object):
         self.id = ata_db_object.id
@@ -127,74 +124,62 @@ class AtaData:
         self.observacoes = ata_db_object.observacoes
         self.portaria_fiscalizacao = ata_db_object.portaria_fiscalizacao
         self.termo_aditivo = ata_db_object.termo_aditivo
-        # ✨ NOVA COLUNA ADICIONADA ✨
         self.nup = ata_db_object.nup 
         self.status = ata_db_object.status_info.status if ata_db_object.status_info else "SEÇÃO ATAS"
         self.registros = [reg.texto for reg in ata_db_object.registros] if ata_db_object.registros else []
         self.serie_ata_link = ata_db_object.links.serie_ata_link if ata_db_object.links else ""
         self.portaria_link = ata_db_object.links.portaria_link if ata_db_object.links else ""
         self.ta_link = ata_db_object.links.ta_link if ata_db_object.links else ""
-        # ✨ NOVA COLUNA ADICIONADA ✨
         self.portal_licitacoes_link = ata_db_object.links.portal_licitacoes_link if ata_db_object.links else ""
 
 class AtasModel:
     def __init__(self):
         self.db_initialized = False # Flag para indicar se o DB foi inicializado com sucesso
         self._initialize_db()
-        
+
     def _initialize_db(self):
         """Inicializa o banco de dados, verificando e criando o schema."""
         global engine, SessionLocal, DB_PATH, DATABASE_URL
 
-        # Se o arquivo do DB não existe, ele será criado com o schema mais recente
+        self.allow_raw_export = False  # nova flag
+
         if not DB_PATH.exists():
             DB_PATH.parent.mkdir(parents=True, exist_ok=True)
             Base.metadata.create_all(bind=engine)
             print(f"✅ Novo banco de dados criado em: {DB_PATH}")
             self.db_initialized = True
+            self.allow_raw_export = True
             return
 
-        # Se o DB existe, verifica o schema
         try:
-            # Tenta criar todas as tabelas. SQLAlchemy não recria se já existem,
-            # mas pode adicionar colunas se o DB for SQLite e a engine for configurada para isso
-            # (o que não é o caso padrão para colunas novas, apenas para tabelas novas)
-            Base.metadata.create_all(bind=engine) 
-
-            # Agora, verificamos se as colunas esperadas existem
             inspector = inspect(engine)
-
-            # Verificar tabela 'atas'
-            if 'atas' in inspector.get_table_names():
-                columns = [col['name'] for col in inspector.get_columns('atas')]
-                if 'nup' not in columns:
-                    raise ValueError("Coluna 'nup' ausente na tabela 'atas'. Schema desatualizado.")
+            if "atas" in inspector.get_table_names():
+                cols = [c["name"] for c in inspector.get_columns("atas")]
+                if "nup" not in cols:
+                    raise ValueError("Coluna 'nup' ausente na tabela 'atas'.")
             else:
-                raise ValueError("Tabela 'atas' ausente. Schema desatualizado.")
+                raise ValueError("Tabela 'atas' ausente.")
 
-            # Verificar tabela 'links_ata'
-            if 'links_ata' in inspector.get_table_names():
-                columns = [col['name'] for col in inspector.get_columns('links_ata')]
-                if 'portal_licitacoes_link' not in columns:
-                    raise ValueError("Coluna 'portal_licitacoes_link' ausente na tabela 'links_ata'. Schema desatualizado.")
+            if "links_ata" in inspector.get_table_names():
+                cols = [c["name"] for c in inspector.get_columns("links_ata")]
+                if "portal_licitacoes_link" not in cols:
+                    raise ValueError("Coluna 'portal_licitacoes_link' ausente.")
             else:
-                # Se a tabela links_ata não existe, o schema está desatualizado
-                raise ValueError("Tabela 'links_ata' ausente. Schema desatualizado.")
+                raise ValueError("Tabela 'links_ata' ausente.")
 
-            print(f"✅ Banco de dados de Atas inicializado em: {DB_PATH} (Schema OK)")
             self.db_initialized = True
+            self.allow_raw_export = True
+            print(f"✅ Schema OK em: {DB_PATH}")
 
-        except ValueError as ve:
-            print(f"❌ Erro de schema: {ve}")
-            print("⚠️ O banco de dados está desatualizado. É necessário migrar os dados.")
-            self.db_initialized = False # Indica que o DB não está pronto para uso direto
-            # Não chamamos QMessageBox aqui, o Controller fará isso.
         except Exception as e:
-            print(f"❌ Erro inesperado ao inicializar o DB: {e}")
+            print(f"⚠️ Schema desatualizado: {e}")
+            # DB antigo, mas ainda válido para leitura via sqlite3
             self.db_initialized = False
+            self.allow_raw_export = True
 
-    def _get_session(self):
-        if not self.db_initialized:
+
+    def _get_session(self, allow_uninitialized=False): # ✨ Adicionado parâmetro allow_uninitialized
+        if not self.db_initialized and not allow_uninitialized: # ✨ Condição modificada
             raise RuntimeError("Banco de dados não inicializado ou schema desatualizado. Não é possível obter sessão.")
         return SessionLocal()
 
@@ -221,8 +206,7 @@ class AtasModel:
             engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
             SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-            # Ao mudar o DB, sempre tentamos criar o schema mais recente
-            Base.metadata.create_all(bind=engine) 
+            Base.metadata.create_all(bind=engine) # Ao mudar o DB, sempre tentamos criar o schema mais recente
 
             print(f"✅ Banco de dados alterado para: {DB_PATH}")
             print(f"✅ Configuração salva em: {CONFIG_FILE}")
@@ -237,38 +221,86 @@ class AtasModel:
     # --- NOVAS FUNÇÕES DE EXPORTAÇÃO/IMPORTAÇÃO JSON ---
 
     def export_main_data_to_json(self):
-        """Exporta os dados da tabela principal (Atas) para JSON."""
-        session = self._get_session()
+        """Exporta os dados principais (tabela 'atas') direto via sqlite3, compatível com bancos antigos."""
         try:
-            atas = session.query(Ata).all()
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+
+            # --- Obtém colunas disponíveis no banco ---
+            cursor.execute("PRAGMA table_info(atas);")
+            columns = [col[1] for col in cursor.fetchall()]
+
+            if not columns:
+                return False, "Tabela 'atas' não encontrada no banco."
+
+            cursor.execute(f"SELECT * FROM atas;")
+            rows = cursor.fetchall()
+
+            # Exporta em formato [{coluna: valor}, ...]
             data = []
-            for ata in atas:
-                ata_dict = {
-                    "setor": ata.setor,
-                    "modalidade": ata.modalidade,
-                    "numero": ata.numero,
-                    "ano": ata.ano,
-                    "empresa": ata.empresa,
-                    "contrato_ata_parecer": ata.contrato_ata_parecer,
-                    "objeto": ata.objeto,
-                    "celebracao": ata.celebracao,
-                    "termino": ata.termino,
-                    "observacoes": ata.observacoes,
-                    "termo_aditivo": ata.termo_aditivo,
-                    "portaria_fiscalizacao": ata.portaria_fiscalizacao,
-                    "nup": ata.nup # ✨ Exporta a nova coluna
-                }
-                data.append(ata_dict)
+            for row in rows:
+                record = dict(zip(columns, row))
+                data.append(record)
+
+            conn.close()
+            print(f"✅ Exportação RAW de {len(data)} atas concluída via sqlite3.")
             return True, data
+
         except Exception as e:
-            print(f"Erro ao exportar dados principais: {e}")
+            print(f"❌ Erro ao exportar dados principais via sqlite3: {e}")
             return False, str(e)
-        finally:
-            session.close()
+
+    def export_complementary_data_to_json(self):
+        """Exporta as tabelas complementares via sqlite3 (status_atas, registros_atas e links_ata)."""
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            data = {}
+
+            # --- STATUS_ATAS ---
+            try:
+                cursor.execute("PRAGMA table_info(status_atas);")
+                colunas = [c[1] for c in cursor.fetchall()]
+                if colunas:
+                    cursor.execute("SELECT * FROM status_atas;")
+                    data["status_atas"] = [dict(zip(colunas, r)) for r in cursor.fetchall()]
+            except Exception as e:
+                print("Tabela status_atas ausente:", e)
+                data["status_atas"] = []
+
+            # --- REGISTROS_ATAS ---
+            try:
+                cursor.execute("PRAGMA table_info(registros_atas);")
+                colunas = [c[1] for c in cursor.fetchall()]
+                if colunas:
+                    cursor.execute("SELECT * FROM registros_atas;")
+                    data["registros_atas"] = [dict(zip(colunas, r)) for r in cursor.fetchall()]
+            except Exception as e:
+                print("Tabela registros_atas ausente:", e)
+                data["registros_atas"] = []
+
+            # --- LINKS_ATA ---
+            try:
+                cursor.execute("PRAGMA table_info(links_ata);")
+                colunas = [c[1] for c in cursor.fetchall()]
+                if colunas:
+                    cursor.execute("SELECT * FROM links_ata;")
+                    data["links_ata"] = [dict(zip(colunas, r)) for r in cursor.fetchall()]
+            except Exception as e:
+                print("Tabela links_ata ausente:", e)
+                data["links_ata"] = []
+
+            conn.close()
+            print(f"✅ Exportação RAW das tabelas complementares concluída.")
+            return True, data
+
+        except Exception as e:
+            print(f"❌ Erro ao exportar dados complementares via sqlite3: {e}")
+            return False, str(e)
 
     def import_main_data_from_json(self, file_path: str):
         """Importa os dados da tabela principal (Atas) de um arquivo JSON."""
-        session = self._get_session()
+        session = self._get_session() # Não permitir sessão se schema desatualizado
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -290,50 +322,9 @@ class AtasModel:
         finally:
             session.close()
 
-    def export_complementary_data_to_json(self):
-        """Exporta dados complementares (Status, Registros, Links) para JSON."""
-        session = self._get_session()
-        try:
-            complementary_data = {
-                "status_atas": [],
-                "registros_atas": [],
-                "links_ata": []
-            }
-
-            # Exportar StatusAta
-            for status_obj in session.query(StatusAta).all():
-                complementary_data["status_atas"].append({
-                    "ata_parecer": status_obj.ata_parecer,
-                    "status": status_obj.status
-                })
-
-            # Exportar RegistroAta
-            for registro_obj in session.query(RegistroAta).all():
-                complementary_data["registros_atas"].append({
-                    "ata_parecer": registro_obj.ata_parecer,
-                    "texto": registro_obj.texto
-                })
-
-            # Exportar LinksAta
-            for link_obj in session.query(LinksAta).all():
-                complementary_data["links_ata"].append({
-                    "ata_parecer": link_obj.ata_parecer,
-                    "serie_ata_link": link_obj.serie_ata_link,
-                    "portaria_link": link_obj.portaria_link,
-                    "ta_link": link_obj.ta_link,
-                    "portal_licitacoes_link": link_obj.portal_licitacoes_link # ✨ Exporta a nova coluna
-                })
-
-            return True, complementary_data
-        except Exception as e:
-            print(f"Erro ao exportar dados complementares: {e}")
-            return False, str(e)
-        finally:
-            session.close()
-
     def import_complementary_data_from_json(self, file_path: str):
         """Importa dados complementares (Status, Registros, Links) de um arquivo JSON."""
-        session = self._get_session()
+        session = self._get_session() # Não permitir sessão se schema desatualizado
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -347,7 +338,6 @@ class AtasModel:
 
             # Importar StatusAta
             for record in data.get("status_atas", []):
-                # Verifica se a ata principal existe antes de adicionar o status
                 if session.query(Ata).filter(Ata.contrato_ata_parecer == record["ata_parecer"]).first():
                     new_status = StatusAta(ata_parecer=record["ata_parecer"], status=record["status"])
                     session.add(new_status)
@@ -372,7 +362,7 @@ class AtasModel:
                         serie_ata_link=record.get("serie_ata_link", ""),
                         portaria_link=record.get("portaria_link", ""),
                         ta_link=record.get("ta_link", ""),
-                        portal_licitacoes_link=record.get("portal_licitacoes_link", "") # ✨ Importa a nova coluna
+                        portal_licitacoes_link=record.get("portal_licitacoes_link", "") 
                     )
                     session.add(new_links)
                     imported_count += 1
@@ -388,10 +378,8 @@ class AtasModel:
         finally:
             session.close()
 
-
     def get_all_atas(self):
-        # Este método agora chamará _get_session(), que verificará self.db_initialized
-        session = self._get_session()
+        session = self._get_session() 
         try:
             atas = session.query(Ata).options(
                 joinedload(Ata.links), 
@@ -409,7 +397,7 @@ class AtasModel:
             session.close()
 
     def get_ata_by_parecer(self, parecer_value):
-        session = self._get_session()
+        session = self._get_session() 
         try:
             ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
             return AtaData(ata) if ata else None
@@ -417,7 +405,7 @@ class AtasModel:
             session.close()
 
     def add_ata(self, ata_data):
-        session = self._get_session()
+        session = self._get_session() 
         try:
             ata_cols = {c.name for c in Ata.__table__.columns}
             filtered_data = {k: v for k, v in ata_data.items() if k in ata_cols}
@@ -433,7 +421,7 @@ class AtasModel:
             session.close()
 
     def delete_ata(self, parecer_value: str):
-        session = self._get_session()
+        session = self._get_session() 
         try:
             ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
             if ata:
@@ -445,7 +433,7 @@ class AtasModel:
             session.close()
 
     def update_ata(self, parecer_value, updated_data, registros_list):
-        session = self._get_session()
+        session = self._get_session() 
         try:
             ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
             if ata:
@@ -481,7 +469,7 @@ class AtasModel:
             session.close()
 
     def import_from_spreadsheet(self, file_path: str):
-        session = self._get_session() # Agora checa db_initialized
+        session = self._get_session() 
         try:
             df = pd.read_excel(file_path)
             df.columns = df.columns.str.strip()
@@ -516,7 +504,7 @@ class AtasModel:
             return False, f"Erro ao ler o arquivo: {e}"
 
     def get_atas_with_status_not_default(self):
-        session = self._get_session() # Agora checa db_initialized
+        session = self._get_session() 
         try:
             atas_com_status = session.query(Ata).join(Ata.status_info).filter(
                 StatusAta.status != 'SEÇÃO ATAS'

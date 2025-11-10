@@ -48,36 +48,76 @@ class AtasController:
 
     def check_db_status_and_load_data(self):
         """Verifica o status do DB e carrega os dados ou inicia o processo de migração."""
-        if not self.model.db_initialized:
-            # Desabilita todas as funções que dependem de um DB funcional
+
+        # 🚦 CASO 1: DB desatualizado, mas ainda acessível para exportação
+        if not self.model.db_initialized and getattr(self.model, "allow_raw_export", False):
+            # 🔒 Bloqueia tudo que modifica dados
             self.view.add_button.setEnabled(False)
             self.view.delete_button.setEnabled(False)
-            self.view.planilha_button.setEnabled(False) # Desabilita o menu de planilhas
+            self.view.planilha_button.setEnabled(False)
             self.view.refresh_table_button.setEnabled(False)
             self.view.refresh_preview_button.setEnabled(False)
             self.view.preview_table.setEnabled(False)
             self.view.table_view.setEnabled(False)
 
-            # Mantém apenas as funções de exportação JSON e mudança de local do DB ativas
+            # 🟢 Habilita só o necessário pra migração
             self.view.export_main_json_action.setEnabled(True)
             self.view.export_complementary_json_action.setEnabled(True)
-            self.view.import_main_json_action.setEnabled(False) # Não pode importar antes de criar o novo DB
+            self.view.import_main_json_action.setEnabled(False)
+            self.view.import_complementary_json_action.setEnabled(False)
+            self.view.change_db_location_action.setEnabled(True)
+
+            # 🧭 Explica o que deve ser feito
+            QMessageBox.warning(
+                self.view,
+                "Banco de Dados Antigo Detectado",
+                (
+                    "O banco de dados atual foi feito em uma versão antiga do programa.\n\n"
+                    "Você pode exportar agora todos os seus dados.\n\n"
+                    "➡️ **PASSOS PARA MIGRAR:**\n"
+                    "1. Use o menu 'DB' para **Exportar Dados Principais (JSON)** e **Exportar Dados Complementares (JSON)**.\n"
+                    "2. Feche o programa.\n"
+                    "3. Exclua ou renomeie o arquivo `atas_controle.db` antigo.\n"
+                    "4. Reinicie o programa — ele criará um novo DB atualizado.\n"
+                    "5. Depois, use o menu 'DB' para **Importar Seus Dados JSON**.\n\n"
+                    "⚠️ Nenhum dado será apagado enquanto você não criar o novo banco."
+                )
+            )
+            print("⚠️ Banco antigo — exportação via sqlite3 habilitada.")
+            return
+
+        # 🚦 CASO 2: DB completamente inválido (nem exportável)
+        elif not self.model.db_initialized and not getattr(self.model, "allow_raw_export", False):
+            # trava tudo
+            self.view.add_button.setEnabled(False)
+            self.view.delete_button.setEnabled(False)
+            self.view.planilha_button.setEnabled(False)
+            self.view.refresh_table_button.setEnabled(False)
+            self.view.refresh_preview_button.setEnabled(False)
+            self.view.preview_table.setEnabled(False)
+            self.view.table_view.setEnabled(False)
+
+            # permite mudar local do DB, mas sem exportar
+            self.view.export_main_json_action.setEnabled(False)
+            self.view.export_complementary_json_action.setEnabled(False)
+            self.view.import_main_json_action.setEnabled(False)
             self.view.import_complementary_json_action.setEnabled(False)
             self.view.change_db_location_action.setEnabled(True)
 
             QMessageBox.critical(
                 self.view,
-                "Erro de Schema do Banco de Dados",
-                "O banco de dados atual está desatualizado ou corrompido.\n\n"
-                "Para evitar perda de dados, siga os passos:\n"
-                "1. **Exporte** seus dados atuais usando as opções 'Exportar Dados Principais (JSON)' e 'Exportar Dados Complementares (JSON)' no menu 'DB'.\n"
-                "2. **Feche o programa.**\n"
-                "3. **Exclua ou renomeie** o arquivo 'atas_controle.db' na pasta do banco de dados.\n"
-                "4. **Reinicie o programa.** Um novo banco de dados com o schema correto será criado.\n"
-                "5. **Importe** seus dados usando as opções 'Importar Dados Principais (JSON)' e 'Importar Dados Complementares (JSON)' no menu 'DB'."
+                "Erro Crítico no Banco de Dados",
+                (
+                    "O banco de dados não pôde ser aberto ou está corrompido.\n\n"
+                    "Por favor, selecione um novo local de banco ou crie um novo DB vazio via menu 'DB > Mudar Local do DB'."
+                )
             )
+            print("❌ DB corrompido — exportação indisponível.")
+            return
+
+        # 🚦 CASO 3: Tudo certo (schema atualizado)
         else:
-            # Se o DB está OK, habilita tudo e carrega os dados
+            # habilita tudo normalmente
             self.view.add_button.setEnabled(True)
             self.view.delete_button.setEnabled(True)
             self.view.planilha_button.setEnabled(True)
@@ -86,13 +126,16 @@ class AtasController:
             self.view.preview_table.setEnabled(True)
             self.view.table_view.setEnabled(True)
 
+            # habilita todas as opções JSON e DB
             self.view.export_main_json_action.setEnabled(True)
             self.view.export_complementary_json_action.setEnabled(True)
             self.view.import_main_json_action.setEnabled(True)
             self.view.import_complementary_json_action.setEnabled(True)
             self.view.change_db_location_action.setEnabled(True)
 
+            # carrega dados
             self.load_initial_data()
+            print("✅ Banco OK — interface reativada e dados carregados.")
 
      # --- FUNÇÕES PARA GERENCIAR O LOCAL DO DB ---
     def change_database_location(self):
@@ -280,7 +323,7 @@ class AtasController:
         font.setBold(True)
         item.setFont(font)
         if isinstance(dias_restantes, int):
-            if dias_restantes < 0: item.setForeground(Qt.GlobalColor.red); item.setIcon(icon_manager.get_icon("delete"))
+            if dias_restantes < 0: item.setForeground(Qt.GlobalColor.red); item.setIcon(icon_manager.get_icon("head_skull"))
             elif dias_restantes <= 89: item.setForeground(QBrush(QColor("#FFA500"))); item.setIcon(icon_manager.get_icon("alert"))
             elif dias_restantes <= 179: item.setForeground(QBrush(QColor("#FFD700"))); item.setIcon(icon_manager.get_icon("mensagem"))
             else: item.setForeground(QBrush(QColor("#32CD32"))); item.setIcon(icon_manager.get_icon("aproved"))
@@ -311,7 +354,8 @@ class AtasController:
             "ALERTA PRAZO": (QColor(255, 160, 160), QFont.Weight.Bold),
             "NOTA TÉCNICA": (QColor(255, 160, 160), QFont.Weight.Bold),
             "AGU": (QColor(255, 160, 160), QFont.Weight.Bold),
-            "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold)
+            "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold),
+            "SIGAD" : (QColor(135, 206, 250), QFont.Weight.Bold)
         }
         color, weight = status_styles.get(status_text, (QColor("#FFFFFF"), QFont.Weight.Normal))
         return QBrush(color), weight
