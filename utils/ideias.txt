@@ -19,3 +19,5 @@ gerar_ata e gerar_contrato
 
 DEPOIS MELHORAR O TEMPO DAS COISAS TIRANDO ESSA QUANTIDADE DE PRINT NA HAVER
 so deixar versão, diretorio base, tabela carregada com x contratos, contrato manual savo (o da tela deixa),
+
+depois tirar o config.json para a pasta config
