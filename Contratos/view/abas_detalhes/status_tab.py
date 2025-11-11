@@ -23,7 +23,7 @@ def create_status_tab(self):
     self.status_dropdown.setObjectName("seta_baixo")
     self.status_dropdown.addItems([
         "SEÇÃO CONTRATOS", "EMPRESA", "SIGDEM", "ASSINADO", "PUBLICADO",
-        "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO"
+        "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO", "SIGAD"
     ])
     self.status_dropdown.setFixedWidth(220)
     status_layout.addWidget(self.status_dropdown)

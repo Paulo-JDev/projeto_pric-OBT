@@ -18,7 +18,8 @@ def _get_status_style(status_text):
         "ALERTA PRAZO": (QColor(255, 160, 160), QFont.Weight.Bold),
         "NOTA TÉCNICA": (QColor(255, 160, 160), QFont.Weight.Bold),
         "AGU": (QColor(255, 160, 160), QFont.Weight.Bold),
-        "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold)
+        "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold),
+        "SIGAD" : (QColor(230, 180, 100), QFont.Weight.Bold)
     }
     return status_styles.get(status_text, (QColor("#FFFFFF"), QFont.Weight.Normal))
 

@@ -547,7 +547,6 @@ class AtasController:
             self.view, "Salvar Planilha como...", "Relatorio_Atas_Administrativas.xlsx",
             "Excel Files (*.xlsx);;All Files (*)"
         )
-
         if not file_path:
             return
 
@@ -566,7 +565,9 @@ class AtasController:
             header_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
             center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
             link_font = Font(color="0000FF", underline="single") # Cor azul padrão de link
-            green_font = Font(color="00B050")
+
+            # NOVO ESTILO para a coluna "DIAS P/ VENCIMENTO"
+            days_to_expire_font = Font(bold=True, size=13, color="00B050") # Negrito, tamanho 13, cor verde
 
             # --- CABEÇALHO COM LOGOS ---
             try:
@@ -587,7 +588,7 @@ class AtasController:
             ws['A4'].value = f"ACORDOS ADMINISTRATIVOS EM VIGOR {ano_atual}"
             ws['A4'].font = subtitle_font
             ws['A4'].alignment = center_align
-            
+
             ws['L6'] = f"Data: {data_atual_str}"
             ws['L6'].font = Font(bold=True, italic=True)
             ws['L6'].alignment = Alignment(horizontal='center')
@@ -602,31 +603,36 @@ class AtasController:
             for cell in ws[header_row_num]:
                 cell.font = header_font
                 cell.fill = header_fill
-                cell.alignment = center_align
+                cell.alignment = center_align # Garante centralização dos cabeçalhos
 
-            # --- DADOS E FÓRMULAS ---
-            today = date.today()
-            for row_idx, ata in enumerate(atas, start=header_row_num + 1):
-                # Prepara os valores com hyperlinks
-                parecer_val = ata.contrato_ata_parecer or "N/A"
-                has_parecer_link = hasattr(ata, 'links') and ata.links and ata.links.serie_ata_link
+            # --- DADOS DAS ATAS ---
+            for ata in atas:
+                row_idx = ws.max_row + 1 # Próxima linha para adicionar dados
+
+                # Pega os links e valores, garantindo que não sejam None
+                parecer_val = ata.contrato_ata_parecer or ""
+                has_parecer_link = bool(ata.links and ata.links.serie_ata_link)
+                parecer_link = ata.links.serie_ata_link if has_parecer_link else ""
+
+                termo_val = ata.termo_aditivo or ""
+                has_ta_link = bool(ata.links and ata.links.ta_link)
+                ta_link = ata.links.ta_link if has_ta_link else ""
+
+                portaria_val = ata.portaria_fiscalizacao or ""
+                has_portaria_link = bool(ata.links and ata.links.portaria_link)
+                portaria_link = ata.links.portaria_link if has_portaria_link else ""
+
+                # Adiciona hyperlinks
                 if has_parecer_link:
-                    parecer_val = f'=HYPERLINK("{ata.links.serie_ata_link}", "{parecer_val}")'
-
-                termo_val = ata.termo_aditivo or "N/A"
-                has_ta_link = hasattr(ata, 'links') and ata.links and ata.links.ta_link
+                    ws.cell(row=row_idx, column=6).hyperlink = parecer_link
                 if has_ta_link:
-                    termo_val = f'=HYPERLINK("{ata.links.ta_link}", "{termo_val}")'
-                
-                portaria_val = ata.portaria_fiscalizacao or "N/A"
-                has_portaria_link = hasattr(ata, 'links') and ata.links and ata.links.portaria_link
+                    ws.cell(row=row_idx, column=9).hyperlink = ta_link
                 if has_portaria_link:
-                    portaria_val = f'=HYPERLINK("{ata.links.portaria_link}", "{portaria_val}")'
+                    ws.cell(row=row_idx, column=10).hyperlink = portaria_link
 
-                # Prepara as datas
                 data_celebracao_excel = self._parse_date_string(ata.celebracao)
                 data_termino_excel = self._parse_date_string(ata.termino)
-                
+
                 row_data = [
                     ata.setor, ata.modalidade, ata.numero, ata.ano, ata.empresa,
                     parecer_val, ata.objeto, data_celebracao_excel, termo_val,
@@ -638,17 +644,19 @@ class AtasController:
                 # --- Formatação da linha ---
                 current_row = ws[row_idx]
                 for cell in current_row:
-                    cell.alignment = center_align
+                    cell.alignment = center_align # Aplica centralização a TODAS as células do corpo
 
                 if has_parecer_link: current_row[5].font = link_font
                 if has_ta_link: current_row[8].font = link_font
                 if has_portaria_link: current_row[9].font = link_font
-                
+
                 # Formato de data e dias
                 current_row[7].number_format = 'DD/MM/YYYY'
                 current_row[10].number_format = 'DD/MM/YYYY'
-                current_row[11].font = green_font
-                current_row[11].number_format = '0'
+
+                # Aplica o NOVO ESTILO para a coluna "DIAS P/ VENCIMENTO" (índice 11)
+                current_row[11].font = days_to_expire_font
+                current_row[11].number_format = '0' # Mantém o formato numérico
 
             # --- AJUSTE FINAL DAS LARGURAS DAS COLUNAS ---
             ws.column_dimensions['A'].width = 12; ws.column_dimensions['B'].width = 15
@@ -656,11 +664,10 @@ class AtasController:
             ws.column_dimensions['E'].width = 35; ws.column_dimensions['F'].width = 25
             ws.column_dimensions['G'].width = 45; ws.column_dimensions['H'].width = 15
             ws.column_dimensions['I'].width = 15; ws.column_dimensions['J'].width = 25
-            ws.column_dimensions['K'].width = 15; ws.column_dimensions['L'].width = 18
+            ws.column_dimensions['K'].width = 15; ws.column_dimensions['L'].width = 18 # Coluna L (Dias p/ Vencimento)
 
             workbook.save(file_path)
             QMessageBox.information(self.view, "Sucesso", f"Planilha salva com sucesso em:\n{file_path}")
-
         except Exception as e:
             QMessageBox.critical(self.view, "Erro ao Gerar Planilha", f"Ocorreu um erro ao gerar a planilha:\n{str(e)}")
 

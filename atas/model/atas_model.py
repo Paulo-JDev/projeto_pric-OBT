@@ -89,6 +89,24 @@ class LinksAta(Base):
     portal_licitacoes_link = Column(String) 
     ata = relationship("Ata", back_populates="links")
 
+class FiscalizacaoAta(Base):
+    """Tabela específica para armazenar dados de fiscalização de atas."""
+    __tablename__ = "fiscalizacao_atas"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ata_parecer = Column(String, ForeignKey("atas.contrato_ata_parecer"), nullable=False, unique=True, index=True)
+    gestor = Column(String)
+    gestor_substituto = Column(String)
+    fiscal_tecnico = Column(String)
+    fiscal_tec_substituto = Column(String)
+    fiscal_administrativo = Column(String)
+    fiscal_admin_substituto = Column(String)
+    observacoes = Column(Text)
+    data_criacao = Column(String)
+    data_atualizacao = Column(String)
+
+    ata = relationship("Ata", back_populates="fiscalizacao_info")
+
 class Ata(Base):
     __tablename__ = "atas"
     id = Column(Integer, primary_key=True, index=True)
@@ -108,6 +126,7 @@ class Ata(Base):
     status_info = relationship("StatusAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     links = relationship("LinksAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     registros = relationship("RegistroAta", back_populates="ata", cascade="all, delete-orphan")
+    fiscalizacao_info = relationship("FiscalizacaoAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
 
 class AtaData:
     def __init__(self, ata_db_object):
@@ -131,6 +150,21 @@ class AtaData:
         self.portaria_link = ata_db_object.links.portaria_link if ata_db_object.links else ""
         self.ta_link = ata_db_object.links.ta_link if ata_db_object.links else ""
         self.portal_licitacoes_link = ata_db_object.links.portal_licitacoes_link if ata_db_object.links else ""
+
+        self.fiscalizacao = None
+        if ata_db_object.fiscalizacao_info:
+            f = ata_db_object.fiscalizacao_info
+            self.fiscalizacao = {
+                "gestor": f.gestor or "",
+                "gestor_substituto": f.gestor_substituto or "",
+                "fiscal_tecnico": f.fiscal_tecnico or "",
+                "fiscal_tec_substituto": f.fiscal_tec_substituto or "",
+                "fiscal_administrativo": f.fiscal_administrativo or "",
+                "fiscal_admin_substituto": f.fiscal_admin_substituto or "",
+                "observacoes": f.observacoes or "",
+                "data_criacao": f.data_criacao or "",
+                "data_atualizacao": f.data_atualizacao or ""
+            }
 
 class AtasModel:
     def __init__(self):
@@ -290,6 +324,20 @@ class AtasModel:
                 print("Tabela links_ata ausente:", e)
                 data["links_ata"] = []
 
+            # --- FISCALIZAÇÃO_ATA ---
+            try:
+                cursor.execute("PRAGMA table_info(fiscalizacao_atas);")
+                columns = [col[1] for col in cursor.fetchall()]
+                if columns:
+                    cursor.execute("SELECT * FROM fiscalizacao_atas;")
+                    rows = cursor.fetchall()
+                    data["fiscalizacao_atas"] = [dict(zip(columns, row)) for row in rows]
+                else:
+                    data["fiscalizacao_atas"] = []
+            except Exception as e:
+                print(f"[Aviso] Erro ao exportar 'fiscalizacao_atas': {e}")
+                data["fiscalizacao_atas"] = []
+
             conn.close()
             print(f"✅ Exportação RAW das tabelas complementares concluída.")
             return True, data
@@ -368,6 +416,26 @@ class AtasModel:
                     imported_count += 1
                 else:
                     print(f"Aviso: Ata principal '{record['ata_parecer']}' não encontrada para links. Ignorando.")
+            
+            # Importar FiscalizacaoAta
+            for record in data.get("fiscalizacao_atas", []):
+                if session.query(Ata).filter(Ata.contrato_ata_parecer == record["ata_parecer"]).first():
+                    fiscal = FiscalizacaoAta(
+                        ata_parecer=record["ata_parecer"],
+                        gestor=record.get("gestor", ""),
+                        gestor_substituto=record.get("gestor_substituto", ""),
+                        fiscal_tecnico=record.get("fiscal_tecnico", ""),
+                        fiscal_tec_substituto=record.get("fiscal_tec_substituto", ""),
+                        fiscal_administrativo=record.get("fiscal_administrativo", ""),
+                        fiscal_admin_substituto=record.get("fiscal_admin_substituto", ""),
+                        observacoes=record.get("observacoes", ""),
+                        data_criacao=record.get("data_criacao", ""),
+                        data_atualizacao=record.get("data_atualizacao", "")
+                    )
+                    session.add(fiscal)
+                    imported_count += 1
+                else:
+                    print(f"Aviso: Ata '{record['ata_parecer']}' não encontrada para fiscalização. Ignorando.")
 
             session.commit()
             return True, f"{imported_count} dados complementares importados com sucesso."

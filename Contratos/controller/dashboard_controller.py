@@ -22,7 +22,8 @@ class DashboardController:
             "ALERTA PRAZO": QColor(255, 160, 160),
             "NOTA TÉCNICA": QColor(255, 160, 160),
             "AGU": QColor(255, 160, 160),
-            "PRORROGADO": QColor(135, 206, 250)
+            "PRORROGADO": QColor(135, 206, 250),
+            "SIGAD" : QColor(230, 180, 100)
         }
 
     def _get_status_for_contrato(self, contrato_id):
