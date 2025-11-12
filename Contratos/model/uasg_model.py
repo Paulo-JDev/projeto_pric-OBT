@@ -6,17 +6,10 @@ import requests
 import sqlite3
 from datetime import datetime # Adicionado para comparação de datas
 from pathlib import Path
+from utils.utils import resource_path
 
 from .database import init_database
 from .models import Base, Contrato, StatusContrato, RegistroStatus, RegistroMensagem, Uasg
-
-def resource_path(relative_path):
-    """Retorna o caminho absoluto para um recurso, funcionando tanto no desenvolvimento quanto no empacotamento."""
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
 
 # Define o caminho base
 try:
