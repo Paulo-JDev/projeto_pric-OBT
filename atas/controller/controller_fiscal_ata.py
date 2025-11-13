@@ -7,6 +7,7 @@ Responsável por salvar e carregar dados completos de fiscalização.
 from datetime import datetime
 from typing import Dict, Optional
 import logging
+from atas.model.atas_model import FiscalizacaoAta
 
 logger = logging.getLogger(__name__)
 
@@ -63,19 +64,30 @@ def load_fiscalizacao_ata(model, parecer_value: str, parent_dialog) -> bool:
 
 
 def _save_fiscalizacao_to_db(model, parecer_value: str, data: Dict[str, str]):
-    from atas.model.fiscalizacao_ata_model import FiscalizacaoAta
     db = model._get_session()
     try:
         record = db.query(FiscalizacaoAta).filter(
             FiscalizacaoAta.ata_parecer == parecer_value
         ).first()
+        
         if not record:
-            record = FiscalizacaoAta(ata_parecer=parecer_value, data_criacao=datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+            # Se não existir, cria um NOVO registro
+            record = FiscalizacaoAta(
+                ata_parecer=parecer_value, 
+                data_criacao=datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            )
             db.add(record)
-        # Atualiza os campos
-        for k, v in data.items():
-            setattr(record, k, v)
+        
+        # Atualiza os campos com os dados do dict 'data'
+        record.gestor = data.get('gestor', '')
+        record.gestor_substituto = data.get('gestor_substituto', '')
+        record.fiscal_tecnico = data.get('fiscal_tecnico', '')
+        record.fiscal_tec_substituto = data.get('fiscal_tec_substituto', '')
+        record.fiscal_administrativo = data.get('fiscal_administrativo', '')
+        record.fiscal_admin_substituto = data.get('fiscal_admin_substituto', '')
+        record.observacoes = data.get('observacoes', '')
         record.data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        
         db.commit()
     except Exception:
         db.rollback()
@@ -85,7 +97,6 @@ def _save_fiscalizacao_to_db(model, parecer_value: str, data: Dict[str, str]):
 
 
 def _get_fiscalizacao_from_db(model, parecer_value: str) -> Optional[Dict[str, str]]:
-    from atas.model.fiscalizacao_ata_model import FiscalizacaoAta
     db = model._get_session()
     try:
         row = db.query(FiscalizacaoAta).filter(

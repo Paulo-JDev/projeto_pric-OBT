@@ -505,11 +505,17 @@ class AtasModel:
         try:
             ata = session.query(Ata).filter(Ata.contrato_ata_parecer == parecer_value).first()
             if ata:
+                # Define as chaves que são RELACIONAMENTOS e não devem ser salvas por este loop
+                relationship_keys = ['status_info', 'links', 'registros', 'fiscalizacao_info', 'registros_mensagem', 'fiscalizacao']
+                
+                # Este loop agora define APENAS os atributos de coluna simples.
                 for key, value in updated_data.items():
-                    if hasattr(ata, key):
-                        setattr(ata, key, str(value) if value is not None else '')
-
-                ata.nup = updated_data.get('nup', '')
+                    # Pula chaves que são relacionamentos ou que não existem no modelo Ata
+                    if key in relationship_keys or not hasattr(ata, key):
+                        continue
+                    
+                    # Define o valor da coluna
+                    setattr(ata, key, str(value) if value is not None else '')
 
                 if not ata.links:
                     ata.links = LinksAta()

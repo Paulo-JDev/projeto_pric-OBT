@@ -14,9 +14,10 @@ from atas.controller.controller_fiscal_ata import save_fiscalizacao_ata, load_fi
 class AtaDetailsDialog(QDialog):
     ata_updated = pyqtSignal()
 
-    def __init__(self, ata_data, parent=None):
+    def __init__(self, ata_data, model, parent=None):
         super().__init__(parent)
         self.ata_data = ata_data
+        self.model = model
         self.setWindowTitle(f"ATA: {ata_data.empresa} ({ata_data.contrato_ata_parecer})")
         self.setMinimumSize(800, 500)
         self.setWindowIcon(icon_manager.get_icon("edit"))
@@ -243,6 +244,7 @@ class AtaDetailsDialog(QDialog):
         self.numero_le.setText(self.ata_data.numero or "")
         self.ano_le.setText(self.ata_data.ano or "")
         self.nup_le.setText(self.ata_data.nup or "")
+        self.setor_le.setText(self.ata_data.setor or "")
         self.modalidade_le.setText(self.ata_data.modalidade or "")
         self.empresa_le.setText(self.ata_data.empresa or "")
         self.objeto_le.setText(self.ata_data.objeto or "")
@@ -272,39 +274,9 @@ class AtaDetailsDialog(QDialog):
         # Status
         self.status_dropdown.setCurrentText(self.ata_data.status)
 
-        if getattr(self.ata_data, "fiscalizacao_info", None):
-            fiscal = self.ata_data.fiscalizacao_info
-            # Usa getattr pra evitar erro se o atributo estiver ausente
-            if hasattr(self, "fiscal_gestor"):
-                self.fiscal_gestor.setText(fiscal.gestor or "")
-            if hasattr(self, "fiscal_gestor_substituto"):
-                self.fiscal_gestor_substituto.setText(fiscal.gestor_substituto or "")
-            if hasattr(self, "fiscalizacao_tecnico"):
-                self.fiscalizacao_tecnico.setText(fiscal.fiscal_tecnico or "")
-            if hasattr(self, "fiscalizacao_tec_substituto"):
-                self.fiscalizacao_tec_substituto.setText(fiscal.fiscal_tec_substituto or "")
-            if hasattr(self, "fiscalizacao_administrativo"):
-                self.fiscalizacao_administrativo.setText(fiscal.fiscal_administrativo or "")
-            if hasattr(self, "fiscalizacao_admin_substituto"):
-                self.fiscalizacao_admin_substituto.setText(fiscal.fiscal_admin_substituto or "")
-            if hasattr(self, "fiscal_observacoes"):
-                self.fiscal_observacoes.setPlainText(fiscal.observacoes or "")
-        else:
-            # Campos vazios se a ata ainda não tiver dados de fiscalização
-            if hasattr(self, "fiscal_gestor"):
-                self.fiscal_gestor.setText("")
-            if hasattr(self, "fiscal_gestor_substituto"):
-                self.fiscal_gestor_substituto.setText("")
-            if hasattr(self, "fiscalizacao_tecnico"):
-                self.fiscalizacao_tecnico.setText("")
-            if hasattr(self, "fiscalizacao_tec_substituto"):
-                self.fiscalizacao_tec_substituto.setText("")
-            if hasattr(self, "fiscalizacao_administrativo"):
-                self.fiscalizacao_administrativo.setText("")
-            if hasattr(self, "fiscalizacao_admin_substituto"):
-                self.fiscalizacao_admin_substituto.setText("")
-            if hasattr(self, "fiscal_observacoes"):
-                self.fiscal_observacoes.setPlainText("")
+        # Fiscalização
+        load_fiscalizacao_ata(self.model, self.ata_data.contrato_ata_parecer, self)
+        
 
     def get_updated_data(self):
         """Retorna um dicionário com os dados atualizados da interface."""
@@ -315,10 +287,10 @@ class AtaDetailsDialog(QDialog):
             'ano': self.ano_le.text(),
             'empresa': self.empresa_le.text(),
             'contrato_ata_parecer': self.ata_data.contrato_ata_parecer, # Mantém o ID original
-            'objeto': self.objeto_le.toPlainText(),
+            'objeto': self.objeto_le.text(),
             'celebracao': self.celebracao_de.date().toString("yyyy-MM-dd"),
             'termino': self.termino_de.date().toString("yyyy-MM-dd"),
-            'observacoes': self.observacoes_te.toPlainText(),
+            #'observacoes': self.observacoes_te.text(),
             'termo_aditivo': self.termo_aditivo_le.text(),
             'portaria_fiscalizacao': self.portaria_le.text(),
             'nup': self.nup_le.text(),

@@ -529,7 +529,7 @@ class AtasController:
     def show_ata_details(self, ata_data):
         """Abre a janela de detalhes e conecta o sinal de atualização."""
         # A AtaDetailsDialog precisará ser atualizada para incluir os campos NUP e Portal de Licitações
-        dialog = AtaDetailsDialog(ata_data, self.view)
+        dialog = AtaDetailsDialog(ata_data, self.model, self.view)
         dialog.ata_updated.connect(lambda: self.update_ata_from_dialog(dialog))
         dialog.exec()
 
