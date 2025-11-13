@@ -203,7 +203,7 @@ class AtasModel:
 
             self.db_initialized = True
             self.allow_raw_export = True
-            print(f"✅ Schema OK em: {DB_PATH}")
+            print(f"✅ Schema OK(local do BD de atas) em: {DB_PATH}")
 
         except Exception as e:
             print(f"⚠️ Schema desatualizado: {e}")

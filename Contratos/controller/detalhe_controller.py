@@ -184,7 +184,7 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
             registro_list.clear() # Limpa a lista antes de adicionar
             cursor.execute("SELECT texto FROM registros_status WHERE contrato_id = ?", (id_contrato,))
             registros_encontrados = cursor.fetchall() # Busca todos
-            print(f"[load_status] Encontrados {len(registros_encontrados)} registros para o contrato {id_contrato}") # Depuração
+            #print(f"[load_status] Encontrados {len(registros_encontrados)} registros para o contrato {id_contrato}") # Depuração
             for row in registros_encontrados:
                 item = QListWidgetItem(row['texto'])
                 item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)

@@ -56,7 +56,6 @@ def load_fiscalizacao_ata(model, parecer_value: str, parent_dialog) -> bool:
         if not data:
             return False
         _populate_fields(parent_dialog, data)
-        logger.info(f"✅ Fiscalização carregada para Ata {parecer_value}")
         return True
     except Exception as e:
         logger.exception(f"❌ Erro ao carregar fiscalização da Ata {parecer_value}: {e}")
