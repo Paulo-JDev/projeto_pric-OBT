@@ -419,15 +419,18 @@ class AtasController:
     def populate_table(self, atas: list):
         model = self.view.table_model
         model.clear()
-        headers = ["Dias", "Número", "Ano", "Empresa", "Ata", "Objeto", "Status"]
+        #headers = ["Dias", "Número", "Ano", "Empresa", "Ata", "Objeto", "Status"]
+        headers = ["Dias", "Vencimento", "Número", "Ano", "Empresa", "Ata", "Objeto", "Status"]
         model.setHorizontalHeaderLabels(headers)
         today = date.today()
         for ata in atas:
             dias_restantes = "N/A"
+            termino_formatado = "N/A"
             if ata.termino:
                 termino_date = self._parse_date_string(ata.termino)
                 if termino_date:
                     dias_restantes = (termino_date - today).days
+                    termino_formatado = termino_date.strftime("%d/%m/%Y")
 
             status_text = ata.status_info.status if ata.status_info else "SEÇÃO ATAS"
             status_item = self._create_centered_item(status_text)
@@ -438,27 +441,28 @@ class AtasController:
             status_item.setFont(font)
 
             model.appendRow([
-                self._create_dias_item(dias_restantes), self._create_centered_item(ata.numero), 
-                self._create_centered_item(ata.ano), self._create_centered_item(ata.empresa), 
+                self._create_dias_item(dias_restantes), self._create_centered_item(termino_formatado),self._create_centered_item(ata.numero), 
+                self._create_centered_item(ata.ano), self._create_centered_item(ata.empresa),
                 self._create_centered_item(ata.contrato_ata_parecer), self._create_centered_item(ata.objeto),
                 status_item
             ])
         # Configura as colunas
         header = self.view.table_view.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed); header.resizeSection(0, 80)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed); header.resizeSection(1, 75)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed); header.resizeSection(2, 80)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed); header.resizeSection(4, 170)
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(6, 180)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed); header.resizeSection(1, 95)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed); header.resizeSection(2, 75)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed); header.resizeSection(3, 80)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed); header.resizeSection(5, 170)
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
+        header.resizeSection(7, 180)
 
     def show_details_on_double_click(self, index):
         source_index = self.view.proxy_model.mapToSource(index)
         row = source_index.row()
         source_model = self.view.proxy_model.sourceModel()
-        parecer_item = source_model.item(row, 4)
+        parecer_item = source_model.item(row, 5)
         if not parecer_item: return
         
         ata_data = self.model.get_ata_by_parecer(parecer_item.text())
