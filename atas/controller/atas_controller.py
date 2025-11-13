@@ -3,10 +3,6 @@ from PyQt6.QtWidgets import QFileDialog, QMessageBox, QHeaderView, QMenu
 from PyQt6.QtGui import QStandardItem, QBrush, QColor, QFont
 from PyQt6.QtCore import Qt
 from datetime import date, datetime
-from atas.model.atas_model import AtasModel
-from atas.model.atas_model import Base, engine
-from utils.icon_loader import icon_manager 
-from atas.view.ata_details_dialog import AtaDetailsDialog
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -14,6 +10,12 @@ from openpyxl.drawing.image import Image
 import os
 import shutil
 import json
+
+from atas.model.atas_model import AtasModel
+from atas.model.atas_model import Base, engine
+from utils.icon_loader import icon_manager 
+from atas.view.ata_details_dialog import AtaDetailsDialog
+from atas.controller.controller_fiscal_ata import save_fiscalizacao_ata
 
 class AtasController:
     def __init__(self, model: AtasModel, view):
@@ -479,23 +481,35 @@ class AtasController:
         menu.exec(self.view.table_view.mapToGlobal(position))
 
     def update_ata_from_dialog(self, dialog):
-        """Pega os dados da janela, atualiza o modelo e a linha da tabela."""
+        """Pega TODOS os dados da janela (Geral e Fiscal) e salva no banco."""
+
+        # 1. Coleta todos os dados da UI
         updated_data = dialog.get_updated_data()
         registros = [dialog.registro_list.item(i).text() for i in range(dialog.registro_list.count())]
-
         parecer_value = dialog.ata_data.contrato_ata_parecer
 
-        if self.model.update_ata(parecer_value, updated_data, registros):
-            # Recarrega os dados da ata no próprio diálogo para manter a consistência
-            dialog.ata_data = self.model.get_ata_by_parecer(parecer_value)
-            dialog.load_data() # Recarrega a UI do diálogo com os novos dados
+        try:
+            # 2. Tenta salvar os dados principais (NUP, Setor, Objeto, etc.)
+            success = self.model.update_ata(parecer_value, updated_data, registros)
+            if not success:
+                raise Exception("Ata principal não encontrada no banco de dados.")
 
-            # Atualiza a linha específica na tabela principal
-            self.update_table_row(parecer_value)
-            self.populate_previsualization_table()
-            #self.populate_table(atas=self.model.get_all_atas())
-        else:
-            QMessageBox.critical(self.view, "Erro", "Não foi possível atualizar a ata.")
+            # 3. Tenta salvar os dados de fiscalização
+            # (Agora que a importação está correta, isso deve funcionar)
+            save_fiscalizacao_ata(self.model, parecer_value, dialog)
+
+        except Exception as e:
+            # 4. Se QUALQUER parte falhar, mostra o erro
+            QMessageBox.critical(self.view, "Erro ao Salvar", f"Não foi possível atualizar a ata:\n{e}")
+            return
+
+        # 5. Se TUDO deu certo, recarrega a UI do diálogo e atualiza a tabela
+        dialog.ata_data = self.model.get_ata_by_parecer(parecer_value)
+        dialog.load_data() # Recarrega a UI do diálogo com os novos dados
+        self.update_table_row(parecer_value)
+        self.populate_previsualization_table()
+
+        QMessageBox.information(dialog, "Sucesso", "Alterações salvas com sucesso!")
 
     def update_table_row(self, parecer_value):
         """Atualiza uma única linha da tabela com base no parecer."""

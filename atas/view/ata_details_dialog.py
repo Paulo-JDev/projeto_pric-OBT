@@ -385,23 +385,7 @@ class AtaDetailsDialog(QDialog):
         QMessageBox.information(self, "Copiar Registros", f"{len(checked_texts)} registro(s) copiado(s) para a área de transferência.")
 
     def save_changes(self):
-        """Coleta os dados da tela, salva pelo controller e mostra a mensagem de sucesso."""
-        # 1️⃣ Coleta todos os dados atualizados da interface
-        updated_data = self.get_updated_data()
-
-        # 2️⃣ Atualiza no banco o que já existia na tabela principal
+        """Emite um sinal para o controller salvar todos os dados."""
+        # O controller vai pegar os dados, salvar TUDO (Geral e Fiscalização),
+        # e depois mostrar a mensagem de sucesso ou erro.
         self.ata_updated.emit()
-
-        # 3️⃣ Extração do bloco Fiscalização
-        fiscal_data = updated_data.get("fiscalizacao", {})
-
-        # 4️⃣ Salvamento da aba Fiscalização (usando o controller)
-        try:
-            from atas.controller.controller_fiscal_ata import save_fiscalizacao_ata
-            save_fiscalizacao_ata(self.model, self.ata_data.contrato_ata_parecer, self)
-        except Exception as e:
-            QMessageBox.warning(self, "Atenção", f"Erro ao salvar os dados de fiscalização:\n{e}")
-            return
-
-        # 5️⃣ Confirmação visual do sucesso
-        QMessageBox.information(self, "Sucesso", "Alterações salvas com sucesso!")
