@@ -100,8 +100,8 @@ class AtaDetailsDialog(QDialog):
         status_label.setStyleSheet("font-weight: bold; color: #E5E5E5; font-size: 13px;")
         self.status_dropdown = QComboBox()
         self.status_dropdown.addItems([
-            "SEÇÃO ATAS", "EMPRESA", "SIGDEM", "ASSINADO", "PUBLICADO", "PORTARIA",
-            "ALERTA PRAZO", "ATA GERADA", "NOTA TÉCNICA", "AGU", "PRORROGADO", "SIGAD"
+            "SEÇÃO ATAS", "EMPRESA", "SIGDEM", "SIGAD","ASSINADO", "PUBLICADO", "PORTARIA",
+            "ALERTA PRAZO", "ATA GERADA", "NOTA TÉCNICA", "AGU", "PRORROGADO"
         ])
         self.status_dropdown.setFixedWidth(230)
         self.status_dropdown.setStyleSheet("""
