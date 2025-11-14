@@ -515,34 +515,74 @@ class AtasController:
 
         QMessageBox.information(dialog, "Sucesso", "Alterações salvas com sucesso!")
 
-    def update_table_row(self, parecer_value):
-        """Atualiza uma única linha da tabela com base no parecer."""
-        source_model = self.view.proxy_model.sourceModel()
-        for row in range(source_model.rowCount()):
-            item_parecer = source_model.item(row, 4) # Coluna "Ata"
-            if item_parecer and item_parecer.text() == parecer_value:
-                ata_data = self.model.get_ata_by_parecer(parecer_value)
-                if ata_data:
-                    dias_restantes = "N/A"
-                    if ata_data.termino:
-                        termino_date = self._parse_date_string(ata_data.termino)
-                        if termino_date:
-                            dias_restantes = (termino_date - date.today()).days
-                    source_model.setItem(row, 0, self._create_dias_item(dias_restantes))
-                    source_model.item(row, 1).setText(ata_data.numero)
-                    source_model.item(row, 2).setText(str(ata_data.ano))
-                    source_model.item(row, 3).setText(ata_data.empresa)
-                    source_model.item(row, 5).setText(ata_data.objeto)
+    def update_table_row(self, parecer_value: str):
+        """
+        Atualiza dinamicamente uma única linha na tabela principal após a edição.
+        """
+        try:
+            # 1. Obter o modelo da tabela
+            model = self.view.table_model
+            
+            # 2. Obter os novos dados atualizados do banco
+            updated_ata = self.model.get_ata_by_parecer(parecer_value)
+            if not updated_ata:
+                print(f"Erro: Ata {parecer_value} não encontrada no banco. Recarregando tabela.")
+                self.load_initial_data()
+                return
 
-                    status_item = source_model.item(row, 6)
-                    status_item.setText(ata_data.status)
-                    brush, weight = self._get_status_style(ata_data.status)
-                    status_item.setForeground(brush)
-                    font = status_item.font()
-                    font.setWeight(weight)
-                    status_item.setFont(font)
-                    print(f"✅ Linha da ata {parecer_value} atualizada na tabela.")
+            # 3. Encontrar a linha (row) que precisa ser atualizada
+            # A coluna "Ata" (ID) é a [5]
+            column_to_check = 5 
+            row_to_update = -1
+            
+            for row in range(model.rowCount()):
+                item = model.item(row, column_to_check)
+                if item and item.text() == parecer_value:
+                    row_to_update = row
                     break
+            
+            if row_to_update == -1:
+                print(f"Erro: Ata {parecer_value} não encontrada na tabela. Recarregando tabela.")
+                self.load_initial_data() # Segurança: se não achar, recarrega tudo
+                return
+
+            # 4. Preparar os dados formatados (lógica copiada do 'populate_table')
+            
+            # Col 0: Dias e Col 1: Vencimento
+            dias_restantes = "N/A"
+            termino_formatado = "N/A"
+            termino_date = None
+            if updated_ata.termino:
+                termino_date = self._parse_date_string(updated_ata.termino)
+                if termino_date:
+                    dias_restantes = (termino_date - date.today()).days
+                    termino_formatado = termino_date.strftime("%d/%m/%Y")
+            
+            # Col 7: Status
+            status_text = updated_ata.status # O AtaData já trata o "SEÇÃO ATAS"
+            status_item = self._create_centered_item(status_text)
+            brush, weight = self._get_status_style(status_text)
+            status_item.setForeground(brush)
+            font = status_item.font()
+            font.setWeight(weight)
+            status_item.setFont(font)
+            
+            # 5. Atualizar CADA CÉLULA daquela linha
+            model.setItem(row_to_update, 0, self._create_dias_item(dias_restantes))
+            model.setItem(row_to_update, 1, self._create_centered_item(termino_formatado))
+            model.setItem(row_to_update, 2, self._create_centered_item(updated_ata.numero))
+            model.setItem(row_to_update, 3, self._create_centered_item(updated_ata.ano))
+            model.setItem(row_to_update, 4, self._create_centered_item(updated_ata.empresa))
+            model.setItem(row_to_update, 5, self._create_centered_item(updated_ata.contrato_ata_parecer)) # A própria ID
+            model.setItem(row_to_update, 6, self._create_centered_item(updated_ata.objeto))
+            model.setItem(row_to_update, 7, status_item)
+            
+            # 6. Log de sucesso (o que você já estava vendo)
+            print(f"✅ Linha da ata {parecer_value} atualizada na tabela.")
+        
+        except Exception as e:
+            print(f"❌ Erro crítico ao atualizar linha da tabela: {e}. Recarregando tudo.")
+            self.load_initial_data()
 
     def show_ata_details(self, ata_data):
         """Abre a janela de detalhes e conecta o sinal de atualização."""
