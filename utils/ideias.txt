@@ -3,19 +3,15 @@
 
 ----------------------------- Contratos --------------------------------
 
-Quando eu estou gerando um contrato manual se ele tiver o mesmo numero porem em uags diferentes eles est'ao se sobre-escrevendo, nao sei o motivo, mesmo para as uasgs que ja foram carregadas ele esta substituindo se o numero for o mesmo, isso deve ser por causa da verificacao unica de um fator (numero) e nao dos dois na hora de salvar no banco (pois a verificacao na hora de criar nao deixa so se for mesma uasg e numero), talvez o problema seja solucionado se tiramos essa verificacao na hora do banco de dados e deixar somente na visualizacao, que ja funciona.
-
-e concertar o calculo dos dias para o contrato vencer nos contratos manuais
+e concertar o calculo dos dias para o contrato vencer nos contratos manuais ok
 
 ----------------------------- Geral ---------------------------------------
-
 
 colocar a ussabilidade de poder fazer outra janela e poder mexer em outras coisas
 
 FAZER DOIS NOVAS ENTRADAS UMA PARA GERAR ATAS E OUTRA Contratos
 UM ICONE PARA CADA E NA ORGANIZAÇÃO DAS PASTAS COLOCAR 
 gerar_ata e gerar_contrato
-
 
 DEPOIS MELHORAR O TEMPO DAS COISAS TIRANDO ESSA QUANTIDADE DE PRINT NA HAVER
 so deixar versão, diretorio base, tabela carregada com x contratos, contrato manual savo (o da tela deixa),

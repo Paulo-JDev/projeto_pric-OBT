@@ -665,7 +665,6 @@ class AtasController:
 
             # --- DADOS DAS ATAS ---
             for ata in atas:
-                row_idx = ws.max_row + 1 # Próxima linha para adicionar dados
 
                 # Pega os links e valores, garantindo que não sejam None
                 parecer_val = ata.contrato_ata_parecer or ""
@@ -680,33 +679,55 @@ class AtasController:
                 has_portaria_link = bool(ata.links and ata.links.portaria_link)
                 portaria_link = ata.links.portaria_link if has_portaria_link else ""
 
-                # Adiciona hyperlinks
-                if has_parecer_link:
-                    ws.cell(row=row_idx, column=6).hyperlink = parecer_link
-                if has_ta_link:
-                    ws.cell(row=row_idx, column=9).hyperlink = ta_link
-                if has_portaria_link:
-                    ws.cell(row=row_idx, column=10).hyperlink = portaria_link
-
                 data_celebracao_excel = self._parse_date_string(ata.celebracao)
                 data_termino_excel = self._parse_date_string(ata.termino)
 
+                # 1️⃣ Primeiro monta os dados da linha
                 row_data = [
-                    ata.setor, ata.modalidade, ata.numero, ata.ano, ata.empresa,
-                    parecer_val, ata.objeto, data_celebracao_excel, termo_val,
-                    portaria_val, data_termino_excel,
-                    f'=IF(ISBLANK(K{row_idx}), "N/A", K{row_idx}-TODAY())'
+                    ata.setor,
+                    ata.modalidade,
+                    ata.numero,
+                    ata.ano,
+                    ata.empresa,
+                    parecer_val,         # COLUNA F (6) - ATAS
+                    ata.objeto,
+                    data_celebracao_excel,
+                    termo_val,           # COLUNA I (9)
+                    portaria_val,        # COLUNA J (10)
+                    data_termino_excel,  # COLUNA K (11)
+                    f'=IF(ISBLANK(K{ws.max_row+1}), "N/A", K{ws.max_row+1}-TODAY())'
                 ]
+
+                # 2️⃣ Adiciona a linha na planilha
                 ws.append(row_data)
 
-                # --- Formatação da linha ---
+                # 3️⃣ Pega o índice REAL da linha recém adicionada
+                row_idx = ws.max_row
                 current_row = ws[row_idx]
-                for cell in current_row:
-                    cell.alignment = center_align # Aplica centralização a TODAS as células do corpo
 
-                if has_parecer_link: current_row[5].font = link_font
+                # 4️⃣ Agora sim aplica os hyperlinks na célula certa
+                if has_parecer_link:
+                    cell = ws.cell(row=row_idx, column=6)  # F -> ATAS
+                    cell.hyperlink = parecer_link
+                    cell.font = link_font
+
+                if has_ta_link:
+                    cell = ws.cell(row=row_idx, column=9)  # I -> TERMO ADITIVO
+                    cell.hyperlink = ta_link
+                    cell.font = link_font
+
+                if has_portaria_link:
+                    cell = ws.cell(row=row_idx, column=10) # J -> PORTARIA
+                    cell.hyperlink = portaria_link
+                    cell.font = link_font
+
+                # 5️⃣ Formatação da linha
+                for cell in current_row:
+                    cell.alignment = center_align  # Centraliza todas as células do corpo
+
+                """if has_parecer_link: current_row[5].font = link_font
                 if has_ta_link: current_row[8].font = link_font
-                if has_portaria_link: current_row[9].font = link_font
+                if has_portaria_link: current_row[9].font = link_font"""
 
                 # Formato de data e dias
                 current_row[7].number_format = 'DD/MM/YYYY'
