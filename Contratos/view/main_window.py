@@ -30,7 +30,7 @@ class MainWindow(QWidget):
         self.layout.addWidget(self.tabs)
 
        # =========================================================================================
-        # Novo layout para a aba de Entrada (Buscar UASG)
+        # Tabela Entrada (Buscar UASG)
         # =========================================================================================
         self.input_tab = QWidget()
         self.input_layout = QHBoxLayout(self.input_tab)
@@ -67,25 +67,17 @@ class MainWindow(QWidget):
         self.delete_button.clicked.connect(self.controller.delete_uasg_data)
         left_layout.addWidget(self.delete_button)
         
-        self.export_status_button = QPushButton("Exportar Status")
-        self.export_status_button.setIcon(icon_manager.get_icon("exportar"))
-        self.export_status_button.clicked.connect(self.controller.export_status_data)
-        left_layout.addWidget(self.export_status_button)
-        
-        self.import_status_button = QPushButton("Importar Status")
-        self.import_status_button.setIcon(icon_manager.get_icon("importar"))
-        self.import_status_button.clicked.connect(self.controller.import_status_data)
-        left_layout.addWidget(self.import_status_button)
+        # Botão STATUS (Abre menu de Importar/Exportar Status)
+        self.status_button = QPushButton("Status")
+        self.status_button.setIcon(icon_manager.get_icon("status"))
+        self.status_button.clicked.connect(self.controller.open_status_options_window)
+        left_layout.addWidget(self.status_button)
 
-        self.export_button = QPushButton("Exportar Tabela")
-        self.export_button.setIcon(icon_manager.get_icon("excel_down"))
-        self.export_button.clicked.connect(self.controller.export_table_to_excel)
-        left_layout.addWidget(self.export_button)
-
-        self.import_links_button = QPushButton("Importar Links da Planilha")
-        self.import_links_button.setIcon(icon_manager.get_icon("link")) # Ícone de link
-        self.import_links_button.clicked.connect(self.controller.import_links_from_spreadsheet) # Conecta à nova função
-        left_layout.addWidget(self.import_links_button)
+        # Botão TABELAS (Abre menu de Excel/Links/BI)
+        self.tabelas_button = QPushButton("Tabelas")
+        self.tabelas_button.setIcon(icon_manager.get_icon("table"))
+        self.tabelas_button.clicked.connect(self.controller.open_table_options)
+        left_layout.addWidget(self.tabelas_button)
 
         self.manual_contract_button = QPushButton("Contrato Manual")
         self.manual_contract_button.setIcon(icon_manager.get_icon("add"))
