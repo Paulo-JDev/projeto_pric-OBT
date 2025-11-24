@@ -287,18 +287,21 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
         
         # --- Coluna 7: Status (Precisa ser buscado antes de 'repopulation') ---
         status_text = "SEÇÃO CONTRATOS"  # Status padrão
+        objeto_text = contrato.get("objeto", "Não informado") # Padrão: Objeto original
         contrato_id = contrato.get("id", "")
         
         try:
             if contrato_id and hasattr(controller, 'model') and controller.model:
                 conn = controller.model._get_db_connection()
                 cursor = conn.cursor()
-                cursor.execute("SELECT status FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
+                cursor.execute("SELECT status, objeto_editado FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
                 status_row = cursor.fetchone()
                 if status_row and status_row['status']:
                     status_text = status_row['status']
+                
+                    if status_row['objeto_editado']:
+                        objeto_text = status_row['objeto_editado']
                 conn.close()
-            # (else... logs de erro removidos para limpeza)
         except sqlite3.Error as e:
             print(f"Erro ao buscar status do DB para contrato {contrato_id}: {e}")
             status_text = "Erro DB"
@@ -309,20 +312,14 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
             # Usa a nova função de formatação
             formatted_contract_number = _format_contract_number(contrato)
             model.setItem(row_index, 1, create_centered_item(formatted_contract_number))
-            # ❌--- LINHA ANTIGA REMOVIDA ---
-            # model.setItem(row_index, 1, create_centered_item(str(contrato.get("numero", ""))))
-            
             model.setItem(row_index, 2, create_centered_item(str(contrato.get("licitacao_numero", ""))))
             model.setItem(row_index, 3, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
             model.setItem(row_index, 4, create_centered_item(str(contrato.get("processo", ""))))
-            model.setItem(row_index, 5, create_centered_item(str(contrato.get("objeto", "Não informado"))))
+            model.setItem(row_index, 5, create_centered_item(str(objeto_text)))
             model.setItem(row_index, 6, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
             
             # --- Coluna 7: Status (Item criado aqui) ---
             model.setItem(row_index, 7, _create_status_item(status_text))
-            
-            # ❌--- CHAMADA REDUNDANTE REMOVIDA ---
-            # _update_row_content(controller, row_index, contrato)
 
     if repopulation:
         print(f"✅ Tabela carregada com {len(controller.current_data)} contratos.")

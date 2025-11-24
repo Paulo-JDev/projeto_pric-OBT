@@ -1,3 +1,5 @@
+# Contratos/controller/detalhe_controller.py
+
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QPushButton, QTextEdit, QListWidgetItem, QApplication, QMessageBox
 from PyQt6.QtCore import Qt, QTimer
 import json
@@ -55,60 +57,70 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         print("Erro: ID do contrato ou UASG não encontrado para salvar o status.")
         return None, None
     
+    # Salva os links (tabela separada ou update na contratos - verifique se este método não altera o objeto original)
     link_data = {
         "link_contrato": parent.link_contrato_le.text(),
         "link_ta": parent.link_ta_le.text(),
         "link_portaria": parent.link_portaria_le.text(),
         "link_pncp_espc": parent.link_pncp_espc_le.text(),
         "link_portal_marinha": parent.link_portal_marinha_le.text()
-
     }
-
     model.save_contract_links(id_contrato, link_data)
 
-    radio_options_dict = {
-        "id_contrato": id_contrato,
-        "uasg": uasg,
-        "status": status_dropdown.currentText(),
-        "registros": [registro_list.item(i).text() for i in range(registro_list.count())],
-        #"comments": [comment_list.item(i).text() for i in range(comment_list.count())] if comment_list else [],
-        "objeto": objeto_edit.text() if objeto_edit is not None else "",
-        "radio_options": {
-            title: next(
-                (option for option, button in radio_buttons[title].items() if button.isChecked()),
-                "Não selecionado"
-            ) for title in radio_buttons
-        },
-        "data_registro": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    # Prepara os dados para o JSON e para as colunas
+    data_registro_atual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    
+    radio_options_data = {
+        title: next(
+            (option for option, button in radio_buttons[title].items() if button.isChecked()),
+            "Não selecionado"
+        ) for title in radio_buttons
     }
-    radio_options_json = json.dumps(radio_options_dict.get("radio_options"))
+    radio_options_json = json.dumps(radio_options_data)
 
-    conn = model._get_db_connection() # Usa o método do modelo passado
+    # Tratamento seguro dos campos de texto
+    txt_objeto = objeto_edit.text() if objeto_edit is not None else ""
+    txt_portaria = portaria_edit.text() if portaria_edit is not None else ""
+    txt_ta = termo_aditivo_edit.text() if termo_aditivo_edit is not None else ""
+    status_atual = status_dropdown.currentText()
+
+    conn = model._get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Salvar/Atualizar status_contratos
-        cursor.execute('''
-            INSERT OR REPLACE INTO status_contratos
-            (contrato_id, uasg_code, status, objeto_editado, portaria_edit, termo_aditivo_edit,radio_options_json, data_registro)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            id_contrato, uasg, status_dropdown.currentText(),
-            objeto_edit.text() if objeto_edit is not None else "",
-            portaria_edit.text() if portaria_edit is not None else "",
-            termo_aditivo_edit.text() if termo_aditivo_edit is not None else "",
-            radio_options_json,
-            radio_options_dict.get("data_registro") # Adicionado o valor de data_registro
-        ))
+        # --- LÓGICA CORRIGIDA: UPDATE SE EXISTE, INSERT SE NÃO ---
+        # Isso evita deletar o registro e perder dados, e garante que estamos mexendo na tabela certa.
+        cursor.execute("SELECT 1 FROM status_contratos WHERE contrato_id = ?", (id_contrato,))
+        exists = cursor.fetchone()
 
-        # Salvar registros_status (deletar antigos e inserir novos)
+        if exists:
+            cursor.execute('''
+                UPDATE status_contratos
+                SET uasg_code = ?, 
+                    status = ?, 
+                    objeto_editado = ?, 
+                    portaria_edit = ?, 
+                    termo_aditivo_edit = ?, 
+                    radio_options_json = ?, 
+                    data_registro = ?
+                WHERE contrato_id = ?
+            ''', (uasg, status_atual, txt_objeto, txt_portaria, txt_ta, radio_options_json, data_registro_atual, id_contrato))
+        else:
+            cursor.execute('''
+                INSERT INTO status_contratos
+                (contrato_id, uasg_code, status, objeto_editado, portaria_edit, termo_aditivo_edit, radio_options_json, data_registro)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (id_contrato, uasg, status_atual, txt_objeto, txt_portaria, txt_ta, radio_options_json, data_registro_atual))
+
+        # Salvar registros_status (deletar antigos e inserir novos mantém o histórico limpo na lista visual)
         cursor.execute("DELETE FROM registros_status WHERE contrato_id = ?", (id_contrato,))
         registros_texts = [registro_list.item(i).text() for i in range(registro_list.count())]
         for texto in registros_texts:
             cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (id_contrato, uasg, texto))
 
         conn.commit()
-        print(f"Status, registros e comentários para o contrato {id_contrato} (UASG: {uasg}) salvos no banco de dados.")
+        print(f"Status salvo com sucesso para contrato {id_contrato}.")
+        
     except sqlite3.Error as e:
         print(f"Erro ao salvar status no banco de dados: {e}")
         conn.rollback()
@@ -155,10 +167,18 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
         cursor.execute("SELECT status, objeto_editado, portaria_edit, termo_aditivo_edit,radio_options_json FROM status_contratos WHERE contrato_id = ?", (id_contrato,))
         status_row = cursor.fetchone()
 
+        # Objeto Original (sempre seguro usar data.get aqui, pois data vem da tabela 'contratos')
+        objeto_original = data.get("objeto", "Não informado")
+
         if status_row:
             status_dropdown.setCurrentText(status_row['status'] or "")
             if objeto_edit is not None:
-                objeto_edit.setText(status_row['objeto_editado'] or data.get("objeto", "Não informado")) # Fallback para objeto original
+                # Se houver algo salvo em 'objeto_editado', usa. Se for NULL ou vazio, usa o original.
+                texto_salvo = status_row['objeto_editado']
+                if texto_salvo:
+                    objeto_edit.setText(texto_salvo)
+                else:
+                    objeto_edit.setText(objeto_original)
             
             if portaria_edit is not None:
                 portaria_edit.setText(status_row['portaria_edit'] or "")
