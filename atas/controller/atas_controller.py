@@ -392,7 +392,7 @@ class AtasController:
         if reply == QMessageBox.StandardButton.No: return
         
         source_model = self.view.proxy_model.sourceModel()
-        pareceres_to_delete = [source_model.item(self.view.proxy_model.mapToSource(idx).row(), 4).text() for idx in selected_indexes]
+        pareceres_to_delete = [source_model.item(self.view.proxy_model.mapToSource(idx).row(), 5).text() for idx in selected_indexes]
         
         for parecer in pareceres_to_delete:
             self.model.delete_ata(parecer)
@@ -427,10 +427,14 @@ class AtasController:
             dias_restantes = "N/A"
             termino_formatado = "N/A"
             if ata.termino:
-                termino_date = self._parse_date_string(ata.termino)
-                if termino_date:
-                    dias_restantes = (termino_date - today).days
-                    termino_formatado = termino_date.strftime("%d/%m/%Y")
+                if ata.termino == "2000-01-01":
+                    dias_restantes = "AD"
+                    termino_formatado = "01/01/2000"
+                else:
+                    termino_date = self._parse_date_string(ata.termino)
+                    if termino_date:
+                        dias_restantes = (termino_date - today).days
+                        termino_formatado = termino_date.strftime("%d/%m/%Y")
 
             status_text = ata.status_info.status if ata.status_info else "SEÇÃO ATAS"
             status_item = self._create_centered_item(status_text)
@@ -473,7 +477,7 @@ class AtasController:
         index = self.view.table_view.indexAt(position)
         if not index.isValid(): return
         source_index = self.view.proxy_model.mapToSource(index)
-        parecer = self.view.proxy_model.sourceModel().item(source_index.row(), 4).text()
+        parecer = self.view.proxy_model.sourceModel().item(source_index.row(), 5).text()
         if not parecer: return
         
         menu = QMenu(self.view)
@@ -551,12 +555,16 @@ class AtasController:
             # Col 0: Dias e Col 1: Vencimento
             dias_restantes = "N/A"
             termino_formatado = "N/A"
-            termino_date = None
+            
             if updated_ata.termino:
-                termino_date = self._parse_date_string(updated_ata.termino)
-                if termino_date:
-                    dias_restantes = (termino_date - date.today()).days
-                    termino_formatado = termino_date.strftime("%d/%m/%Y")
+                if updated_ata.termino == "2000-01-01":
+                    dias_restantes = "AD"
+                    termino_formatado = "01/01/2000"
+                else:
+                    termino_date = self._parse_date_string(updated_ata.termino)
+                    if termino_date:
+                        dias_restantes = (termino_date - date.today()).days
+                        termino_formatado = termino_date.strftime("%d/%m/%Y")
             
             # Col 7: Status
             status_text = updated_ata.status # O AtaData já trata o "SEÇÃO ATAS"
