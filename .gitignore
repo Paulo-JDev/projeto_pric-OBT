@@ -31,9 +31,9 @@ database/
 config.json
 testes-locais/
 DB_offline/
-.xml
-.xlsx
-.csv
+*.xml
+*.xlsx
+*.csv
 
 # Arquivos de configuração de IDEs
 .vscode/

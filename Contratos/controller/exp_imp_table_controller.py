@@ -4,6 +4,7 @@
 import os
 import re
 import json
+import pandas as pd
 from datetime import datetime, date
 from PyQt6.QtWidgets import QMessageBox, QFileDialog
 from openpyxl import Workbook, load_workbook
@@ -412,9 +413,136 @@ class ExpImpTableController:
     # EXPORTAR DADOS BI
     # =========================================================================
     def export_bi_data(self):
-        """Funcionalidade futura para BI."""
-        QMessageBox.information(self.view, "Em Desenvolvimento", "A funcionalidade de Exportação para BI estará disponível em breve.")
+        """
+        Exporta dados para Excel (BI), incluindo a coluna dinâmica de Material/Serviço.
+        """
+        # 1. Escolher onde salvar
+        filename, _ = QFileDialog.getSaveFileName(
+            self.view, 
+            "Salvar Relatório BI", 
+            f"Relatorio_BI_{datetime.now().strftime('%d-%m-%Y')}.xlsx", 
+            "Arquivos Excel (*.xlsx)"
+        )
 
+        if not filename:
+            return
+
+        conn = None
+        try:
+            # 2. Conectar ao Banco (Usa conexão do model ou busca arquivo)
+            if hasattr(self, 'model') and hasattr(self.model, '_get_db_connection'):
+                conn = self.model._get_db_connection()
+            else:
+                root_dir = os.getcwd() 
+                db_path = os.path.join(root_dir, "database", "gerenciador_uasg.db")
+                if not os.path.exists(db_path):
+                    db_path = os.path.join(root_dir, "..", "database", "gerenciador_uasg.db")
+                
+                if not os.path.exists(db_path):
+                    raise FileNotFoundError("Banco de dados não encontrado.")
+                conn = sqlite3.connect(db_path)
+
+            # 3. Query SQL - Adicionada a coluna 'radio_options_json'
+            query = """
+            SELECT 
+                c.numero AS numero_contrato,
+                c.uasg_code AS uasg, 
+                c.valor_global,
+                COALESCE(s.objeto_editado, c.objeto) AS objeto_final,
+                COALESCE(s.status, 'SEÇÃO CONTRATOS') AS status_atual,
+                c.tipo,
+                c.modalidade,
+                s.radio_options_json
+            FROM contratos c
+            LEFT JOIN status_contratos s ON c.id = s.contrato_id
+            """
+            
+            # 4. Carregar no Pandas
+            df = pd.read_sql_query(query, conn)
+
+            if df.empty:
+                QMessageBox.warning(self.view, "Aviso", "A tabela está vazia.")
+                return
+
+            # 5. Lógica para Material/Serviço (Lê do JSON)
+            def get_material_servico(row):
+                json_str = row['radio_options_json']
+                
+                # Se não tem nada salvo no banco, retorna "Definir"
+                if not json_str:
+                    return "Definir"
+                
+                try:
+                    data = json.loads(json_str)
+                    # Tenta pegar o valor. A chave no banco geralmente tem ":", mas prevenimos os dois casos
+                    valor = data.get("Material/Serviço:") or data.get("Material/Serviço")
+                    
+                    # Se o valor for vazio, nulo ou "Não selecionado", retorna "Definir"
+                    if not valor or valor == "Não selecionado":
+                        return "Definir"
+                    
+                    return valor
+                except:
+                    return "Definir"
+
+            # Aplica a função na coluna
+            df['Material/Serviço'] = df.apply(get_material_servico, axis=1)
+
+            # 6. Formatação do Número do Contrato
+            def formatar_numero(row):
+                try:
+                    uasg = str(row['uasg'])[-5:] if row['uasg'] else "00000"
+                    numero_raw = str(row['numero_contrato'])
+                    if "/" in numero_raw:
+                        parts = numero_raw.split('/')
+                        num_parte = parts[0].lstrip('0') or "0"
+                        ano_parte = parts[1][-2:] if len(parts[1]) >= 2 else parts[1]
+                        return f"{uasg}/{ano_parte}-{num_parte}/00"
+                    return numero_raw
+                except:
+                    return str(row['numero_contrato'])
+
+            df['Número Formatado'] = df.apply(formatar_numero, axis=1)
+
+            # 7. Selecionar e Renomear Colunas Finais
+            colunas_finais = [
+                'Número Formatado', 
+                'Material/Serviço', 
+                'valor_global', 
+                'objeto_final', 
+                'status_atual', 
+                'tipo', 
+                'modalidade'
+            ]
+            
+            # Garante que só pegamos colunas que existem (segurança)
+            cols_to_export = [c for c in colunas_finais if c in df.columns]
+            df_final = df[cols_to_export].copy()
+
+            # Renomeia para o Excel ficar bonito
+            rename_map = {
+                'Número Formatado': 'Número',
+                'Material/Serviço': 'Material/Serviço',
+                'valor_global': 'Valor Global',
+                'objeto_final': 'Objeto',
+                'status_atual': 'Status',
+                'tipo': 'Tipo',
+                'modalidade': 'Modalidade'
+            }
+            df_final.rename(columns=rename_map, inplace=True)
+
+            # 8. Gerar Excel
+            df_final.to_excel(filename, index=False)
+            QMessageBox.information(self.view, "Sucesso", f"Relatório BI exportado!\n{filename}")
+
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            QMessageBox.critical(self.view, "Erro", f"Erro ao exportar: {str(e)}")
+        
+        finally:
+            if conn:
+                conn.close()
     # =========================================================================
     # MÉTODOS AUXILIARES (PRIVADOS)
     # =========================================================================
