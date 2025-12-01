@@ -15,7 +15,7 @@ import os
 class MainShellView(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("HASTA 360 - Gestão Integrada")
+        self.setWindowTitle("CA 360 - Interface Principal")
         self.setGeometry(100, 100, 1280, 720)
         self.setMinimumSize(1024, 600)
 
@@ -69,6 +69,14 @@ class MainShellView(QMainWindow):
         self.backup_button.setFixedSize(300, 80)
         self.backup_button.setStyleSheet("font-size: 16px; font-weight: bold;")
         welcome_layout.addWidget(self.backup_button)
+
+        # Botão de Ajuda
+        self.help_button = QPushButton(" Ajuda e Suporte")
+        self.help_button.setIcon(icon_manager.get_icon("ajuda")) # Ícone de Ajuda
+        self.help_button.setIconSize(QSize(32, 32))
+        self.help_button.setFixedSize(300, 80)
+        self.help_button.setStyleSheet("font-size: 16px; font-weight: bold;")
+        welcome_layout.addWidget(self.help_button)
         
         self.stacked_widget.addWidget(welcome_widget)
         # --- FIM DA TELA DE BOAS-VINDAS (REFEITA) ---

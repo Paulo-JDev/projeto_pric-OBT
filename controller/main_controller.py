@@ -11,6 +11,7 @@ from atas.model.atas_model import AtasModel
 # --- Importações Adicionadas ---
 from view.info_dialog import InfoDialog
 from backup.controller.backup_controller import BackupController
+from view.help_dialog import HelpDialog
 # --- Fim das Importações Adicionadas ---
 
 class MainController:
@@ -35,6 +36,7 @@ class MainController:
         # --- Conexões dos novos botões da tela Home ---
         self.view.info_button.clicked.connect(self.show_info_dialog)
         self.view.backup_button.clicked.connect(self.show_backup_dialog)
+        self.view.help_button.clicked.connect(self.show_help_dialog)
         # --- Fim das novas conexões ---
 
     def switch_module(self, index):
@@ -55,3 +57,7 @@ class MainController:
         # O controlador de backup gerencia sua própria view
         self.backup_controller = BackupController(self.view)
         self.backup_controller.show()
+
+    def show_help_dialog(self):
+        """So um print no terminal, mas poderia abrir uma janela de ajuda."""
+        print("Ajuda do Projeto")
