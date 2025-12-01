@@ -72,7 +72,7 @@ class MainShellView(QMainWindow):
 
         # Botão de Ajuda
         self.help_button = QPushButton(" Ajuda e Suporte")
-        self.help_button.setIcon(icon_manager.get_icon("ajuda")) # Ícone de Ajuda
+        self.help_button.setIcon(icon_manager.get_icon("ajuda_more")) # Ícone de Ajuda
         self.help_button.setIconSize(QSize(32, 32))
         self.help_button.setFixedSize(300, 80)
         self.help_button.setStyleSheet("font-size: 16px; font-weight: bold;")

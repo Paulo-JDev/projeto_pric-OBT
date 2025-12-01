@@ -59,5 +59,5 @@ class MainController:
         self.backup_controller.show()
 
     def show_help_dialog(self):
-        """So um print no terminal, mas poderia abrir uma janela de ajuda."""
-        print("Ajuda do Projeto")
+        dialog = HelpDialog(self.view)
+        dialog.exec()
