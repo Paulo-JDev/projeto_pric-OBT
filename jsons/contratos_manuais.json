@@ -1,28 +1,64 @@
 [
     {
-        "id": "MANUAL-001/2025",
-        "numero": "001/2025",
-        "licitacao_numero": "09973/2022",
-        "processo": "123456789",
+        "id": "MANUAL-787010-011/2025",
+        "numero": "011/2025",
+        "licitacao_numero": "12345",
+        "processo": "12345",
         "fornecedor": {
-            "nome": "Teste nome da empresa manual",
-            "cnpj_cpf_idgener": "345345347895"
+            "nome": "dfgdfgdfgdfg",
+            "cnpj_cpf_idgener": "12345"
         },
-        "objeto": "OBJETO TESTE manual",
-        "valor_global": "23456.56",
-        "vigencia_inicio": "2025-11-05",
-        "vigencia_fim": "2026-11-05",
-        "tipo": "Contrato manual",
-        "modalidade": "PE manual",
+        "objeto": "sdfsfsdsdfsdfsdfs",
+        "valor_global": "12345.00",
+        "vigencia_inicio": "2025-12-02",
+        "vigencia_fim": "2025-12-02",
+        "tipo": "",
+        "modalidade": "",
         "contratante": {
             "orgao": {
                 "unidade_gestora": {
-                    "codigo": "787320",
-                    "nome_resumido": "CFB manual"
+                    "codigo": "787010",
+                    "nome_resumido": ""
                 }
-            }
+            },
+            "orgao_responsavel": ""
         },
         "manual": true,
-        "raw_json": "{\"numero\": \"001/2025\", \"licitacao_numero\": \"\", \"nup\": \"\", \"cnpj\": \"\", \"uasg\": \"787320\"}"
+        "sigla_om_resp": "",
+        "orgao_responsavel": "",
+        "raw_json": "{\"numero\": \"011/2025\", \"licitacao_numero\": \"\", \"nup\": \"\", \"cnpj\": \"\", \"uasg\": \"787010\"}",
+        "portaria": "CEIMBRA",
+        "portaria_edit": "CEIMBRA"
+    },
+    {
+        "id": "MANUAL-787010-011/2021",
+        "numero": "011/2021",
+        "licitacao_numero": "2222222222",
+        "processo": "333333333",
+        "fornecedor": {
+            "nome": "NOME EMPRESA",
+            "cnpj_cpf_idgener": "555555555"
+        },
+        "objeto": "objeto",
+        "valor_global": "444444.00",
+        "vigencia_inicio": "2025-12-03",
+        "vigencia_fim": "2028-06-30",
+        "tipo": "TIPO",
+        "modalidade": "MODALIDADE",
+        "contratante": {
+            "orgao": {
+                "unidade_gestora": {
+                    "codigo": "787010",
+                    "nome_resumido": "SIGLA OM RESP"
+                }
+            },
+            "orgao_responsavel": "ORGÃO RESPONSAVEL"
+        },
+        "manual": true,
+        "sigla_om_resp": "SIGLA OM RESP",
+        "orgao_responsavel": "ORGÃO RESPONSAVEL",
+        "raw_json": "{\"numero\": \"011/2021\", \"licitacao_numero\": \"\", \"nup\": \"\", \"cnpj\": \"\", \"uasg\": \"787010\"}",
+        "portaria": "portarrias",
+        "portaria_edit": "portarrias"
     }
 ]

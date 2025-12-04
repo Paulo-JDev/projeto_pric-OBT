@@ -50,14 +50,76 @@ def delete_registro(registro_list):
 
 def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, objeto_edit, portaria_edit, termo_aditivo_edit, radio_buttons):
     """Salva o status, registros e comentários no banco de dados SQLite."""
-    id_contrato = data.get("id", "")
+
+    # DEBUG: ver o que chega na primeira e nas próximas vezes
+    print("\n[save_status] =====================")
+    print("[save_status] data.id =", data.get("id"))
+    print("[save_status] data.numero =", data.get("numero"))
+    print("[save_status] data.manual =", data.get("manual"))
+    print("[save_status] data.contratante.orgao.unidade_gestora.codigo =",
+          data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", ""))
+
+    id_contrato = data.get("id")
     uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
 
+    # fallback só para contratos manuais: se tiver uasg_code plano, usa
+    if not uasg and data.get("uasg_code"):
+        uasg = data["uasg_code"]
+
     if not id_contrato or not uasg:
-        print("Erro: ID do contrato ou UASG não encontrado para salvar o status.")
+        print("[save_status] ERRO: ID ou UASG vazios. data completo =", data)
+        QMessageBox.critical(
+            parent,
+            "Erro ao salvar",
+            "ID do contrato ou UASG não encontrados.\n"
+            "Veja o console para detalhes (logs de [save_status])."
+        )
         return None, None
-    
-    # Salva os links (tabela separada ou update na contratos - verifique se este método não altera o objeto original)
+
+    id_contrato = str(id_contrato)
+    uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
+
+    # Se não tiver uasg_code plano, tenta puxar do dicionário
+    uasg_code_flat = data.get("uasg_code")
+    if not uasg and uasg_code_flat:
+        uasg = uasg_code_flat
+
+    # Se ainda não tiver ID, tenta recuperar pelo banco a partir de numero+uasg
+    if not id_contrato:
+        try:
+            conn_tmp = model._get_db_connection()
+            cursor_tmp = conn_tmp.cursor()
+            numero = data.get("numero")
+            if numero and uasg:
+                cursor_tmp.execute(
+                    "SELECT id FROM contratos WHERE numero = ? AND uasg_code = ?",
+                    (numero, uasg)
+                )
+                row = cursor_tmp.fetchone()
+                if row:
+                    id_contrato = row["id"]
+                    data["id"] = id_contrato  # mantém em memória
+                    print(f"[save_status] ID recuperado do DB: {id_contrato}")
+            conn_tmp.close()
+        except Exception as e:
+            print(f"[save_status] Erro ao recuperar ID do contrato pelo numero/uasg: {e}")
+
+    # Validação final
+    if not id_contrato or not uasg:
+        print("[save_status] ERRO: ID ou UASG ausentes. data atual:", data)
+        QMessageBox.critical(
+            parent,
+            "Erro ao salvar",
+            "ID do contrato ou UASG não encontrados.\n"
+            "Verifique se o contrato foi salvo corretamente no banco."
+        )
+        return None, None
+
+    # A partir daqui, usa id_contrato e uasg já validados
+    id_contrato = str(id_contrato)
+    uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
+
+    # Salva os links
     link_data = {
         "link_contrato": parent.link_contrato_le.text(),
         "link_ta": parent.link_ta_le.text(),
@@ -69,7 +131,6 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
 
     # Prepara os dados para o JSON e para as colunas
     data_registro_atual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    
     radio_options_data = {
         title: next(
             (option for option, button in radio_buttons[title].items() if button.isChecked()),
@@ -88,8 +149,7 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
     cursor = conn.cursor()
 
     try:
-        # --- LÓGICA CORRIGIDA: UPDATE SE EXISTE, INSERT SE NÃO ---
-        # Isso evita deletar o registro e perder dados, e garante que estamos mexendo na tabela certa.
+        # Salva/atualiza status_contratos
         cursor.execute("SELECT 1 FROM status_contratos WHERE contrato_id = ?", (id_contrato,))
         exists = cursor.fetchone()
 
@@ -112,23 +172,124 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (id_contrato, uasg, status_atual, txt_objeto, txt_portaria, txt_ta, radio_options_json, data_registro_atual))
 
-        # Salvar registros_status (deletar antigos e inserir novos mantém o histórico limpo na lista visual)
+        # Salvar registros_status
         cursor.execute("DELETE FROM registros_status WHERE contrato_id = ?", (id_contrato,))
         registros_texts = [registro_list.item(i).text() for i in range(registro_list.count())]
         for texto in registros_texts:
             cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (id_contrato, uasg, texto))
 
-        conn.commit()
-        print(f"Status salvo com sucesso para contrato {id_contrato}.")
-        
+        # ==================== SALVAMENTO DE DADOS DE CONTRATO MANUAL ====================
+        if data.get("manual") and hasattr(parent, "line_edits"):
+            print(f"🔄 Salvando dados manuais para o contrato {id_contrato}...")
+
+            def get_field_text(key):
+                widget = parent.line_edits.get(key)
+                if widget:
+                    if hasattr(widget, "date"):
+                        return widget.date().toString("yyyy-MM-dd")
+                    return widget.text().strip()
+                return ""
+
+            novo_valor = get_field_text("valor_global")
+            nova_empresa = get_field_text("empresa")
+            novo_cnpj = get_field_text("cnpj")
+            nova_licitacao = get_field_text("licitacao_numero")
+            novo_nup = get_field_text("processo")
+            nova_vig_inicio = get_field_text("vigencia_inicio")
+            nova_vig_fim = get_field_text("vigencia_fim")
+
+            nova_sigla = getattr(parent, "manual_sigla_om", None)
+            nova_sigla = nova_sigla.text().strip() if nova_sigla else ""
+            novo_orgao = getattr(parent, "manual_orgao", None)
+            novo_orgao = novo_orgao.text().strip() if novo_orgao else ""
+            novo_tipo = getattr(parent, "manual_tipo", None)
+            novo_tipo = novo_tipo.text().strip() if novo_tipo else ""
+            nova_modalidade = getattr(parent, "manual_modalidade", None)
+            nova_modalidade = nova_modalidade.text().strip() if nova_modalidade else ""
+
+            try:
+                raw_json_str = data.get("raw_json", "{}")
+                if isinstance(raw_json_str, str) and raw_json_str:
+                    current_json = json.loads(raw_json_str)
+                else:
+                    current_json = {}
+
+                # GARANTE campos críticos intactos
+                current_json["id"] = id_contrato                    # força manter id manual
+                current_json["manual"] = True                       # marca sempre como manual
+
+                # Garante estrutura contratante/orgao/unidade_gestora
+                if "contratante" not in current_json:
+                    current_json["contratante"] = {"orgao": {"unidade_gestora": {}}}
+                if "orgao" not in current_json["contratante"]:
+                    current_json["contratante"]["orgao"] = {"unidade_gestora": {}}
+                if "unidade_gestora" not in current_json["contratante"]["orgao"]:
+                    current_json["contratante"]["orgao"]["unidade_gestora"] = {}
+
+                ug = current_json["contratante"]["orgao"]["unidade_gestora"]
+                ug["codigo"] = uasg
+                # se não tiver sigla nova, mantém antiga
+                ug["nome_resumido"] = nova_sigla or ug.get("nome_resumido", "")
+
+                # Atualiza os campos que o usuário pode editar
+                current_json["numero"] = data.get("numero")          # não mexe, só reafirma
+                current_json["valor_global"] = novo_valor
+                current_json["licitacao_numero"] = nova_licitacao
+                current_json["processo"] = novo_nup
+                current_json["vigencia_inicio"] = nova_vig_inicio
+                current_json["vigencia_fim"] = nova_vig_fim
+                current_json["tipo"] = novo_tipo
+                current_json["modalidade"] = nova_modalidade
+                current_json["sigla_om"] = nova_sigla
+                current_json["orgao_responsavel"] = novo_orgao
+                current_json["objeto"] = txt_objeto
+                current_json["contratante_orgao_unidade_gestora_nome_resumido"] = nova_sigla
+
+                if "fornecedor" not in current_json or not isinstance(current_json["fornecedor"], dict):
+                    current_json["fornecedor"] = {}
+                current_json["fornecedor"]["nome"] = nova_empresa
+                current_json["fornecedor"]["cnpj_cpf_idgener"] = novo_cnpj
+
+                new_raw_json = json.dumps(current_json, ensure_ascii=False)
+
+                cursor.execute("""
+                    UPDATE contratos
+                    SET 
+                        valor_global = ?,
+                        fornecedor_nome = ?,
+                        fornecedor_cnpj = ?,
+                        licitacao_numero = ?,
+                        processo = ?,
+                        vigencia_inicio = ?,
+                        vigencia_fim = ?,
+                        tipo = ?,
+                        modalidade = ?,
+                        objeto = ?,
+                        contratante_orgao_unidade_gestora_nome_resumido = ?,
+                        raw_json = ?
+                    WHERE id = ?
+                """, (
+                    novo_valor, nova_empresa, novo_cnpj,
+                    nova_licitacao, novo_nup,
+                    nova_vig_inicio, nova_vig_fim,
+                    novo_tipo, nova_modalidade,
+                    txt_objeto, nova_sigla, new_raw_json,
+                    id_contrato
+                ))
+                print(f"✅ Dados manuais atualizados para o contrato {id_contrato}")
+            except Exception as e_json:
+                print(f"❌ Erro ao atualizar JSON/colunas manuais: {e_json}")
+
+            conn.commit()
+            print(f"✅ Status salvo com sucesso para contrato {id_contrato}.")
+
     except sqlite3.Error as e:
-        print(f"Erro ao salvar status no banco de dados: {e}")
+        print(f"❌ Erro ao salvar status no banco de dados: {e}")
         conn.rollback()
     finally:
         conn.close()
 
     save_fiscalizacao(model, id_contrato, parent)
-    
     return id_contrato, uasg
 
 def show_success_message(parent):
@@ -154,6 +315,7 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
     conn = model._get_db_connection()
     cursor = conn.cursor()
 
+    # Carrega os links
     links = model.get_contract_links(id_contrato)
     if links:
         parent_dialog.link_contrato_le.setText(links.get("link_contrato", ""))
@@ -164,22 +326,21 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
 
     try:
         # Carregar status_contratos
-        cursor.execute("SELECT status, objeto_editado, portaria_edit, termo_aditivo_edit,radio_options_json FROM status_contratos WHERE contrato_id = ?", (id_contrato,))
+        cursor.execute("SELECT status, objeto_editado, portaria_edit, termo_aditivo_edit, radio_options_json FROM status_contratos WHERE contrato_id = ?", (id_contrato,))
         status_row = cursor.fetchone()
 
-        # Objeto Original (sempre seguro usar data.get aqui, pois data vem da tabela 'contratos')
         objeto_original = data.get("objeto", "Não informado")
 
         if status_row:
             status_dropdown.setCurrentText(status_row['status'] or "")
+
             if objeto_edit is not None:
-                # Se houver algo salvo em 'objeto_editado', usa. Se for NULL ou vazio, usa o original.
                 texto_salvo = status_row['objeto_editado']
                 if texto_salvo:
                     objeto_edit.setText(texto_salvo)
                 else:
                     objeto_edit.setText(objeto_original)
-            
+
             if portaria_edit is not None:
                 portaria_edit.setText(status_row['portaria_edit'] or "")
 
@@ -195,25 +356,99 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
                 except json.JSONDecodeError:
                     print(f"Erro ao decodificar radio_options_json para contrato {id_contrato}")
         else:
-            # Se não houver status salvo, usar o objeto original
             if objeto_edit is not None:
-                objeto_edit.setText(data.get("objeto", "Não informado"))
+                objeto_edit.setText(objeto_original)
 
         # Carregar registros_status
         if registro_list is not None:
-            registro_list.clear() # Limpa a lista antes de adicionar
+            registro_list.clear()
             cursor.execute("SELECT texto FROM registros_status WHERE contrato_id = ?", (id_contrato,))
-            registros_encontrados = cursor.fetchall() # Busca todos
-            #print(f"[load_status] Encontrados {len(registros_encontrados)} registros para o contrato {id_contrato}") # Depuração
+            registros_encontrados = cursor.fetchall()
             for row in registros_encontrados:
                 item = QListWidgetItem(row['texto'])
                 item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 item.setCheckState(Qt.CheckState.Unchecked)
                 registro_list.addItem(item)
-            registro_list.clearSelection() # Remove qualquer seleção residual
-        else:
-            print("[load_status] Aviso: registro_list é None.")
-        
+            registro_list.clearSelection()
+
+        # ==================== CARREGAMENTO DE DADOS DE CONTRATO MANUAL ====================
+        if data.get("manual") and hasattr(parent_dialog, "line_edits"):
+            print(f"🔄 Carregando dados do contrato manual {id_contrato}...")
+
+            # Busca os dados atualizados diretamente do banco
+            cursor.execute("""
+                SELECT valor_global, fornecedor_nome, fornecedor_cnpj, 
+                       licitacao_numero, processo, vigencia_inicio, vigencia_fim,
+                       tipo, modalidade, contratante_orgao_unidade_gestora_nome_resumido, 
+                       objeto, raw_json
+                FROM contratos WHERE id = ?
+            """, (id_contrato,))
+            contract_row = cursor.fetchone()
+
+            if contract_row:
+                def set_manual_field(key, val):
+                    widget = parent_dialog.line_edits.get(key)
+                    if widget and val:
+                        if hasattr(widget, "setDate"):
+                            from PyQt6.QtCore import QDate
+                            try:
+                                parts = str(val).split('-')
+                                if len(parts) == 3:
+                                    widget.setDate(QDate(int(parts[0]), int(parts[1]), int(parts[2])))
+                            except:
+                                pass
+                        elif hasattr(widget, "setText"):
+                            widget.setText(str(val))
+
+                # Preenche os campos da interface
+                set_manual_field("valor_global", contract_row['valor_global'])
+                set_manual_field("empresa", contract_row['fornecedor_nome'])
+                set_manual_field("cnpj", contract_row['fornecedor_cnpj'])
+                set_manual_field("licitacao_numero", contract_row['licitacao_numero'])
+                set_manual_field("processo", contract_row['processo'])
+                set_manual_field("vigencia_inicio", contract_row['vigencia_inicio'])
+                set_manual_field("vigencia_fim", contract_row['vigencia_fim'])
+
+                # Preenche campos de gestão
+                if getattr(parent_dialog, "manual_tipo", None):
+                    parent_dialog.manual_tipo.setText(contract_row['tipo'] or "")
+                if getattr(parent_dialog, "manual_modalidade", None):
+                    parent_dialog.manual_modalidade.setText(contract_row['modalidade'] or "")
+                if getattr(parent_dialog, "manual_sigla_om", None):
+                    parent_dialog.manual_sigla_om.setText(contract_row['contratante_orgao_unidade_gestora_nome_resumido'] or "")
+
+                # Tenta recuperar Órgão Responsável do raw_json
+                if getattr(parent_dialog, "manual_orgao", None) and contract_row['raw_json']:
+                    try:
+                        json_data = json.loads(contract_row['raw_json'])
+                        orgao_resp = json_data.get("orgao_responsavel", "")
+                        parent_dialog.manual_orgao.setText(orgao_resp)
+                    except:
+                        pass
+
+                # IMPORTANTE: Atualiza o dicionário data com os valores do banco
+                # mas SEM sobrescrever o ID e a estrutura principal
+                data["valor_global"] = contract_row['valor_global'] or ""
+                data["objeto"] = contract_row['objeto'] or objeto_original
+
+                if "fornecedor" not in data:
+                    data["fornecedor"] = {}
+                data["fornecedor"]["nome"] = contract_row['fornecedor_nome'] or ""
+                data["fornecedor"]["cnpj_cpf_idgener"] = contract_row['fornecedor_cnpj'] or ""
+
+                data["licitacao_numero"] = contract_row['licitacao_numero'] or ""
+                data["processo"] = contract_row['processo'] or ""
+                data["vigencia_inicio"] = contract_row['vigencia_inicio'] or ""
+                data["vigencia_fim"] = contract_row['vigencia_fim'] or ""
+                data["tipo"] = contract_row['tipo'] or ""
+                data["modalidade"] = contract_row['modalidade'] or ""
+
+                if "contratante" not in data:
+                    data["contratante"] = {"orgao": {"unidade_gestora": {}}}
+                data["contratante"]["orgao"]["unidade_gestora"]["nome_resumido"] = contract_row['contratante_orgao_unidade_gestora_nome_resumido'] or ""
+
+                print(f"✅ Dados do contrato manual {id_contrato} carregados e sincronizados com o dicionário data!")
+
         if status_row:
             print(f"Status, registros e comentários para o contrato {id_contrato} carregados do banco de dados.")
         else:
@@ -225,7 +460,7 @@ def load_status(data, model: UASGModel, status_dropdown, objeto_edit, portaria_e
         print(f"Erro inesperado ao carregar status para contrato {id_contrato}, UASG {uasg}: {e}")
     finally:
         conn.close()
-    
+
     load_fiscalizacao(model, id_contrato, parent_dialog)
 
 def copy_to_clipboard(line_edit):

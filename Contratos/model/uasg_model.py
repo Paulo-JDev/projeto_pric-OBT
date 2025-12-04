@@ -1,3 +1,5 @@
+# Contratos/model/uasg_model.py
+
 import os
 import sys
 import json

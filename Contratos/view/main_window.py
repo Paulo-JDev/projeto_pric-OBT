@@ -1,3 +1,5 @@
+# Contratos/view/main_window.py
+
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QLineEdit, QPushButton,
     QHeaderView, QGridLayout, QMenu, QTableView, QMessageBox, QHBoxLayout, QFrame, QSizePolicy

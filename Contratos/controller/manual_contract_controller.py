@@ -162,7 +162,10 @@ class ManualContractController:
     
     # ==================== EXPORTAR CONTRATOS ====================
     def export_manual_contracts(self):
-        """Exporta apenas contratos manuais para JSON"""
+        """
+        Exporta contratos manuais para JSON, incluindo dados extras como Portaria 
+        que podem estar na tabela de status.
+        """
         file_path, _ = QFileDialog.getSaveFileName(
             self.main_window,
             "Exportar Contratos Manuais",
@@ -174,27 +177,44 @@ class ManualContractController:
             return
         
         try:
-            # Busca apenas contratos manuais
             conn = self.model._get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT raw_json FROM contratos WHERE manual = 1")
+            
+            # Busca o JSON base do contrato e a portaria da tabela de status
+            query = """
+            SELECT 
+                c.raw_json,
+                s.portaria_edit
+            FROM contratos c
+            LEFT JOIN status_contratos s ON c.id = s.contrato_id
+            WHERE c.manual = 1
+            """
+            
+            cursor.execute(query)
             rows = cursor.fetchall()
             conn.close()
             
-            # Converte para lista de dicionários
-            contratos = [json.loads(row["raw_json"]) for row in rows]
+            contratos_exportacao = []
+            
+            for row in rows:
+                # Carrega o JSON base
+                contrato_dict = json.loads(row["raw_json"])
+                
+                contratos_exportacao.append(contrato_dict)
             
             # Salva no arquivo
             with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(contratos, f, ensure_ascii=False, indent=4)
+                json.dump(contratos_exportacao, f, ensure_ascii=False, indent=4)
             
             QMessageBox.information(
                 self.main_window,
                 "Exportação Concluída",
-                f"{len(contratos)} contratos manuais exportados para:\n{file_path}"
+                f"{len(contratos_exportacao)} contratos manuais exportados com sucesso!\n(Incluindo Portarias e dados extras)"
             )
             
         except Exception as e:
+            import traceback
+            print(traceback.format_exc())
             QMessageBox.critical(
                 self.main_window,
                 "Erro",

@@ -60,20 +60,20 @@ class HelpDialog(QDialog):
         # --- LISTA DE PERGUNTAS E RESPOSTAS ---
         # Você pode adicionar mais itens a esta lista
         faq_data = [
-            ("Como faço para cadastrar um novo Contrato?", 
-             "Vá até a aba 'Gestão de Contratos', selecione a UASG desejada e clique no botão 'Adicionar Contrato'. Preencha os dados obrigatórios e salve."),
-            
-            ("Onde ficam salvos os Backups?", 
-             "Os backups são salvos na pasta 'backups' dentro do diretório de instalação do sistema. Você pode alterar este local nas configurações de Backup."),
-            
-            ("Não consigo visualizar as Atas, o que fazer?", 
-             "Verifique se você selecionou o ano correto no filtro da tela de Atas. Se o problema persistir, verifique a conexão com o banco de dados."),
-            
-            ("Como exportar um relatório para PDF?", 
-             "Na visualização da tabela (Contratos ou Atas), clique com o botão direito sobre o registro ou utilize o ícone de PDF na barra de ferramentas superior."),
-             
-            ("O sistema está lento ao carregar dados.", 
-             "Isso pode ocorrer se houver muitos registros. Tente utilizar os filtros de busca para limitar a quantidade de dados exibidos na tela.")
+            ("Como utilizo o sistema sem internet (Modo Offline)?", 
+            "Primeiro, em um PC com internet, vá em 'Configurações' (engrenagem), digite a UASG e clique em 'Fazer DB'. Depois, ative o botão 'Modo de Obtenção de Dados' para a cor VERMELHA (Offline) para usar os dados baixados."),
+
+            ("Como faço backup do meu trabalho (Status e Fiscais)?", 
+            "Na aba 'Buscar UASG', clique no botão 'Status' e escolha 'Exportar Status (Backup)'. Isso gera um arquivo .json com suas edições. Para restaurar em outro computador, use a opção 'Importar Status'."),
+
+            ("Posso mudar o local onde o Banco de Dados é salvo?", 
+            "Sim. Vá em 'Configurações' e clique em 'Alterar Local...'. Você pode escolher uma nova pasta e o sistema perguntará se deseja copiar seus dados atuais ou criar um banco novo do zero."),
+
+            ("Como cadastro um Contrato Manual antigo?", 
+            "Recomendamos carregar a UASG primeiro. Depois, clique no botão 'Contrato Manual' (+) na aba inicial. É obrigatório preencher o Número do Contrato e a UASG para salvar."),
+
+            ("Por que minhas alterações no contrato não foram salvas?", 
+            "Para confirmar qualquer edição (objeto, fiscais, status), você deve obrigatoriamente clicar no botão 'SALVAR' no canto inferior direito da janela de detalhes antes de fechá-la.")
         ]
 
         for pergunta, resposta in faq_data:
