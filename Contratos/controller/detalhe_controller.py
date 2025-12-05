@@ -51,46 +51,17 @@ def delete_registro(registro_list):
 def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, objeto_edit, portaria_edit, termo_aditivo_edit, radio_buttons):
     """Salva o status, registros e comentários no banco de dados SQLite."""
 
-    # DEBUG: ver o que chega na primeira e nas próximas vezes
-    print("\n[save_status] =====================")
-    print("[save_status] data.id =", data.get("id"))
-    print("[save_status] data.numero =", data.get("numero"))
-    print("[save_status] data.manual =", data.get("manual"))
-    print("[save_status] data.contratante.orgao.unidade_gestora.codigo =",
-          data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", ""))
-
     id_contrato = data.get("id")
-    uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
+    uasg_nested = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
+    uasg = uasg_nested or data.get("uasg_code", "")
 
-    # fallback só para contratos manuais: se tiver uasg_code plano, usa
-    if not uasg and data.get("uasg_code"):
-        uasg = data["uasg_code"]
-
-    if not id_contrato or not uasg:
-        print("[save_status] ERRO: ID ou UASG vazios. data completo =", data)
-        QMessageBox.critical(
-            parent,
-            "Erro ao salvar",
-            "ID do contrato ou UASG não encontrados.\n"
-            "Veja o console para detalhes (logs de [save_status])."
-        )
-        return None, None
-
-    id_contrato = str(id_contrato)
-    uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
-
-    # Se não tiver uasg_code plano, tenta puxar do dicionário
-    uasg_code_flat = data.get("uasg_code")
-    if not uasg and uasg_code_flat:
-        uasg = uasg_code_flat
-
-    # Se ainda não tiver ID, tenta recuperar pelo banco a partir de numero+uasg
-    if not id_contrato:
+    # Se é contrato MANUAL e está sem id, tenta descobrir no banco
+    if data.get("manual") and not id_contrato and uasg:
         try:
             conn_tmp = model._get_db_connection()
             cursor_tmp = conn_tmp.cursor()
             numero = data.get("numero")
-            if numero and uasg:
+            if numero:
                 cursor_tmp.execute(
                     "SELECT id FROM contratos WHERE numero = ? AND uasg_code = ?",
                     (numero, uasg)
@@ -98,26 +69,23 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
                 row = cursor_tmp.fetchone()
                 if row:
                     id_contrato = row["id"]
-                    data["id"] = id_contrato  # mantém em memória
-                    print(f"[save_status] ID recuperado do DB: {id_contrato}")
+                    data["id"] = id_contrato
+                    print(f"[save_status] ID manual recuperado do DB: {id_contrato}")
             conn_tmp.close()
         except Exception as e:
-            print(f"[save_status] Erro ao recuperar ID do contrato pelo numero/uasg: {e}")
+            print(f"[save_status] Erro ao recuperar ID manual: {e}")
 
-    # Validação final
+    # Validação única
     if not id_contrato or not uasg:
-        print("[save_status] ERRO: ID ou UASG ausentes. data atual:", data)
+        print("[save_status] ERRO: ID ou UASG vazios. data =", data)
         QMessageBox.critical(
             parent,
             "Erro ao salvar",
-            "ID do contrato ou UASG não encontrados.\n"
-            "Verifique se o contrato foi salvo corretamente no banco."
+            "ID do contrato ou UASG não encontrados."
         )
         return None, None
 
-    # A partir daqui, usa id_contrato e uasg já validados
     id_contrato = str(id_contrato)
-    uasg = data.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo", "")
 
     # Salva os links
     link_data = {
@@ -280,8 +248,8 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
             except Exception as e_json:
                 print(f"❌ Erro ao atualizar JSON/colunas manuais: {e_json}")
 
-            conn.commit()
-            print(f"✅ Status salvo com sucesso para contrato {id_contrato}.")
+        conn.commit()
+        print(f"✅ Status salvo com sucesso para contrato {id_contrato}.")
 
     except sqlite3.Error as e:
         print(f"❌ Erro ao salvar status no banco de dados: {e}")

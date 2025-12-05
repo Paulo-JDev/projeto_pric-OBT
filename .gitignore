@@ -44,12 +44,15 @@ DB_offline/
 Thumbs.db
 dist/
 
+# Aquivos Json
+teste.json
+jsons/
+
 # I don't know about this past -> /config
 *.log
 app.py
 m_requirements.txt
 dist-linux/
-teste.json
 *.spec
 LICENSE.txt
 testes.py
