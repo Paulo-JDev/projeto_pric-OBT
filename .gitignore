@@ -48,6 +48,10 @@ dist/
 teste.json
 jsons/
 
+#Imagens
+*.gif
+gifs/
+
 # I don't know about this past -> /config
 *.log
 app.py

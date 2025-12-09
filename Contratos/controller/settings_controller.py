@@ -6,7 +6,8 @@ from Contratos.view.settings_dialog import SettingsDialog
 from Contratos.model.offline_db_model import OfflineDBController
 from pathlib import Path
 import shutil
-
+import os
+import sys
 
 class SettingsController(QObject):
     mode_changed = pyqtSignal(str)
@@ -24,6 +25,7 @@ class SettingsController(QObject):
         self.view.change_db_path_button.clicked.connect(self._change_db_path)  # ✅ ATUALIZADO
         self.view.create_db_button.clicked.connect(self.run_create_offline_db)
         self.view.delete_db_button.clicked.connect(self.run_delete_offline_db)
+        self.view.btn_abrir_local_db.clicked.connect(self.open_db_path)
         
         self._load_initial_state()
     
@@ -210,3 +212,25 @@ class SettingsController(QObject):
             self.offline_db_model.delete_uasg_from_db(uasg)
             QMessageBox.information(self.view, "Concluído", f"Os dados da UASG {uasg} foram removidos.")
             self.database_updated.emit()
+
+    def open_db_path(self):
+        """Abre a pasta onde o banco de dados está salvo no explorador de arquivos."""
+        db_file_path = self.model.get_current_db_path()
+
+        if db_file_path and os.path.exists(db_file_path):
+            # Extrai o diretório (pasta) do caminho completo do arquivo
+            folder_path = os.path.dirname(db_file_path)
+            
+            try:
+                if sys.platform == "win32":
+                    os.startfile(folder_path)  # Abre a pasta no Windows Explorer
+                elif sys.platform == "darwin":  # macOS
+                    subprocess.Popen(["open", folder_path])
+                else:  # Linux
+                    subprocess.Popen(["xdg-open", folder_path])
+            except Exception as e:
+                QMessageBox.critical(self.view, "Erro", f"Não foi possível abrir a pasta:\n{e}")
+        else:
+            QMessageBox.warning(self.view, "Local Inválido",
+                            "O local do banco de dados não está definido ou não existe mais.")
+                            

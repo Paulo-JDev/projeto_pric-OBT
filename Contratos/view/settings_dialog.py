@@ -45,11 +45,23 @@ class SettingsDialog(QDialog):
         """)
         db_path_layout.addWidget(self.db_path_label)
         
-        # Botão para alterar o caminho
         self.change_db_path_button = QPushButton("Alterar Local...")
         self.change_db_path_button.setIcon(icon_manager.get_icon("open_icon"))
-        self.change_db_path_button.setObjectName("header_button")  # ✅ Usa o estilo do tema
-        db_path_layout.addWidget(self.change_db_path_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.change_db_path_button.setObjectName("header_button")
+
+        self.btn_abrir_local_db = QPushButton("Abrir Local")
+        self.btn_abrir_local_db.setToolTip("Abrir a pasta de backup selecionada")
+        self.btn_abrir_local_db.setIcon(icon_manager.get_icon("folder128"))
+        self.btn_abrir_local_db.setObjectName("header_button")
+
+        # Cria layout horizontal para os botões ficarem lado a lado
+        buttons_layout = QHBoxLayout()
+        buttons_layout.addWidget(self.change_db_path_button)
+        buttons_layout.addStretch()  # Empurra os botões para as extremidades
+        buttons_layout.addWidget(self.btn_abrir_local_db)
+
+        # Adiciona o layout de botões ao layout principal
+        db_path_layout.addLayout(buttons_layout)
         
         # ✅ Texto explicativo com estilo dark mode
         info_label = QLabel(
