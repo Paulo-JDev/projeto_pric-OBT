@@ -75,9 +75,12 @@ class InfoDialog(QDialog):
         welcome_layout.addLayout(features_grid)
         welcome_layout.addStretch()
 
-        footer_label = QLabel("Para mais informações, entre em contato pelo e-mail: <b>obtencaoceimbra@gmail.com</b>")
+        footer_label = QLabel('Para mais informações, entre em contato pelo e-mail: <a href="mailto:obtencaoceimbra@gmail.com" ' \
+        'style="color: #4A9EFF; text-decoration: none;">obtencaoceimbra@gmail.com</a>')
         footer_label.setStyleSheet("font-size: 12px; color: #ccc; margin-top: 20px;")
         footer_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        footer_label.setOpenExternalLinks(True)  # Permite abrir o link
+        footer_label.setTextFormat(Qt.TextFormat.RichText)  # Habilita HTML
         welcome_layout.addWidget(footer_label)
         # --- FIM DO CONTEÚDO MOVIDO ---
 
