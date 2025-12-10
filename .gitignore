@@ -51,6 +51,7 @@ jsons/
 #Imagens
 *.gif
 gifs/
+imgs/
 
 # I don't know about this past -> /config
 *.log
