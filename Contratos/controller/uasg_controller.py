@@ -1,3 +1,4 @@
+import os
 from Contratos.view.main_window import MainWindow
 from Contratos.model.uasg_model import UASGModel
 from utils.utils import refresh_uasg_menu
@@ -469,6 +470,37 @@ class UASGController:
                 QMessageBox.critical(self.view, "Erro de Importação", "Arquivo JSON inválido ou corrompido.")
             except Exception as e:
                 QMessageBox.critical(self.view, "Erro ao Importar", f"Não foi possível importar os dados: {e}")
+
+    # ==================== MÉTODOS PARA AUTOMAÇÃO (SILENCIOSOS) ====================
+
+    def export_status_to_path(self, file_path):
+        """Exporta status para um caminho específico sem abrir diálogo."""
+        all_status_data = self.model.get_all_status_data()
+        if all_status_data:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(all_status_data, f, ensure_ascii=False, indent=4)
+            return True
+        return False
+
+    def import_status_from_path(self, file_path):
+        """Importa status de um caminho específico sem abrir diálogo."""
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            self.model.import_statuses(data)
+            self.load_saved_uasgs()
+            self.populate_previsualization_table()
+            return True
+        return False
+
+    def export_manual_contracts_to_path(self, file_path):
+        """Chama o ManualContractController para exportar contratos manuais para um path."""
+        # Supondo que seu ManualContractController tenha ou precise desta lógica:
+        return self.manual_contract_ctrl.export_to_path(file_path)
+
+    def import_manual_contracts_from_path(self, file_path):
+        """Chama o ManualContractController para importar contratos manuais de um path."""
+        return self.manual_contract_ctrl.import_from_path(file_path)
 
 # =========================================== Método para exportar a tabela para um arquivo Excel =================================================
     def _calculate_dias_restantes(self, vigencia_fim_str):

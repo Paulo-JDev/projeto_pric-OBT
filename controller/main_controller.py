@@ -7,6 +7,7 @@ from Contratos.controller.uasg_controller import UASGController
 from atas.view.atas_view import AtasView
 from atas.controller.atas_controller import AtasController
 from atas.model.atas_model import AtasModel
+from auto.controller.auto_controller import AutoController
 
 # --- Importações Adicionadas ---
 from view.info_dialog import InfoDialog
@@ -37,6 +38,7 @@ class MainController:
         self.view.info_button.clicked.connect(self.show_info_dialog)
         self.view.backup_button.clicked.connect(self.show_backup_dialog)
         self.view.help_button.clicked.connect(self.show_help_dialog)
+        self.view.automation_button.clicked.connect(self.show_automation_dialog)
         # --- Fim das novas conexões ---
 
     def switch_module(self, index):
@@ -57,6 +59,11 @@ class MainController:
         # O controlador de backup gerencia sua própria view
         self.backup_controller = BackupController(self.view)
         self.backup_controller.show()
+
+    def show_automation_dialog(self):
+        """Abre a janela do módulo de Automações."""
+        self.auto_controller = AutoController(self.view, self.base_dir, self.contratos_controller)
+        self.auto_controller.show()
 
     def show_help_dialog(self):
         dialog = HelpDialog(self.view)

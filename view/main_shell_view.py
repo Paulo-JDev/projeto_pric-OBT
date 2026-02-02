@@ -70,6 +70,14 @@ class MainShellView(QMainWindow):
         self.backup_button.setStyleSheet("font-size: 16px; font-weight: bold;")
         welcome_layout.addWidget(self.backup_button)
 
+        # Botão Automações
+        self.automation_button = QPushButton(" Automações")
+        self.automation_button.setIcon(icon_manager.get_icon("automation")) 
+        self.automation_button.setIconSize(QSize(32, 32))
+        self.automation_button.setFixedSize(300, 80)
+        self.automation_button.setStyleSheet("font-size: 16px; font-weight: bold;")
+        welcome_layout.addWidget(self.automation_button)
+
         # Botão de Ajuda
         self.help_button = QPushButton(" Ajuda e Suporte")
         self.help_button.setIcon(icon_manager.get_icon("ajuda_more")) # Ícone de Ajuda

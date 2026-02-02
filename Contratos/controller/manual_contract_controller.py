@@ -7,6 +7,7 @@ Responsável por adicionar, exportar e importar contratos manuais.
 
 import json
 from datetime import datetime
+import os
 from PyQt6.QtWidgets import QMessageBox, QFileDialog, QDialog
 from Contratos.view.detalhes_manual.manual_contract_dialog import ManualContractDialog
 from Contratos.view.detalhes_manual.manual_contract_form import ManualContractForm
@@ -272,3 +273,52 @@ class ManualContractController:
                 "Erro",
                 f"Erro ao importar contratos:\n{str(e)}"
             )
+
+# ==================== MÉTODOS PARA AUTOMAÇÃO (SILENCIOSOS) ====================
+
+    def export_to_path(self, file_path):
+        """Exporta contratos manuais para um caminho específico sem abrir diálogo."""
+        try:
+            conn = self.model._get_db_connection()
+            cursor = conn.cursor()
+            
+            query = """
+            SELECT c.raw_json FROM contratos c WHERE c.manual = 1
+            """
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            conn.close()
+            
+            contratos_exportacao = [json.loads(row["raw_json"]) for row in rows]
+            
+            if contratos_exportacao:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(contratos_exportacao, f, ensure_ascii=False, indent=4)
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ Erro na exportação automática de manuais: {e}")
+            return False
+
+    def import_from_path(self, file_path):
+        """Importa contratos manuais de um caminho específico sem abrir diálogo."""
+        if not os.path.exists(file_path):
+            return False
+            
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                contratos = json.load(f)
+            
+            por_uasg = {}
+            for contrato in contratos:
+                uasg = contrato.get("contratante", {}).get("orgao", {}).get("unidade_gestora", {}).get("codigo")
+                if uasg:
+                    contrato["manual"] = True
+                    por_uasg.setdefault(uasg, []).append(contrato)
+            
+            for uasg, lista in por_uasg.items():
+                self.model.save_uasg_data(uasg, lista)
+            return True
+        except Exception as e:
+            print(f"❌ Erro na importação automática de manuais: {e}")
+            return False
