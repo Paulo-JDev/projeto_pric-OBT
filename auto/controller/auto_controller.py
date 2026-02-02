@@ -53,10 +53,25 @@ class AutoController:
                 self.view.log(f"Backup local salvo em: {dest_bkp}")
 
             # --- PASSO 4: Troca da Base ---
-            self.view.log("Substituindo banco de dados antigo pela nova versão...")
-            # Caminho oficial do DB do projeto
+            self.view.log("Encerrando conexões com o banco de dados...")
+            
+            # 1. Comando crucial para liberar o arquivo no SQLAlchemy
+            from Contratos.model.database import engine
+            if engine:
+                engine.dispose() 
+            
+            self.view.log("Substituindo arquivo de Banco de Dados...")
             current_db_path = os.path.join(self.base_dir, "database", "gerenciador_uasg.db")
-            self.model.replace_database(new_db, current_db_path)
+            
+            # Tentativa de substituição com tratamento de erro específico para arquivo travado
+            try:
+                self.model.replace_database(new_db, current_db_path)
+            except PermissionError:
+                self.view.log("❌ ERRO: O arquivo ainda está travado pelo sistema.")
+                QMessageBox.critical(self.view, "Erro de Permissão", 
+                    "Não foi possível substituir o banco. O arquivo 'gerenciador_uasg.db' está sendo usado por outro processo.\n\n"
+                    "Tente fechar o programa e abrir novamente, ou verifique se o Gerenciador de Tarefas tem algum processo Python pendente.")
+                return
 
             # --- PASSO 5: Reinicialização e Restauração ---
             self.view.log("Conectando à nova base e restaurando dados preservados...")

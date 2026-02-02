@@ -21,6 +21,10 @@ class AutoModel:
 
     def replace_database(self, new_db_path, current_db_path):
         """Substitui o arquivo .db atual pelo novo selecionado."""
+        import gc
+        # Força o coletor de lixo a limpar objetos de conexão perdidos
+        gc.collect() 
+        
         if os.path.exists(current_db_path):
             os.remove(current_db_path)
         shutil.copy2(new_db_path, current_db_path)
