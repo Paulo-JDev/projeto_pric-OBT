@@ -16,6 +16,7 @@ class AutoDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Gerenciador de Automações")
+        self.setWindowIcon(icon_manager.get_icon("automation"))
         self.setMinimumSize(650, 500)
         
         # Layout Principal
@@ -35,7 +36,6 @@ class AutoDialog(QDialog):
             #automation_frame {
                 border: 1px solid #3d3d3d;
                 border-radius: 10px;
-                background-color: #2b2b2b;
             }
         """)
         db_layout = QVBoxLayout(self.db_group)

@@ -34,7 +34,14 @@ class IconManager:
             print(f"[AVISO] Ícone não encontrado: {icon_path}")
             return QIcon()  # Ícone vazio (não quebra o programa)
         return QIcon(str(icon_path))
-
+    
+    def got_ico(self, icon_name):
+        """Retorna um QIcon pelo nome do arquivo (sem extensão)."""
+        icon_path = self.icons_dir / f"{icon_name}.ico"
+        if not icon_path.exists():
+            print(f"[AVISO] Ícone não encontrado: {icon_path}")
+            return QIcon()  # Ícone vazio (não quebra o programa)
+        return QIcon(str(icon_path))
 
 # Cria uma instância global para usar em todo o projeto
 icon_manager = IconManager()

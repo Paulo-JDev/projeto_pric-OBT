@@ -16,6 +16,7 @@ class MainShellView(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("CA 360 - Interface Principal")
+        self.setWindowIcon(icon_manager.got_ico("mn"))
         self.setGeometry(100, 100, 1280, 720)
         self.setMinimumSize(1024, 600)
 
