@@ -21,7 +21,7 @@ from view.main_shell_view import MainShellView
 from controller.main_controller import MainController
 from utils.utils import resource_path
 
-APP_VERSION = "9.5.6"
+APP_VERSION = "9.6.6"
 
 def setup_logging(base_dir):
     # (Sua função de logging continua a mesma)

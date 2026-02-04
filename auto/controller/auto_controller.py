@@ -7,17 +7,32 @@ from auto.model.auto_model import AutoModel
 from auto.view.auto_dialog import AutoDialog
 from Contratos.model.database import init_database
 
+from integration.controller.trello_controller import TrelloController
+from integration.model.trello_model import TrelloModel
+
 class AutoController:
     def __init__(self, parent_view, base_dir, contratos_controller):
         self.model = AutoModel(base_dir)
         self.view = AutoDialog(parent_view)
         self.contratos_controller = contratos_controller
         self.base_dir = base_dir
-
-        # Conectar botão da view
-        self.view.btn_start_db_auto.clicked.connect(self.run_database_automation)
-
+        
     def show(self):
+        # 1. Instanciamos o Model do Trello
+        trello_model = TrelloModel()
+        
+        # 2. Instanciamos o Controller do Trello PASSANDO a aba que está dentro da view
+        # e o controlador de contratos
+        self.trello_integration = TrelloController(
+            self.view.trello_tab, 
+            trello_model, 
+            self.contratos_controller
+        )
+        
+        # 3. Conecta o botão de banco de dados (que pertence a este AutoController)
+        self.view.btn_start_db_auto.clicked.connect(self.run_database_automation)
+        
+        # 4. Exibe a janela
         self.view.exec()
 
     def run_database_automation(self):

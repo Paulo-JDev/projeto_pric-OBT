@@ -2,34 +2,59 @@
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
-    QPlainTextEdit, QFrame, QProgressBar
+    QPlainTextEdit, QFrame, QTabWidget, QWidget
 )
 from PyQt6.QtCore import Qt, QSize
 from utils.icon_loader import icon_manager
 from datetime import datetime
+from integration.view.trello_tab import TrelloTab
 
 class AutoDialog(QDialog):
-    """
-    Interface gráfica para o módulo de Automações.
-    Centraliza todas as tarefas repetitivas do sistema.
-    """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Gerenciador de Automações")
+        self.setWindowTitle("Central de Automações")
         self.setWindowIcon(icon_manager.get_icon("automation"))
-        self.setMinimumSize(650, 500)
+        self.setMinimumSize(800, 600)
         
-        # Layout Principal
-        self.layout = QVBoxLayout(self)
-        self.layout.setSpacing(15)
-        self.layout.setContentsMargins(25, 25, 25, 25)
+        # Layout Principal da Janela
+        self.main_layout = QVBoxLayout(self)
+        
+        # Cabeçalho Principal (Fica fixo acima das abas)
+        self.header_title = QLabel("Automações do Sistema")
+        self.header_title.setStyleSheet("font-size: 22px; font-weight: bold; color: #8AB4F7;")
+        self.main_layout.addWidget(self.header_title)
 
-        # Cabeçalho do Módulo
-        self.header_label = QLabel("Automações do Sistema")
-        self.header_label.setStyleSheet("font-size: 22px; font-weight: bold; color: #8AB4F7;")
-        self.layout.addWidget(self.header_label)
+        # Widget de Abas
+        self.tabs = QTabWidget()
+        
+        # --- Aba 1: Banco de Dados ---
+        self.db_tab = QWidget()
+        self.setup_db_tab() # Este método agora contém o layout da aba DB
+        self.tabs.addTab(self.db_tab, "Banco de Dados")
+        
+        # --- Aba 2: Trello ---
+        self.trello_tab = TrelloTab()
+        self.tabs.addTab(self.trello_tab, "Integração Trello")
+        
+        self.main_layout.addWidget(self.tabs)
 
-        # --- SEÇÃO: AUTOMAÇÃO DE BANCO DE DADOS ---
+        # Rodapé com Botão Fechar (Fica fixo abaixo das abas)
+        footer_layout = QHBoxLayout()
+        footer_layout.addStretch()
+        self.close_button = QPushButton("Fechar")
+        self.close_button.setFixedWidth(120)
+        self.close_button.setMinimumHeight(35)
+        self.close_button.clicked.connect(self.accept)
+        footer_layout.addWidget(self.close_button)
+        self.main_layout.addLayout(footer_layout)
+
+    def setup_db_tab(self):
+        """Configura o layout específico da aba de Banco de Dados."""
+        layout = QVBoxLayout(self.db_tab)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(15)
+
+        # Grupo da Automação de DB
         self.db_group = QFrame()
         self.db_group.setObjectName("automation_frame")
         self.db_group.setStyleSheet("""
@@ -39,28 +64,26 @@ class AutoDialog(QDialog):
             }
         """)
         db_layout = QVBoxLayout(self.db_group)
-        db_layout.setSpacing(10)
         
-        db_title_layout = QHBoxLayout()
+        title_layout = QHBoxLayout()
         db_icon = QLabel()
         db_icon.setPixmap(icon_manager.get_icon("database").pixmap(24, 24))
-        db_title_layout.addWidget(db_icon)
+        title_layout.addWidget(db_icon)
         
         db_title = QLabel("Atualização de Base Offline (Preservando Dados)")
         db_title.setStyleSheet("font-weight: bold; font-size: 15px; color: #ffffff;")
-        db_title_layout.addWidget(db_title)
-        db_title_layout.addStretch()
-        db_layout.addLayout(db_title_layout)
+        title_layout.addWidget(db_title)
+        title_layout.addStretch()
+        db_layout.addLayout(title_layout)
         
         db_desc = QLabel(
             "Esta automação exporta seus Status e Contratos Manuais, substitui o arquivo "
             "de banco de dados (.db) e restaura tudo automaticamente para a nova base."
         )
         db_desc.setWordWrap(True)
-        db_desc.setStyleSheet("color: #bbbbbb; margin-bottom: 5px;")
+        db_desc.setStyleSheet("color: #bbbbbb;")
         db_layout.addWidget(db_desc)
         
-        # Botão de Disparo
         self.btn_start_db_auto = QPushButton(" Iniciar Automação de Banco de Dados")
         self.btn_start_db_auto.setIcon(icon_manager.get_icon("automation"))
         self.btn_start_db_auto.setIconSize(QSize(24, 24))
@@ -79,13 +102,12 @@ class AutoDialog(QDialog):
             }
         """)
         db_layout.addWidget(self.btn_start_db_auto)
-        
-        self.layout.addWidget(self.db_group)
+        layout.addWidget(self.db_group)
 
-        # --- ÁREA DE CONSOLE/LOG ---
+        # Área de Log
         log_label = QLabel("Progresso da Automação:")
         log_label.setStyleSheet("font-weight: bold; color: #8AB4F7;")
-        self.layout.addWidget(log_label)
+        layout.addWidget(log_label)
 
         self.log_edit = QPlainTextEdit()
         self.log_edit.setReadOnly(True)
@@ -93,7 +115,7 @@ class AutoDialog(QDialog):
         self.log_edit.setStyleSheet("""
             QPlainTextEdit {
                 background-color: #181818;
-                color: #00FF41; /* Verde Estilo Matrix/Terminal */
+                color: #00FF41;
                 font-family: 'Consolas', 'Monospace';
                 font-size: 13px;
                 border: 1px solid #3d3d3d;
@@ -101,33 +123,20 @@ class AutoDialog(QDialog):
                 padding: 10px;
             }
         """)
-        self.layout.addWidget(self.log_edit)
-
-        # Rodapé com Botão Fechar
-        footer_layout = QHBoxLayout()
-        footer_layout.addStretch()
-        self.close_button = QPushButton("Fechar")
-        self.close_button.setFixedWidth(120)
-        self.close_button.setMinimumHeight(35)
-        self.close_button.clicked.connect(self.accept)
-        footer_layout.addWidget(self.close_button)
-        self.layout.addLayout(footer_layout)
+        layout.addWidget(self.log_edit)
 
     def log(self, message):
         """Adiciona uma linha de log com timestamp na interface."""
         now = datetime.now().strftime("%H:%M:%S")
         self.log_edit.appendPlainText(f"[{now}] > {message}")
-        # Faz o scroll automático para o final
         self.log_edit.verticalScrollBar().setValue(
             self.log_edit.verticalScrollBar().maximum()
         )
 
     def clear_log(self):
-        """Limpa o console de log."""
         self.log_edit.clear()
 
     def set_loading_state(self, is_loading):
-        """Habilita/Desabilita botões durante o processo."""
         self.btn_start_db_auto.setEnabled(not is_loading)
         self.close_button.setEnabled(not is_loading)
         if is_loading:
