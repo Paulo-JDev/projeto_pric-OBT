@@ -47,6 +47,7 @@ dist/
 # Aquivos Json
 teste.json
 jsons/
+trello_json.json
 
 #Imagens
 *.gif
