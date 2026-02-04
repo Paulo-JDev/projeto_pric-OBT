@@ -1,76 +1,112 @@
 # integration/controller/trello_controller.py
-import requests
-from PyQt6.QtWidgets import QMessageBox
+
+import json
+import os
+from datetime import datetime
+from pathlib import Path
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QListWidgetItem
+
 
 class TrelloController:
     def __init__(self, view, model, contratos_controller):
         self.view = view
         self.model = model
         self.contratos_controller = contratos_controller
-        self.view.btn_sync_trello.clicked.connect(self.test_single_sync)
-
-    # integration/controller/trello_controller.py
-
-    def test_single_sync(self):
-        """Teste de envio de um único contrato selecionado com formatação específica."""
-        creds = self.view.get_credentials()
+        self.trello_json_path = Path("utils/json/trello_json.json")
         
-        if not all([creds["key"], creds["token"], creds["list_id"]]):
-            QMessageBox.warning(self.view, "Erro de Configuração", "Preencha API Key, Token e ID da Lista.")
+        self.view.btn_save_creds.clicked.connect(self.save_creds_to_file)
+        self.view.btn_sync_trello.clicked.connect(self.sync_selected_contracts)
+        
+        self.load_creds_from_file()
+        self.refresh_contract_list()
+
+    def save_creds_to_file(self):
+        data = self.get_full_trello_data()
+        data["api_key"] = self.view.api_key_input.text()
+        data["token"] = self.view.token_input.text()
+        data["list_id"] = self.view.list_id_input.text()
+        
+        with open(self.trello_json_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4)
+        self.view.log("✅ Configurações salvas em trello_json.json")
+
+    def get_full_trello_data(self):
+        if self.trello_json_path.exists():
+            with open(self.trello_json_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return {"api_key": "", "token": "", "list_id": "", "sincronizados": []}
+
+    def load_creds_from_file(self):
+        data = self.get_full_trello_data()
+        self.view.api_key_input.setText(data.get("api_key", ""))
+        self.view.token_input.setText(data.get("token", ""))
+        self.view.list_id_input.setText(data.get("list_id", ""))
+
+    def refresh_contract_list(self):
+        self.view.contract_list.clear()
+        data = self.contratos_controller.model.get_contracts_with_status_not_default()
+        trello_data = self.get_full_trello_data()
+        ids_ja_no_trello = trello_data.get("sincronizados", [])
+
+        self.contracts_map = {}
+        for c in data:
+            c_id = str(c.get('id'))
+            # Só mostra se não estiver no histórico de sincronizados
+            if c_id not in ids_ja_no_trello:
+                display_text = f"{c.get('numero')} - {c.get('fornecedor_nome')}"
+                item = QListWidgetItem(display_text)
+                # Adiciona checkbox para seleção múltipla
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                self.view.contract_list.addItem(item)
+                self.contracts_map[display_text] = c
+
+    def sync_selected_contracts(self):
+        items = [self.view.contract_list.item(i) for i in range(self.view.contract_list.count())]
+        selected_items = [i for i in items if i.checkState() == Qt.CheckState.Checked]
+
+        if not selected_items:
+            self.view.log("⚠️ Marque ao menos um contrato na lista.")
             return
 
-        self.model.api_key = creds["key"]
-        self.model.token = creds["token"]
+        trello_data = self.get_full_trello_data()
+        self.model.api_key = trello_data["api_key"]
+        self.model.token = trello_data["token"]
 
-        # 1. Pegar seleção da tabela principal
-        selected_indexes = self.contratos_controller.view.table.selectionModel().selectedIndexes()
+        for item in selected_items:
+            contrato_base = self.contracts_map[item.text()]
+            # Busca dados completos do banco (para pegar objeto_editado se houver)
+            status_data = self.contratos_controller.model.get_all_status_data()
+            
+            # Tenta achar o objeto editado no log de status
+            obj_final = contrato_base.get('objeto', 'N/A')
+            for s in status_data:
+                if str(s['contrato_id']) == str(contrato_base['id']):
+                    if s.get('objeto_editado'):
+                        obj_final = s['objeto_editado']
+                    break
+
+            titulo = f"Contrato: {contrato_base.get('numero')}"
+            descricao = (
+                f"**Fornecedor:** {contrato_base.get('fornecedor_nome')}\n"
+                f"**CNPJ:** {contrato_base.get('fornecedor_cnpj', 'N/A')}\n"
+                f"**Objeto:** {obj_final}\n"
+                f"**Valor:** R$ {contrato_base.get('valor_global', '0,00')}\n"
+                f"**Processo:** {contrato_base.get('processo', 'N/A')}"
+            )
+
+            success, response = self.model.create_card(trello_data["list_id"], titulo, descricao)
+            
+            if success:
+                self.view.log(f"✅ Sincronizado: {contrato_base.get('numero')}")
+                # Adiciona ao histórico para sumir da lista no refresh
+                trello_data["sincronizados"].append(str(contrato_base['id']))
+            else:
+                self.view.log(f"❌ Erro no contrato {contrato_base.get('numero')}")
+
+        # Salva o novo histórico e atualiza a lista
+        with open(self.trello_json_path, 'w', encoding='utf-8') as f:
+            json.dump(trello_data, f, indent=4)
         
-        if not selected_indexes:
-            self.view.log("⚠️ Nenhum contrato selecionado na tabela. Selecione uma linha primeiro.")
-            return
-
-        # Mapeamento para o dado real (considerando filtros/ordenação)
-        proxy_model = self.contratos_controller.view.table.model()
-        source_index = proxy_model.mapToSource(selected_indexes[0])
-        row = source_index.row()
-        contrato = self.contratos_controller.get_current_data()[row]
-
-        # 2. Formatação do Identificador (ex: 87010/25 - 71/00)
-        # Extraímos a UASG e os anos (assumindo formato YYYY-MM-DD ou similar na vigência)
-        uasg = contrato.get('uasg_code', '000000')
-        numero_full = contrato.get('numero', '0/0') # Ex: "00071/2025"
-        
-        # Tenta extrair o ano do contrato para formatar a UASG (ex: 2025 -> 25)
-        ano_contrato_curto = "00"
-        if "/" in numero_full:
-            partes_num = numero_full.split("/")
-            num_so = partes_num[0].lstrip('0') # "00071" -> "71"
-            ano_full = partes_num[1]
-            ano_contrato_curto = ano_full[-2:]
-        else:
-            num_so = numero_full
-
-        # Monta o título: UASG/ANO - NUMERO/SUB
-        # Como o seu exemplo 87010/25-71/00, vamos aproximar:
-        titulo_card = f"Contrato: {uasg}/{ano_contrato_curto} - {num_so}/00"
-        
-        self.view.log(f"Enviando para Trello: {titulo_card}...")
-
-        # 3. Descrição detalhada
-        descricao = (
-            f"**Fornecedor:** {contrato.get('fornecedor_nome', 'N/A')}\n"
-            f"**CNPJ:** {contrato.get('fornecedor_cnpj', 'N/A')}\n"
-            f"**Objeto:** {contrato.get('objeto', 'N/A')}\n"
-            f"**Valor:** R$ {contrato.get('valor_global', '0,00')}\n"
-            f"**Processo:** {contrato.get('processo', 'N/A')}"
-        )
-
-        # 4. Envio
-        success, response = self.model.create_card(creds["list_id"], titulo_card, descricao)
-
-        if success:
-            self.view.log(f"✅ SUCESSO! Card criado no Trello.")
-            self.view.log(f"Link: {response.get('shortUrl')}")
-        else:
-            # Se der erro, vamos logar a resposta bruta para identificar o motivo
-            self.view.log(f"❌ ERRO API: {response}")
+        self.refresh_contract_list()
