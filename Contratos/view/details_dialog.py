@@ -30,6 +30,8 @@ from Contratos.view.detalhes_manual.links_tab_manual import create_links_tab_man
 from Contratos.controller.itens_controller import ItensController
 from Contratos.controller.empenhos_controller import EmpenhoController
 from Contratos.controller.email_controller import EmailController
+from integration.controller.trello_individual_controller import TrelloIndividualController
+from integration.model.trello_model import TrelloModel
 from Contratos.controller.detalhe_controller import (
     registro_def, delete_registro, save_status, load_status,
     show_success_message, copy_to_clipboard, copy_registros
@@ -104,8 +106,8 @@ class DetailsDialog(QDialog):
             # ==================== ABAS PARA CONTRATO MANUAL ====================
             self.tabs.addTab(create_general_tab_manual(self), "Informações Gerais")
             self.tabs.addTab(create_links_tab_manual(self), "LINKS do Contrato")
-            self.tabs.addTab(create_fiscal_tab(self), "Fiscalização")  # ✅ REUTILIZA
-            self.tabs.addTab(create_status_tab(self), "Status")        # ✅ REUTILIZA
+            self.tabs.addTab(create_fiscal_tab(self), "Fiscalização")
+            self.tabs.addTab(create_status_tab(self), "Status")
         else:
             # ==================== ABAS PARA CONTRATO NORMAL ====================
             self.tabs.addTab(create_general_tab(self), "Informações Gerais")
@@ -115,10 +117,20 @@ class DetailsDialog(QDialog):
             self.tabs.addTab(create_empenhos_tab(self), "Empenhos")
             self.tabs.addTab(create_itens_tab(self), "Itens")
             self.tabs.addTab(aba_extras_link(self), "Extras")
-        
-        # Conecta botão de copiar registros (criado em status_tab)
+
+        # ==================== CONEXÕES DE BOTÕES DA ABA STATUS ====================
+       
         if hasattr(self, 'copy_registro_button'):
+            # Conecta botão de copiar registros (criado em status_tab)
             self.copy_registro_button.clicked.connect(self.copy_registro_def)
+        
+        if hasattr(self, 'trello_button'):
+            # Instancia o serviço de API e o Controller Individual
+            self.trello_model = TrelloModel()
+            self.trello_individual_ctrl = TrelloIndividualController(self.trello_model)
+            
+            # Conecta o clique ao método que gerencia o envio
+            self.trello_button.clicked.connect(self.handle_trello_individual_sync)
     
     def _create_action_buttons(self):
         """Cria os botões de ação (Salvar e Cancelar)"""
@@ -425,3 +437,30 @@ class DetailsDialog(QDialog):
                     QMessageBox.critical(self, "Falha no Envio", message)
                 
                 break
+
+    # ==================== NOVO MÉTODO PARA SYNC INDIVIDUAL ====================
+
+    def handle_trello_individual_sync(self):
+        """
+        Coleta os dados atuais da interface e envia para o Trello usando o Controller.
+        """
+        if not self.status_dropdown:
+            return
+
+        status_selecionado = self.status_dropdown.currentText()
+        
+        # Prepara os dados para o envio (incluindo o objeto editado atual)
+        # Importante: usamos o self.data como base e injetamos o objeto_edit atual da tela
+        dados_para_envio = self.data.copy()
+        if self.objeto_edit:
+            dados_para_envio['objeto_editado'] = self.objeto_edit.text()
+
+        # Executa a sincronização via Controller
+        success, message = self.trello_individual_ctrl.sync_contract(dados_para_envio, status_selecionado)
+
+        if success:
+            # message aqui será o objeto JSON da resposta com a shortUrl
+            short_url = message.get('shortUrl', '') if isinstance(message, dict) else ""
+            QMessageBox.information(self, "Trello", f"Cartão criado com sucesso!\n{short_url}")
+        else:
+            QMessageBox.warning(self, "Erro Trello", f"Falha na sincronização:\n{message}")

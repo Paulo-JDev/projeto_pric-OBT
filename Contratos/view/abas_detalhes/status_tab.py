@@ -7,13 +7,13 @@ from PyQt6.QtWidgets import (
 from utils.icon_loader import icon_manager
 
 def create_status_tab(self):
-    """Cria a aba 'Status' com layout vertical lado a lado para registros e comentários."""
+    """Cria a aba 'Status' com layout corrigido e botão CA-Trello integrado."""
     self.status_tab = QWidget()
     main_layout = QVBoxLayout(self.status_tab)
 
     # ==== SEÇÃO STATUS (TOPO) ====
     status_layout = QHBoxLayout()
-    status_layout.addStretch() # Empurra para a direita
+    status_layout.addStretch() 
     
     status_label = QLabel("Status:")
     status_label.setObjectName("status_label")
@@ -29,45 +29,59 @@ def create_status_tab(self):
     status_layout.addWidget(self.status_dropdown)
     main_layout.addLayout(status_layout)
 
-    # ==== LAYOUT DE CONTEÚDO (LADO A LADO) ====
-    content_layout = QHBoxLayout()
-    content_layout.setSpacing(15)
-
-    # ---- COLUNA ESQUERDA: REGISTROS ----
+    # ==== COLUNA DE REGISTROS (CENTRO) ====
     registros_section = QVBoxLayout()
     
-    # Frame para a lista de registros
     registros_frame = QFrame()
     registros_frame.setObjectName("registros_frame")
     registros_frame.setFrameShape(QFrame.Shape.StyledPanel)
     registros_list_layout = QVBoxLayout(registros_frame)
-    registros_list_layout.setContentsMargins(5, 5, 5, 5)
     
     self.registro_list = QListWidget()
     self.registro_list.setObjectName("registro_list")
     registros_list_layout.addWidget(self.registro_list)
-    registros_section.addWidget(registros_frame) # Adiciona o frame à seção
+    registros_section.addWidget(registros_frame)
 
-    # Botões para registros (abaixo da lista)
-    registro_buttons_layout = QHBoxLayout()
-    self.add_record_button = QPushButton("Adicionar Registro")
+    # --- LINHA 1 DE BOTÕES: Gerenciamento de Registros ---
+    registro_mgmt_layout = QHBoxLayout()
+    self.add_record_button = QPushButton(" Adicionar Registro")
     self.add_record_button.setIcon(icon_manager.get_icon("registrar_status"))
     self.add_record_button.clicked.connect(self.registro_def)
-    registro_buttons_layout.addWidget(self.add_record_button)
     
-    self.delete_registro_button = QPushButton("Excluir Registro")
+    self.delete_registro_button = QPushButton(" Excluir Registro")
     self.delete_registro_button.setIcon(icon_manager.get_icon("delete"))
     self.delete_registro_button.clicked.connect(self.delete_registro)
-    registro_buttons_layout.addWidget(self.delete_registro_button)
-    registros_section.addLayout(registro_buttons_layout) # Adiciona botões à seção
+    
+    registro_mgmt_layout.addWidget(self.add_record_button)
+    registro_mgmt_layout.addWidget(self.delete_registro_button)
+    registros_section.addLayout(registro_mgmt_layout)
 
-    self.copy_registro_button = QPushButton("Copiar Registro")
+    # --- LINHA 2 DE BOTÕES: Ações e Automação (Rodapé da Aba) ---
+    self.bottom_actions_layout = QHBoxLayout()
+    
+    self.copy_registro_button = QPushButton(" Copiar Registro")
     self.copy_registro_button.setIcon(icon_manager.get_icon("copy"))
-    registro_buttons_layout.addWidget(self.copy_registro_button)
+    # O .clicked.connect para o copiar já deve estar no DetailsDialog
+    
+    # NOVO Botão CA-Trello (Formatado igual aos outros)
+    self.trello_button = QPushButton(" CA-Trello")
+    self.trello_button.setIcon(icon_manager.get_icon("automation"))
+    self.trello_button.setMinimumHeight(30) # Padroniza altura com os outros botões
+    self.trello_button.setStyleSheet("""
+        QPushButton {
+            background-color: #0079bf;
+            color: white;
+            font-weight: bold;
+        }
+        QPushButton:hover { background-color: #026aa7; }
+    """)
 
-    content_layout.addLayout(registros_section) # Adiciona seção de registros ao layout principal
+    self.bottom_actions_layout.addWidget(self.copy_registro_button)
+    self.bottom_actions_layout.addWidget(self.trello_button)
+    
+    registros_section.addLayout(self.bottom_actions_layout)
 
-    # Adiciona o layout de conteúdo (com as duas colunas) ao layout da aba
-    main_layout.addLayout(content_layout)
+    # Adiciona tudo ao layout principal
+    main_layout.addLayout(registros_section)
 
     return self.status_tab

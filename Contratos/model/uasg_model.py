@@ -631,7 +631,11 @@ class UASGModel:
                     c.numero,
                     c.processo,
                     c.fornecedor_nome,
+                    c.fornecedor_cnpj,
+                    c.objeto,
+                    c.valor_global,
                     sc.status,
+                    sc.objeto_editado,
                     c.vigencia_fim
                 FROM contratos c
                 JOIN status_contratos sc ON c.id = sc.contrato_id
@@ -646,7 +650,11 @@ class UASGModel:
                     "numero": row['numero'],
                     "processo": row['processo'],
                     "fornecedor_nome": row['fornecedor_nome'],
+                    "fornecedor_cnpj": row['fornecedor_cnpj'],
+                    "objeto": row['objeto'],
+                    "valor_global": row['valor_global'],
                     "status": row['status'],
+                    "objeto_editado": row['objeto_editado'],
                     "vigencia_fim": row['vigencia_fim']
                 })
         except sqlite3.Error as e:
