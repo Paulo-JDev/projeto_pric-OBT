@@ -25,3 +25,19 @@ class TrelloModel:
             return response.status_code == 200
         except:
             return False
+        
+    def update_card(self, card_id, id_list, name, desc):
+        """Move o card para uma nova lista e atualiza título/descrição."""
+        url = f"{self.base_url}/cards/{card_id}"
+        query = {
+            'key': self.api_key,
+            'token': self.token,
+            'idList': id_list,
+            'name': name,
+            'desc': desc
+        }
+        try:
+            response = requests.put(url, params=query)
+            return (True, response.json()) if response.status_code == 200 else (False, response.text)
+        except Exception as e:
+            return False, str(e)
