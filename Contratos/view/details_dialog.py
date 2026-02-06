@@ -456,7 +456,7 @@ class DetailsDialog(QDialog):
             dados_para_envio['objeto_editado'] = self.objeto_edit.text()
 
         # Executa a sincronização via Controller
-        success, message = self.trello_individual_ctrl.sync_contract(dados_para_envio, status_selecionado)
+        success, message = self.trello_individual_ctrl.sync_contract(dados_para_envio, status_selecionado, self.model)
 
         if success:
             # message aqui será o objeto JSON da resposta com a shortUrl

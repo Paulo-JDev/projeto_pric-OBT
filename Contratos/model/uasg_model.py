@@ -665,6 +665,16 @@ class UASGModel:
 
         return contracts_data
     
+    def get_contract_records_list(self, contrato_id):
+        """Busca apenas a lista de textos dos registros de um contrato."""
+        from .models import RegistroStatus
+        db = self._get_db_session()
+        try:
+            registros = db.query(RegistroStatus.texto).filter(RegistroStatus.contrato_id == contrato_id).all()
+            return [reg[0] for reg in registros]
+        finally:
+            db.close()
+    
     # =============================== Novos métodos para salvar e buscar links de contratos =============================
     def save_contract_links(self, contrato_id, link_data, db_session=None):
         from .models import LinksContrato

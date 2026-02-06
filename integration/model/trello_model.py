@@ -41,3 +41,17 @@ class TrelloModel:
             return (True, response.json()) if response.status_code == 200 else (False, response.text)
         except Exception as e:
             return False, str(e)
+
+    def add_comment(self, card_id, text):
+        """Adiciona um comentário a um card existente."""
+        url = f"{self.base_url}/cards/{card_id}/actions/comments"
+        query = {
+            'key': self.api_key,
+            'token': self.token,
+            'text': text
+        }
+        try:
+            response = requests.post(url, params=query)
+            return response.status_code == 200
+        except:
+            return False
