@@ -51,35 +51,16 @@ def create_status_tab(self):
     self.delete_registro_button = QPushButton(" Excluir Registro")
     self.delete_registro_button.setIcon(icon_manager.get_icon("delete"))
     self.delete_registro_button.clicked.connect(self.delete_registro)
-    
-    registro_mgmt_layout.addWidget(self.add_record_button)
-    registro_mgmt_layout.addWidget(self.delete_registro_button)
-    registros_section.addLayout(registro_mgmt_layout)
 
-    # --- LINHA 2 DE BOTÕES: Ações e Automação (Rodapé da Aba) ---
-    self.bottom_actions_layout = QHBoxLayout()
     
     self.copy_registro_button = QPushButton(" Copiar Registro")
     self.copy_registro_button.setIcon(icon_manager.get_icon("copy"))
-    # O .clicked.connect para o copiar já deve estar no DetailsDialog
+    self.copy_registro_button.clicked.connect(self.copy_registro_def)
     
-    # NOVO Botão CA-Trello (Formatado igual aos outros)
-    self.trello_button = QPushButton(" CA-Trello")
-    self.trello_button.setIcon(icon_manager.get_icon("automation"))
-    self.trello_button.setMinimumHeight(30) # Padroniza altura com os outros botões
-    self.trello_button.setStyleSheet("""
-        QPushButton {
-            background-color: #0079bf;
-            color: white;
-            font-weight: bold;
-        }
-        QPushButton:hover { background-color: #026aa7; }
-    """)
-
-    self.bottom_actions_layout.addWidget(self.copy_registro_button)
-    self.bottom_actions_layout.addWidget(self.trello_button)
-    
-    registros_section.addLayout(self.bottom_actions_layout)
+    registro_mgmt_layout.addWidget(self.add_record_button)
+    registro_mgmt_layout.addWidget(self.delete_registro_button)
+    registro_mgmt_layout.addWidget(self.copy_registro_button)
+    registros_section.addLayout(registro_mgmt_layout)
 
     # Adiciona tudo ao layout principal
     main_layout.addLayout(registros_section)

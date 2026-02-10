@@ -9,6 +9,9 @@ from utils.icon_loader import icon_manager
 from Contratos.model.uasg_model import UASGModel # Para _get_db_connection se necessário, ou usar o model passado
 from Contratos.controller.controller_fiscal import load_fiscalizacao, save_fiscalizacao
 
+from integration.model.trello_model import TrelloModel
+from integration.controller.trello_individual_controller import TrelloIndividualController, TrelloSyncWorker
+
 SUCCESS_MSG_TIMEOUT_MS = 300
 
 def registro_def(parent, registro_list, status_dropdown):
@@ -258,6 +261,39 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
         conn.close()
 
     save_fiscalizacao(model, id_contrato, parent)
+
+    # Parte sobre o Trello aqui
+    # 1. Recupera o status atual salvo
+    status_atual = status_dropdown.currentText()
+    
+    # 2. Prepara os dados do contrato para o Trello
+    # Precisamos garantir que 'data' tenha os campos atualizados (especialmente se for manual ou editado)
+    contrato_para_trello = data.copy()
+    contrato_para_trello['objeto_editado'] = objeto_edit.text() if objeto_edit else data.get("objeto")
+    contrato_para_trello['id'] = id_contrato # Garante que o ID correto vai
+    
+    # 3. Instancia Model e Controller do Trello
+    t_model = TrelloModel() # Credenciais serão carregadas pelo controller
+    t_controller = TrelloIndividualController(t_model)
+    
+    # 4. Inicia a Thread de Sincronização (Worker)
+    # Importante: Guardamos a referência do worker no 'parent' para o Garbage Collector não matar a thread
+    parent.trello_worker = TrelloSyncWorker(t_controller, contrato_para_trello, status_atual)
+    
+    def on_trello_finished(success, msg):
+        if success:
+            print(f"✅ [Trello] {msg}")
+            # Opcional: Mostrar popup discreto ou atualizar ícone na tela
+        else:
+            print(f"⚠️ [Trello] Falha na sincronização: {msg}")
+            # Opcional: Mostrar erro para o usuário se desejar
+            
+    parent.trello_worker.finished.connect(on_trello_finished)
+    parent.trello_worker.start()
+    
+    print("⏳ Iniciando sincronização com Trello em segundo plano...")
+
+    # =============================================================================
     return id_contrato, uasg
 
 def show_success_message(parent):
@@ -453,4 +489,5 @@ def copy_registros(parent_view, registro_list):
     clipboard = QApplication.clipboard()
     clipboard.setText(text_to_copy)
     
-    QMessageBox.information(parent_view, "Copiado", "O(s) registro(s) selecionado(s) foi/foram copiado(s) para a área de transferência.")
+    #Mantenha essa mensgame comentaada ate eu descobrir pq ela esta sendo duplicada
+    #QMessageBox.information(parent_view, "Copiado", "O(s) registro(s) selecionado(s) foi/foram copiado(s) para a área de transferência.")

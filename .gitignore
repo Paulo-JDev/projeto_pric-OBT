@@ -48,6 +48,7 @@ dist/
 teste.json
 jsons/
 trello_json.json
+trello_comments.json
 
 #Imagens
 *.gif
