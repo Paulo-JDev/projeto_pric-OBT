@@ -109,24 +109,26 @@ class TrelloIndividualController:
         registros_db = self.get_contract_records_with_ids(contrato_id_local)
         
         if registros_db:
+            comment_history = self._get_comment_history()
             enviados = comment_history.get(contrato_id_local, [])
             novos_enviados = False
 
             for reg in registros_db:
-                reg_id = str(reg['id'])
-                if reg_id not in enviados:
-                    # Se o ID do registro não está no JSON, envia para o Trello
-                    texto_comentario = f"📌 **Registro Local (ID: {reg_id}):**\n{reg['texto']}"
-                    
-                    if self.trello_model.add_comment(card_id_trello, texto_comentario):
-                        enviados.append(reg_id)
-                        novos_enviados = True
-                    else:
-                        print(f"Falha ao enviar comentário ID {reg_id} para o Trello.")
+                # USA UUID AO INVÉS DE ID SEQUENCIAL
+                reg_uuid = reg['uuid']
 
-            # Salva histórico de comentários enviados
+                if reg_uuid not in enviados:
+                    texto_comentario = f"📌 **Registro ({reg_uuid[:8]}...):**\n{reg['texto']}"
+
+                    if self.trello_model.add_comment(card_id_trello, texto_comentario):
+                        enviados.append(reg_uuid)
+                        novos_enviados = True
+                        print(f"✅ Comentário UUID {reg_uuid[:8]} enviado ao Trello")
+                    else:
+                        print(f"❌ Falha ao enviar comentário UUID {reg_uuid[:8]}")
+
+            # Atualiza histórico
             if novos_enviados:
-                comment_history = self._get_comment_history() # Recarrega
                 comment_history[contrato_id_local] = enviados
                 with open(self.comments_path, 'w', encoding='utf-8') as f:
                     json.dump(comment_history, f, indent=4, ensure_ascii=False)
@@ -142,9 +144,9 @@ class TrelloIndividualController:
         session = database.SessionLocal() # Cria a sessão usando a factory atualizada
         try:
             registros = session.query(RegistroStatus).filter(RegistroStatus.contrato_id == str(contrato_id)).all()
-            return [{'id': r.id, 'texto': r.texto} for r in registros]
+            return [{'uuid': r.uuid, 'texto': r.texto} for r in registros]
         except Exception as e:
-            print(f"Erro ao buscar registros do DB: {e}")
+            print(f"Erro ao buscar registros: {e}")
             return []
         finally:
             session.close()

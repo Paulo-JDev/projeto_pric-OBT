@@ -1,5 +1,6 @@
 # Contratos/controller/detalhe_controller.py
 
+import uuid
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QPushButton, QTextEdit, QListWidgetItem, QApplication, QMessageBox
 from PyQt6.QtCore import Qt, QTimer
 import json
@@ -143,11 +144,30 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (id_contrato, uasg, status_atual, txt_objeto, txt_portaria, txt_ta, radio_options_json, data_registro_atual))
 
-        # Salvar registros_status
+        # ==================== SALVAMENTO DE REGISTROS (COM PRESERVAÇÃO DE UUID) ====================
+        # 1. Busca UUIDs existentes antes de deletar
+        cursor.execute("SELECT uuid, texto FROM registros_status WHERE contrato_id = ?", (id_contrato,))
+        registros_existentes = {row['texto']: row['uuid'] for row in cursor.fetchall()}
+
+        # 2. Deleta todos os registros antigos
         cursor.execute("DELETE FROM registros_status WHERE contrato_id = ?", (id_contrato,))
+
+        # 3. Pega os textos atuais da interface
         registros_texts = [registro_list.item(i).text() for i in range(registro_list.count())]
+
+        # 4. Reinsere preservando UUIDs de textos iguais
         for texto in registros_texts:
-            cursor.execute("INSERT INTO registros_status (contrato_id, uasg_code, texto) VALUES (?, ?, ?)", (id_contrato, uasg, texto))
+            if texto in registros_existentes:
+                # Texto já existia → reutiliza UUID
+                registro_uuid = registros_existentes[texto]
+            else:
+                # Texto novo → gera novo UUID
+                registro_uuid = str(uuid.uuid4())
+
+            cursor.execute(
+                "INSERT INTO registros_status (uuid, contrato_id, uasg_code, texto) VALUES (?, ?, ?, ?)",
+                (registro_uuid, id_contrato, uasg, texto)
+            )
 
         # ==================== SALVAMENTO DE DADOS DE CONTRATO MANUAL ====================
         if data.get("manual") and hasattr(parent, "line_edits"):
@@ -186,8 +206,8 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
                     current_json = {}
 
                 # GARANTE campos críticos intactos
-                current_json["id"] = id_contrato                    # força manter id manual
-                current_json["manual"] = True                       # marca sempre como manual
+                current_json["id"] = id_contrato
+                current_json["manual"] = True
 
                 # Garante estrutura contratante/orgao/unidade_gestora
                 if "contratante" not in current_json:
@@ -199,11 +219,10 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
 
                 ug = current_json["contratante"]["orgao"]["unidade_gestora"]
                 ug["codigo"] = uasg
-                # se não tiver sigla nova, mantém antiga
                 ug["nome_resumido"] = nova_sigla or ug.get("nome_resumido", "")
 
                 # Atualiza os campos que o usuário pode editar
-                current_json["numero"] = data.get("numero")          # não mexe, só reafirma
+                current_json["numero"] = data.get("numero")
                 current_json["valor_global"] = novo_valor
                 current_json["licitacao_numero"] = nova_licitacao
                 current_json["processo"] = novo_nup
@@ -262,38 +281,6 @@ def save_status(parent, data, model: UASGModel, status_dropdown, registro_list, 
 
     save_fiscalizacao(model, id_contrato, parent)
 
-    # Parte sobre o Trello aqui
-    # 1. Recupera o status atual salvo
-    status_atual = status_dropdown.currentText()
-    
-    # 2. Prepara os dados do contrato para o Trello
-    # Precisamos garantir que 'data' tenha os campos atualizados (especialmente se for manual ou editado)
-    contrato_para_trello = data.copy()
-    contrato_para_trello['objeto_editado'] = objeto_edit.text() if objeto_edit else data.get("objeto")
-    contrato_para_trello['id'] = id_contrato # Garante que o ID correto vai
-    
-    # 3. Instancia Model e Controller do Trello
-    t_model = TrelloModel() # Credenciais serão carregadas pelo controller
-    t_controller = TrelloIndividualController(t_model)
-    
-    # 4. Inicia a Thread de Sincronização (Worker)
-    # Importante: Guardamos a referência do worker no 'parent' para o Garbage Collector não matar a thread
-    parent.trello_worker = TrelloSyncWorker(t_controller, contrato_para_trello, status_atual)
-    
-    def on_trello_finished(success, msg):
-        if success:
-            print(f"✅ [Trello] {msg}")
-            # Opcional: Mostrar popup discreto ou atualizar ícone na tela
-        else:
-            print(f"⚠️ [Trello] Falha na sincronização: {msg}")
-            # Opcional: Mostrar erro para o usuário se desejar
-            
-    parent.trello_worker.finished.connect(on_trello_finished)
-    parent.trello_worker.start()
-    
-    print("⏳ Iniciando sincronização com Trello em segundo plano...")
-
-    # =============================================================================
     return id_contrato, uasg
 
 def show_success_message(parent):

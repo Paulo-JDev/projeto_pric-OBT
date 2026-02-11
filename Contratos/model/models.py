@@ -1,7 +1,9 @@
 # model/models.py
 
+import uuid
 from sqlalchemy import Column, String, Integer, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.dialects.postgresql import UUID
 
 Base = declarative_base()
 
@@ -97,11 +99,16 @@ class StatusContrato(Base):
 
 class RegistroStatus(Base):
     __tablename__ = "registros_status"
+
     id = Column(Integer, primary_key=True, autoincrement=True)
+    uuid = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     contrato_id = Column(String, ForeignKey("contratos.id"), nullable=False, index=True)
     uasg_code = Column(String)
     texto = Column(Text, unique=True)
     contrato = relationship("Contrato", back_populates="registros")
+
+    def __repr__(self):
+        return f"<RegistroStatus(uuid={self.uuid}, texto={self.texto[:30]}...)>"
 
 class LinksContrato(Base):
     __tablename__ = "links_contratos"
