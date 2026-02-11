@@ -78,6 +78,7 @@ class DetailsDialog(QDialog):
         self.termo_aditivo_edit = None
         self.status_dropdown = None
         self.registro_list = None
+        self._trello_thread = None
         
         # Layout principal
         self.main_layout = QVBoxLayout(self)
@@ -131,6 +132,10 @@ class DetailsDialog(QDialog):
             
             # Conecta o clique ao método que gerencia o envio
             self.trello_button.clicked.connect(self.handle_trello_individual_sync)
+        
+        if not hasattr(self, 'trello_individual_ctrl'):
+            self.trello_model = TrelloModel()
+            self.trello_individual_ctrl = TrelloIndividualController(self.trello_model)
     
     def _create_action_buttons(self):
         """Cria os botões de ação (Salvar e Cancelar)"""
@@ -142,6 +147,14 @@ class DetailsDialog(QDialog):
         save_button.setIcon(icon_manager.get_icon("concluido"))
         save_button.clicked.connect(self.save_and_close)
         button_layout.addWidget(save_button)
+
+        # Botão Trello
+        self.trello_button = QPushButton("CA-Trello")
+        self.trello_button.setIcon(icon_manager.get_icon("trello"))  # Use ícone do Trello se tiver
+        self.trello_button.setToolTip("Sincronizar este contrato com o Trello")
+        self.trello_button.clicked.connect(self.handle_trello_individual_sync)
+        self.trello_button.setObjectName("trello_button")
+        button_layout.addWidget(self.trello_button)
         
         # Botão Cancelar
         cancel_button = QPushButton("Cancelar")
@@ -441,26 +454,96 @@ class DetailsDialog(QDialog):
     # ==================== NOVO MÉTODO PARA SYNC INDIVIDUAL ====================
 
     def handle_trello_individual_sync(self):
-        """
-        Coleta os dados atuais da interface e envia para o Trello usando o Controller.
-        """
-        if not self.status_dropdown:
+        """Sincroniza este contrato individual com o Trello em background."""
+        import logging
+
+        # Valida se há dados do contrato
+        if not self.data or not self.data.get("id"):
+            QMessageBox.warning(self, "Aviso", "Salve o contrato antes de sincronizar com o Trello.")
             return
 
-        status_selecionado = self.status_dropdown.currentText()
-        
-        # Prepara os dados para o envio (incluindo o objeto editado atual)
-        # Importante: usamos o self.data como base e injetamos o objeto_edit atual da tela
-        dados_para_envio = self.data.copy()
-        if self.objeto_edit:
-            dados_para_envio['objeto_editado'] = self.objeto_edit.text()
+        # Verifica se já há uma sincronização em andamento
+        if self._trello_thread is not None and self._trello_thread.isRunning():
+            QMessageBox.information(self, "Aguarde", "Já existe uma sincronização em andamento.")
+            return
 
-        # Executa a sincronização via Controller
-        success, message = self.trello_individual_ctrl.sync_contract(dados_para_envio, status_selecionado)
+        # Pega o status atual
+        status_atual = self.status_dropdown.currentText() if hasattr(self, 'status_dropdown') else "SEÇÃO CONTRATOS"
 
+        # Verifica se o status está mapeado
+        if hasattr(self, 'trello_individual_ctrl'):
+            list_id = self.trello_individual_ctrl.trello_model.config.get("mappings", {}).get(status_atual)
+            if not list_id:
+                QMessageBox.warning(
+                    self, 
+                    "Configuração Trello",
+                    f"O status '{status_atual}' ainda não tem uma lista mapeada.\n"
+                    "Abra a tela de configuração do Trello e informe o ID da lista."
+                )
+                return
+
+        # Prepara dados do contrato
+        contrato_para_trello = self.data.copy()
+        if hasattr(self, 'objeto_edit') and self.objeto_edit:
+            contrato_para_trello['objeto_editado'] = self.objeto_edit.text()
+
+        # Log no terminal (aparece imediatamente)
+        logging.info(f"🔄 Iniciando sincronização do contrato {self.data.get('numero', 'N/A')} com o Trello...")
+        print(f"🔄 Iniciando sincronização do contrato {self.data.get('numero', 'N/A')} (status: {status_atual})")
+
+        # Cria Worker para sincronização em background
+        from integration.controller.trello_individual_controller import TrelloSyncWorker
+
+        self._trello_thread = TrelloSyncWorker(
+            self.trello_individual_ctrl, 
+            contrato_para_trello, 
+            status_atual
+        )
+
+        # Conecta o sinal de finalização
+        self._trello_thread.finished.connect(self._on_trello_finished)
+
+        # Feedback visual: desabilita botão e muda texto
+        self.trello_button.setEnabled(False)
+        self.trello_button.setText("Sincronizando...")
+
+        # Inicia a thread
+        self._trello_thread.start()
+
+    def _on_trello_finished(self, success, message):
+        """Callback chamado quando a sincronização termina."""
+        import logging
+
+        # Restaura o botão
+        self.trello_button.setEnabled(True)
+        self.trello_button.setText("CA-Trello")
+
+        # Libera a referência da thread
+        self._trello_thread = None
+
+        # Mostra resultado
         if success:
-            # message aqui será o objeto JSON da resposta com a shortUrl
-            short_url = message.get('shortUrl', '') if isinstance(message, dict) else ""
-            QMessageBox.information(self, "Trello", f"Cartão criado com sucesso!\n{short_url}")
+            logging.info(f"✅ Sincronização concluída: {message}")
+            print(f"✅ Sincronização concluída com sucesso!")
+
+            # Extrai URL se disponível
+            if isinstance(message, dict):
+                short_url = message.get('shortUrl', '')
+                card_name = message.get('name', '')
+                QMessageBox.information(
+                    self, 
+                    "Trello - Sucesso", 
+                    f"✅ Cartão sincronizado com sucesso!\n\n"
+                    f"Nome: {card_name}\n"
+                    f"URL: {short_url}"
+                )
+            else:
+                QMessageBox.information(self, "Trello - Sucesso", f"✅ {message}")
         else:
-            QMessageBox.warning(self, "Erro Trello", f"Falha na sincronização:\n{message}")
+            logging.error(f"❌ Erro na sincronização: {message}")
+            print(f"❌ Erro na sincronização: {message}")
+            QMessageBox.warning(
+                self, 
+                "Trello - Erro", 
+                f"⚠️ Falha na sincronização:\n\n{message}"
+            )
