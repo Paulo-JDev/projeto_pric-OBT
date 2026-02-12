@@ -99,6 +99,20 @@ class TrelloIndividualController:
                     config["cards_sincronizados"] = {}
                 
                 config["cards_sincronizados"][contrato_id_local] = card_id_trello
+
+                checklist = self.trello_model.create_checklist(card_id_trello, "Tramitação / Pendências")
+                if checklist:
+                    # Defina aqui os passos padrão para todo contrato novo
+                    tarefas_padrao = [
+                        "Verificar Assinaturas",
+                        "Publicar no PNCP",
+                        "Emitir Nota de Empenho",
+                        "Designar Fiscal",
+                        "Arquivar Processo Físico"
+                    ]
+
+                    for tarefa in tarefas_padrao:
+                        self.trello_model.add_checklist_item(checklist['id'], tarefa)
                 
                 with open(self.config_path, 'w', encoding='utf-8') as f:
                     json.dump(config, f, indent=4, ensure_ascii=False)

@@ -262,4 +262,33 @@ class TrelloModel:
         except:
             return False
 
-    
+    def create_checklist(self, card_id, name):
+        """Cria uma checklist no cartão."""
+        url = f"{self.base_url}/checklists"
+        query = {
+            'key': self.api_key, 
+            'token': self.token, 
+            'idCard': card_id, 
+            'name': name
+        }
+        try:
+            response = requests.post(url, params=query)
+            if response.status_code == 200:
+                return response.json() # Retorna o objeto checklist (com ID)
+            return None
+        except:
+            return None
+
+    def add_checklist_item(self, checklist_id, name):
+        """Adiciona um item (tarefa) na checklist."""
+        url = f"{self.base_url}/checklists/{checklist_id}/checkItems"
+        query = {
+            'key': self.api_key, 
+            'token': self.token, 
+            'name': name
+        }
+        try:
+            requests.post(url, params=query)
+            return True
+        except:
+            return False
