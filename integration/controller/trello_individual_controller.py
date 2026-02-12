@@ -60,6 +60,7 @@ class TrelloIndividualController:
         fornecedor = contrato_data.get('fornecedor_nome') or contrato_data.get('fornecedor', {}).get('nome', 'N/A')
         cnpj = contrato_data.get('fornecedor_cnpj') or contrato_data.get('fornecedor', {}).get('cnpj_cpf_idgener', 'N/A')
         obj_final = contrato_data.get('objeto_editado') or contrato_data.get('objeto', 'N/A')
+        vigencia_fim = contrato_data.get('vigencia_fim')
         
         titulo = f"Contrato: {contrato_data.get('numero', 'S/N')}"
         description = (
@@ -103,6 +104,30 @@ class TrelloIndividualController:
                     json.dump(config, f, indent=4, ensure_ascii=False)
             else:
                 return False, f"Erro ao criar card: {res_new}"
+            
+        if card_id_trello:
+            # A) Data de Entrega (Due Date)
+            if vigencia_fim:
+                try:
+                    # Adiciona horário para garantir que o Trello entenda (final do dia)
+                    data_formatada = f"{vigencia_fim}T18:00:00.000Z"
+                    self.trello_model.set_due_date(card_id_trello, data_formatada)
+                    print(f"📅 Prazo definido para: {vigencia_fim}")
+                except Exception as e:
+                    print(f"Erro ao definir data: {e}")
+
+            # B) Links como Anexos
+            links_para_enviar = {
+                "📄 Contrato (Link)": contrato_data.get('link_contrato'),
+                "⚓ Portal Marinha": contrato_data.get('link_portal_marinha'),
+                "📜 Termo Aditivo": contrato_data.get('link_ta'),
+                "🌐 PNCP": contrato_data.get('link_pncp_espc')
+            }
+
+            for nome_link, url_link in links_para_enviar.items():
+                if url_link and "http" in url_link: # Só envia se tiver link válido
+                    self.trello_model.add_attachment(card_id_trello, url_link, nome_link)
+                    print(f"📎 Anexo adicionado: {nome_link}")
 
         # --- ADIÇÃO DOS REGISTROS COMO COMENTÁRIOS ---
         # Busca os registros usando SQLAlchemy Session

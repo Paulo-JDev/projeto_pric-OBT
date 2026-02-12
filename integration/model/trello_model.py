@@ -231,3 +231,35 @@ class TrelloModel:
             return response.status_code == 200
         except:
             return False
+
+    def set_due_date(self, card_id, date_string):
+        """Define a data de entrega (vencimento) do card."""
+        # O Trello espera formato ISO. Vamos garantir que YYYY-MM-DD funcione.
+        url = f"{self.base_url}/cards/{card_id}"
+        query = {
+            'key': self.api_key, 
+            'token': self.token, 
+            'due': date_string  # Aceita '2026-12-31' ou null para remover
+        }
+        try:
+            requests.put(url, params=query)
+            return True
+        except:
+            return False
+
+    def add_attachment(self, card_id, url, name):
+        """Adiciona um link como anexo no card."""
+        url_api = f"{self.base_url}/cards/{card_id}/attachments"
+        query = {
+            'key': self.api_key, 
+            'token': self.token, 
+            'url': url,
+            'name': name
+        }
+        try:
+            requests.post(url_api, params=query)
+            return True
+        except:
+            return False
+
+    
