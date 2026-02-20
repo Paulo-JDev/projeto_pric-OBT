@@ -414,85 +414,84 @@ class ExpImpTableController:
     # =========================================================================
     def export_bi_data(self):
         """
-        Exporta dados para Excel (BI), incluindo a coluna dinâmica de Material/Serviço.
+        Exporta dados para Excel (BI), incluindo:
+        - UASG (código e nome)
+        - Vigência início e fim
+        - Duas abas: Contratos Vigentes e Contratos Mortos (com data no nome da aba)
         """
+        import pandas as pd
+        from datetime import datetime, date
+
         # 1. Escolher onde salvar
+        hoje_str = datetime.now().strftime('%d-%m-%Y')
         filename, _ = QFileDialog.getSaveFileName(
-            self.view, 
-            "Salvar Relatório BI", 
-            f"Relatorio_BI_{datetime.now().strftime('%d-%m-%Y')}.xlsx", 
+            self.view,
+            "Salvar Relatório BI",
+            f"Relatorio_BI_{hoje_str}.xlsx",
             "Arquivos Excel (*.xlsx)"
         )
-
         if not filename:
             return
 
         conn = None
         try:
-            # 2. Conectar ao Banco (Usa conexão do model ou busca arquivo)
+            # 2. Conectar ao Banco
             if hasattr(self, 'model') and hasattr(self.model, '_get_db_connection'):
                 conn = self.model._get_db_connection()
             else:
-                root_dir = os.getcwd() 
+                root_dir = os.getcwd()
                 db_path = os.path.join(root_dir, "database", "gerenciador_uasg.db")
                 if not os.path.exists(db_path):
                     db_path = os.path.join(root_dir, "..", "database", "gerenciador_uasg.db")
-                
                 if not os.path.exists(db_path):
                     raise FileNotFoundError("Banco de dados não encontrado.")
                 conn = sqlite3.connect(db_path)
 
-            # 3. Query SQL - Adicionada a coluna 'radio_options_json'
+            # 3. Query SQL (agora trazendo UASG nome + vigências)
             query = """
             SELECT 
                 c.numero AS numero_contrato,
-                c.uasg_code AS uasg, 
+                c.uasg_code AS uasg,
+                c.contratante_orgao_unidade_gestora_nome_resumido AS uasg_nome,
                 c.valor_global,
                 COALESCE(s.objeto_editado, c.objeto) AS objeto_final,
                 COALESCE(s.status, 'SEÇÃO CONTRATOS') AS status_atual,
                 c.tipo,
                 c.modalidade,
-                s.radio_options_json
+                s.radio_options_json,
+                c.vigencia_inicio,
+                c.vigencia_fim
             FROM contratos c
             LEFT JOIN status_contratos s ON c.id = s.contrato_id
             """
-            
+
             # 4. Carregar no Pandas
             df = pd.read_sql_query(query, conn)
-
             if df.empty:
                 QMessageBox.warning(self.view, "Aviso", "A tabela está vazia.")
                 return
 
-            # 5. Lógica para Material/Serviço (Lê do JSON)
+            # 5. Material/Serviço (lê do JSON)
             def get_material_servico(row):
-                json_str = row['radio_options_json']
-                
-                # Se não tem nada salvo no banco, retorna "Definir"
+                json_str = row.get('radio_options_json')
                 if not json_str:
                     return "Definir"
-                
                 try:
                     data = json.loads(json_str)
-                    # Tenta pegar o valor. A chave no banco geralmente tem ":", mas prevenimos os dois casos
                     valor = data.get("Material/Serviço:") or data.get("Material/Serviço")
-                    
-                    # Se o valor for vazio, nulo ou "Não selecionado", retorna "Definir"
                     if not valor or valor == "Não selecionado":
                         return "Definir"
-                    
                     return valor
                 except:
                     return "Definir"
 
-            # Aplica a função na coluna
             df['Material/Serviço'] = df.apply(get_material_servico, axis=1)
 
             # 6. Formatação do Número do Contrato
             def formatar_numero(row):
                 try:
-                    uasg = str(row['uasg'])[-5:] if row['uasg'] else "00000"
-                    numero_raw = str(row['numero_contrato'])
+                    uasg = str(row['uasg'])[-5:] if row.get('uasg') else "00000"
+                    numero_raw = str(row.get('numero_contrato', ''))
                     if "/" in numero_raw:
                         parts = numero_raw.split('/')
                         num_parte = parts[0].lstrip('0') or "0"
@@ -500,46 +499,102 @@ class ExpImpTableController:
                         return f"{uasg}/{ano_parte}-{num_parte}/00"
                     return numero_raw
                 except:
-                    return str(row['numero_contrato'])
+                    return str(row.get('numero_contrato', ''))
 
             df['Número Formatado'] = df.apply(formatar_numero, axis=1)
 
-            # 7. Selecionar e Renomear Colunas Finais
+            # 7. Converter vigências para data (pandas)
+            # Aceita "YYYY-MM-DD"; se vier vazio vira NaT
+            df['vigencia_inicio_dt'] = pd.to_datetime(df['vigencia_inicio'], errors='coerce').dt.date
+            df['vigencia_fim_dt'] = pd.to_datetime(df['vigencia_fim'], errors='coerce').dt.date
+
+            # 7.1 Criar colunas formatadas para exportação (dd/mm/aaaa)
+            df['vigencia_inicio_export'] = pd.to_datetime(df['vigencia_inicio'], errors='coerce').dt.strftime('%d/%m/%Y')
+            df['vigencia_fim_export'] = pd.to_datetime(df['vigencia_fim'], errors='coerce').dt.strftime('%d/%m/%Y')
+
+            # Se preferir célula vazia ao invés de "NaT"
+            df['vigencia_inicio_export'] = df['vigencia_inicio_export'].fillna("")
+            df['vigencia_fim_export'] = df['vigencia_fim_export'].fillna("")
+
+            hoje = date.today()
+
+            # Regra:
+            # - Vigente: vigencia_fim >= hoje E (vigencia_inicio é nula OU <= hoje)
+            # - Morto: vigencia_fim < hoje
+            # - Sem vigencia_fim: vamos considerar como "vigente" (para não sumir do relatório)
+            def is_vigente(row):
+                ini = row['vigencia_inicio_dt']
+                fim = row['vigencia_fim_dt']
+                if fim is None or pd.isna(fim):
+                    return True
+                if ini is None or pd.isna(ini):
+                    return fim >= hoje
+                return (ini <= hoje) and (fim >= hoje)
+
+            df['__vigente__'] = df.apply(is_vigente, axis=1)
+
+            df_vigentes = df[df['__vigente__'] == True].copy()
+            df_mortos = df[(df['vigencia_fim_dt'].notna()) & (df['vigencia_fim_dt'] < hoje)].copy()
+
+            # 8. Selecionar e renomear colunas finais
             colunas_finais = [
-                'Número Formatado', 
-                'Material/Serviço', 
-                'valor_global', 
-                'objeto_final', 
-                'status_atual', 
-                'tipo', 
-                'modalidade'
+                'Número Formatado',
+                'uasg',
+                'uasg_nome',
+                'Material/Serviço',
+                'valor_global',
+                'objeto_final',
+                'status_atual',
+                'tipo',
+                'modalidade',
+                'vigencia_inicio_export',
+                'vigencia_fim_export'
             ]
-            
-            # Garante que só pegamos colunas que existem (segurança)
+
             cols_to_export = [c for c in colunas_finais if c in df.columns]
-            df_final = df[cols_to_export].copy()
 
-            # Renomeia para o Excel ficar bonito
-            rename_map = {
-                'Número Formatado': 'Número',
-                'Material/Serviço': 'Material/Serviço',
-                'valor_global': 'Valor Global',
-                'objeto_final': 'Objeto',
-                'status_atual': 'Status',
-                'tipo': 'Tipo',
-                'modalidade': 'Modalidade'
-            }
-            df_final.rename(columns=rename_map, inplace=True)
+            def montar_df_export(dfx):
+                out = dfx[cols_to_export].copy()
+                rename_map = {
+                    'Número Formatado': 'Número',
+                    'uasg': 'UASG Código',
+                    'uasg_nome': 'UASG Nome',
+                    'valor_global': 'Valor Global',
+                    'objeto_final': 'Objeto',
+                    'status_atual': 'Status',
+                    'tipo': 'Tipo',
+                    'modalidade': 'Modalidade',
+                    'vigencia_inicio_export': 'Vigência Início',
+                    'vigencia_fim_export': 'Vigência Fim',
+                }
+                out.rename(columns=rename_map, inplace=True)
+                return out
 
-            # 8. Gerar Excel
-            df_final.to_excel(filename, index=False)
-            QMessageBox.information(self.view, "Sucesso", f"Relatório BI exportado!\n{filename}")
+            df_vigentes_final = montar_df_export(df_vigentes)
+            df_mortos_final = montar_df_export(df_mortos)
+
+            # 9. Gerar Excel com 2 abas
+            sheet_vivos = "Contratos Vigentes"
+            sheet_mortos = f"Contratos Mortos {hoje_str}"  # <= 31 chars OK
+
+            with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+                df_vigentes_final.to_excel(writer, sheet_name=sheet_vivos, index=False)
+                df_mortos_final.to_excel(writer, sheet_name=sheet_mortos, index=False)
+
+            QMessageBox.information(
+                self.view,
+                "Sucesso",
+                f"Relatório BI exportado!\n\n"
+                f"Aba 1: {sheet_vivos} ({len(df_vigentes_final)} contratos)\n"
+                f"Aba 2: {sheet_mortos} ({len(df_mortos_final)} contratos)\n\n"
+                f"{filename}"
+            )
 
         except Exception as e:
             import traceback
             print(traceback.format_exc())
             QMessageBox.critical(self.view, "Erro", f"Erro ao exportar: {str(e)}")
-        
+
         finally:
             if conn:
                 conn.close()
