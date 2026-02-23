@@ -122,7 +122,9 @@ class Ata(Base):
     observacoes = Column(Text)
     termo_aditivo = Column(String)
     portaria_fiscalizacao = Column(String)
-    nup = Column(String) 
+    nup = Column(String)
+    cnpj = Column(String)
+    valor_global = Column(String)
     status_info = relationship("StatusAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     links = relationship("LinksAta", uselist=False, back_populates="ata", cascade="all, delete-orphan")
     registros = relationship("RegistroAta", back_populates="ata", cascade="all, delete-orphan")
@@ -143,7 +145,9 @@ class AtaData:
         self.observacoes = ata_db_object.observacoes
         self.portaria_fiscalizacao = ata_db_object.portaria_fiscalizacao
         self.termo_aditivo = ata_db_object.termo_aditivo
-        self.nup = ata_db_object.nup 
+        self.nup = ata_db_object.nup
+        self.cnpj = getattr(ata_db_object, 'cnpj', '') or ""
+        self.valor_global = getattr(ata_db_object, 'valor_global', '') or ""
         self.status = ata_db_object.status_info.status if ata_db_object.status_info else "SEÇÃO ATAS"
         self.registros = [reg.texto for reg in ata_db_object.registros] if ata_db_object.registros else []
         self.serie_ata_link = ata_db_object.links.serie_ata_link if ata_db_object.links else ""

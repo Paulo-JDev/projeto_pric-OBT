@@ -59,12 +59,14 @@ class AtaDetailsDialog(QDialog):
         self.numero_le = QLineEdit()
         self.ano_le = QLineEdit()
         self.nup_le = QLineEdit()
+        self.cnpj_le = QLineEdit()
         self.setor_le = QLineEdit()
         self.modalidade_le = QLineEdit()
         self.empresa_le = QLineEdit()
         self.objeto_le = QLineEdit()
         self.termo_aditivo_le = QLineEdit()
         self.portaria_le = QLineEdit()
+        self.valor_global_le = QLineEdit()
 
         # Campos de data
         self.celebracao_de = QDateEdit(calendarPopup=True)
@@ -72,18 +74,46 @@ class AtaDetailsDialog(QDialog):
         self.termino_de = QDateEdit(calendarPopup=True)
         self.termino_de.setDisplayFormat("dd/MM/yyyy")
 
-        # Adiciona os campos ao layout
-        layout.addRow(QLabel("<b>Número:</b>"), self.numero_le)
-        layout.addRow(QLabel("<b>Ano:</b>"), self.ano_le)
-        layout.addRow(QLabel("<b>NUP:</b>"), self.nup_le)
-        layout.addRow(QLabel("<b>Setor:</b>"), self.setor_le)
-        layout.addRow(QLabel("<b>Modalidade:</b>"), self.modalidade_le)
+        # ===== Linhas em grade (duas colunas) =====
+
+        # Linha 1: Número | Ano
+        h_num_ano = QHBoxLayout()
+        h_num_ano.addWidget(self.numero_le)
+        h_num_ano.addWidget(self.ano_le)
+        layout.addRow(QLabel("<b>Número / Ano:</b>"), h_num_ano)
+
+        # Linha 2: CNPJ | NUP
+        h_cnpj_nup = QHBoxLayout()
+        h_cnpj_nup.addWidget(self.cnpj_le)
+        h_cnpj_nup.addWidget(self.nup_le)
+        layout.addRow(QLabel("<b>CNPJ / NUP:</b>"), h_cnpj_nup)
+
+        # Linha 3: Setor | Modalidade
+        h_setor_modalidade = QHBoxLayout()
+        h_setor_modalidade.addWidget(self.setor_le)
+        h_setor_modalidade.addWidget(self.modalidade_le)
+        layout.addRow(QLabel("<b>Setor / Modalidade:</b>"), h_setor_modalidade)
+
+        # Linha 4: Empresa (sozinha, mas pode ser larga)
         layout.addRow(QLabel("<b>Empresa:</b>"), self.empresa_le)
+
+        # Linha 5: Objeto (sozinha)
         layout.addRow(QLabel("<b>Objeto:</b>"), self.objeto_le)
-        layout.addRow(QLabel("<b>Termo Aditivo:</b>"), self.termo_aditivo_le)
-        layout.addRow(QLabel("<b>Portaria de Fiscalização:</b>"), self.portaria_le)
-        layout.addRow(QLabel("<b>Data de Celebração:</b>"), self.celebracao_de)
-        layout.addRow(QLabel("<b>Data de Término:</b>"), self.termino_de)
+
+        # Linha 6: Termo Aditivo | Portaria de Fiscalização
+        h_termo_portaria = QHBoxLayout()
+        h_termo_portaria.addWidget(self.termo_aditivo_le)
+        h_termo_portaria.addWidget(self.portaria_le)
+        layout.addRow(QLabel("<b>Termo Aditivo / Portaria:</b>"), h_termo_portaria)
+
+        # Linha 7: Valor Global (sozinho ou com outro campo, se desejar)
+        layout.addRow(QLabel("<b>Valor Global:</b>"), self.valor_global_le)
+
+        # Linha 8: Datas (Celebração | Término)
+        h_datas = QHBoxLayout()
+        h_datas.addWidget(self.celebracao_de)
+        h_datas.addWidget(self.termino_de)
+        layout.addRow(QLabel("<b>Data de Celebração / Término:</b>"), h_datas)
 
         self.tabs.addTab(general_tab, "Informações Gerais")
 
@@ -244,12 +274,14 @@ class AtaDetailsDialog(QDialog):
         self.numero_le.setText(self.ata_data.numero or "")
         self.ano_le.setText(self.ata_data.ano or "")
         self.nup_le.setText(self.ata_data.nup or "")
+        self.cnpj_le.setText(getattr(self.ata_data, "cnpj", "") or "")
         self.setor_le.setText(self.ata_data.setor or "")
         self.modalidade_le.setText(self.ata_data.modalidade or "")
         self.empresa_le.setText(self.ata_data.empresa or "")
         self.objeto_le.setText(self.ata_data.objeto or "")
         self.termo_aditivo_le.setText(self.ata_data.termo_aditivo or "")
         self.portaria_le.setText(self.ata_data.portaria_fiscalizacao or "")
+        self.valor_global_le.setText(getattr(self.ata_data.valor_global, "valor_global", "") or "")
 
         # Links
         self.serie_ata_link_le.setText(self.ata_data.serie_ata_link or "")
@@ -294,6 +326,8 @@ class AtaDetailsDialog(QDialog):
             'termo_aditivo': self.termo_aditivo_le.text(),
             'portaria_fiscalizacao': self.portaria_le.text(),
             'nup': self.nup_le.text(),
+            'cnpj': self.cnpj_le.text(),             # NOVO
+            'valor_global': self.valor_global_le.text(),  # NOVO
             'portal_licitacoes_link': self.portal_licitacoes_link_le.text(),
             'status': self.status_dropdown.currentText() if hasattr(self, 'status_dropdown') else '',
             'serie_ata_link': self.serie_ata_link_le.text(),
