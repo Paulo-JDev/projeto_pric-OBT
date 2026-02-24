@@ -238,7 +238,7 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
         controller.view.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         model.setRowCount(len(controller.current_data))
         model.setColumnCount(8)
-        model.setHorizontalHeaderLabels(["Dias", "Contrato", "Processo", "Fornecedor", "N° de Série", "Objeto", "Valor Global", "Status"])
+        model.setHorizontalHeaderLabels(["Dias", "Contrato", "Pregão", "Fornecedor", "NUP", "Objeto", "Valor Global", "Status"])
 
         header = controller.view.table.horizontalHeader()
         

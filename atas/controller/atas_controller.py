@@ -420,7 +420,7 @@ class AtasController:
         model = self.view.table_model
         model.clear()
         #headers = ["Dias", "Número", "Ano", "Empresa", "Ata", "Objeto", "Status"]
-        headers = ["Dias", "Vencimento", "Número", "Ano", "Empresa", "Ata", "Objeto", "Status"]
+        headers = ["Dias", "Vencimento", "Pregão", "Ano", "Empresa", "Ata", "Objeto", "Status"]
         model.setHorizontalHeaderLabels(headers)
         today = date.today()
         for ata in atas:

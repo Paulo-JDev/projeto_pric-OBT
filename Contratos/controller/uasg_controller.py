@@ -48,6 +48,7 @@ class UASGController:
         self.table_controller = ExpImpTableController(self)
         
         self.view.settings_button.clicked.connect(self.show_settings_dialog)
+        self.view.table.doubleClicked.connect(self._open_details_from_double_click)
 
         initial_mode = self.model.load_setting("data_mode", "Online")
         self.view.update_status_icon(initial_mode)
@@ -70,6 +71,19 @@ class UASGController:
     def get_loaded_uasgs(self):
         """Retorna o dicionário de todas as UASGs carregadas."""
         return self.loaded_uasgs
+    
+    def _open_details_from_double_click(self, index):
+        if not index.isValid():
+            return
+
+        # A tabela usa proxy model (por causa da busca)
+        proxy_model = self.view.table.model()
+        source_index = proxy_model.mapToSource(index)
+        row = source_index.row()
+
+        if 0 <= row < len(self.current_data):
+            contrato = self.current_data[row]
+            self.show_details_dialog(contrato.copy())
 
     # ==================== WRAPPER PARA A VIEW ====================
     def open_table_options(self):
