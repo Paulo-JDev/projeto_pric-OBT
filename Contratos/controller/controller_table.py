@@ -1,12 +1,40 @@
 # Contratos/controller/controller_table.py
 
-from PyQt6.QtWidgets import QHeaderView, QTableView, QAbstractItemView
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
+from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush, QTextDocument
+from PyQt6.QtWidgets import QHeaderView, QTableView, QAbstractItemView, QStyledItemDelegate
+
 from datetime import datetime, date
 import sqlite3
 from utils.icon_loader import icon_manager
 
+class RichTextDelegate(QStyledItemDelegate):
+    """Renderiza HTML (UserRole), mantendo texto simples (DisplayRole) para busca."""
+    def paint(self, painter, option, index):
+        html = index.data(Qt.ItemDataRole.UserRole)
+        if not html:
+            return super().paint(painter, option, index)
+
+        doc = QTextDocument()
+        doc.setHtml(html)
+        doc.setTextWidth(option.rect.width())
+
+        painter.save()
+        painter.translate(option.rect.topLeft())
+        rectf = QRectF(0, 0, option.rect.width(), option.rect.height())
+        doc.drawContents(painter, rectf)
+        painter.restore()
+
+    def sizeHint(self, option, index):
+        html = index.data(Qt.ItemDataRole.UserRole)
+        if not html:
+            return super().sizeHint(option, index)
+
+        doc = QTextDocument()
+        doc.setHtml(html)
+        doc.setTextWidth(option.rect.width())
+        return doc.size().toSize()
+    
 # =============================================================================
 # NOVAS FUNÇÕES AUXILIARES CENTRALIZADAS
 # =============================================================================
@@ -113,6 +141,13 @@ def _get_status_style(status_text):
     }
     return status_styles.get(status_text, (Qt.GlobalColor.white, QFont.Weight.Normal))
 
+def _format_date_br(date_str: str) -> str:
+    if not date_str:
+        return ""
+    try:
+        return datetime.strptime(str(date_str), "%Y-%m-%d").strftime("%d/%m/%Y")
+    except:
+        return str(date_str)
 
 # =============================================================================
 # FUNÇÕES PRINCIPAIS ATUALIZADAS
@@ -175,38 +210,51 @@ def _update_row_content(controller, row_index, contrato, new_status=None):
     status_text = "SEÇÃO CONTRATOS"
     objeto_text = contrato.get("objeto", "Não informado")
     
-    try:
-        if contrato_id and hasattr(controller, 'model') and controller.model:
-            conn = controller.model._get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT status, objeto_editado FROM status_contratos WHERE contrato_id = ?", (contrato_id,))
-            saved_data = cursor.fetchone()
-            if saved_data:
-                status_text = saved_data['status'] or status_text
-                objeto_text = saved_data['objeto_editado'] or objeto_text
-            conn.close()
-    except sqlite3.Error as e:
-        print(f"Erro ao buscar dados salvos para o contrato {contrato_id}: {e}")
-
-    # Se um novo status foi passado (após salvar), ele tem prioridade
-    if new_status:
-        status_text = new_status
-        
-    # --- ✅ USA A NOVA FUNÇÃO DE FORMATAÇÃO ---
+        # --- ✅ NOVO LAYOUT: 7 COLUNAS ---
     formatted_contract_number = _format_contract_number(contrato)
-    model.setItem(row_index, 1, create_centered_item(formatted_contract_number))
-    # --- FIM DA MODIFICAÇÃO ---
 
-    model.setItem(row_index, 2, create_centered_item(contrato.get("licitacao_numero", "")))
-    model.setItem(row_index, 3, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
-    model.setItem(row_index, 4, create_centered_item(contrato.get("processo", "")))
-    model.setItem(row_index, 5, create_centered_item(objeto_text)) # Objeto (pode ter sido editado)
-    model.setItem(row_index, 6, create_centered_item(contrato.get("valor_global", "Não informado")))
+    # Processo (visual) = licitacao_numero (API)
+    processo_visual = str(contrato.get("licitacao_numero", "") or "")
+    contrato_plain = f"{formatted_contract_number}\nProcesso: {processo_visual}"
+    contrato_html = (
+        f"<div>{formatted_contract_number}</div>"
+        f"<div style='color:#7a7a7a; font-size:9pt;'>Processo: {processo_visual}</div>"
+    )
+    item_contrato = QStandardItem(contrato_plain)
+    item_contrato.setData(contrato_html, Qt.ItemDataRole.UserRole)
+    item_contrato.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+    model.setItem(row_index, 1, item_contrato)
 
-    # --- Coluna 7: Status (Usando a nova função auxiliar) ---
-    status_item = _create_status_item(status_text)
-    model.setItem(row_index, 7, status_item)
+    # NUP (visual) = processo (API) -> dentro de Fornecedor
+    forn = str(contrato.get("fornecedor", {}).get("nome", "") or "")
+    nup_visual = str(contrato.get("processo", "") or "")
+    forn_plain = f"{forn}\nNUP: {nup_visual}"
+    forn_html = (
+        f"<div>{forn}</div>"
+        f"<div style='color:#7a7a7a; font-size:9pt;'>NUP: {nup_visual}</div>"
+    )
+    item_forn = QStandardItem(forn_plain)
+    item_forn.setData(forn_html, Qt.ItemDataRole.UserRole)
+    item_forn.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+    model.setItem(row_index, 2, item_forn)
 
+    # Vigência (compacta)
+    ini = _format_date_br(contrato.get("vigencia_inicio", ""))
+    fim = _format_date_br(contrato.get("vigencia_fim", ""))
+    vig_plain = f"Início: {ini}\nFim: {fim}"
+    vig_html = (
+        f"<div>Início: {ini}</div>"
+        f"<div style='color:#7a7a7a; font-size:9pt;'>Fim: {fim}</div>"
+    )
+    item_vig = QStandardItem(vig_plain)
+    item_vig.setData(vig_html, Qt.ItemDataRole.UserRole)
+    item_vig.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+    model.setItem(row_index, 3, item_vig)
+
+    # Objeto / Valor / Status
+    model.setItem(row_index, 4, create_centered_item(objeto_text))
+    model.setItem(row_index, 5, create_centered_item(contrato.get("valor_global", "Não informado")))
+    model.setItem(row_index, 6, _create_status_item(status_text))
 
 def _populate_or_update_table(controller, data_source, repopulation=True):
     """Função auxiliar para popular (repopulation=True) ou atualizar (repopulation=False) a tabela."""
@@ -237,8 +285,14 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
         # --- 2. Configuração do Modelo e Headers ---
         controller.view.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         model.setRowCount(len(controller.current_data))
-        model.setColumnCount(8)
-        model.setHorizontalHeaderLabels(["Dias", "Contrato", "Pregão", "Fornecedor", "NUP", "Objeto", "Valor Global", "Status"])
+        model.setColumnCount(7)
+        model.setHorizontalHeaderLabels(["Dias", "Contrato", "Fornecedor", "Vigência", "Objeto", "Valor Global", "Status"])
+
+        # Delegate para renderizar as “sub-linhas”
+        delegate = RichTextDelegate(controller.view.table)
+        controller.view.table.setItemDelegateForColumn(1, delegate)  # Contrato (com Processo dentro)
+        controller.view.table.setItemDelegateForColumn(2, delegate)  # Fornecedor (com NUP dentro)
+        controller.view.table.setItemDelegateForColumn(3, delegate)  # Vigência (início/fim)
 
         header = controller.view.table.horizontalHeader()
         
@@ -250,20 +304,21 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
             return item
         
         # --- 3. Configuração do Layout da Tabela (inspirado no seu exemplo) ---
-        header.setMinimumSectionSize(80)
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive) # Dias
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # Dias
         header.resizeSection(0, 80)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive) # Contrato/Ata (Aumentado)
-        header.resizeSection(1, 150) # Aumentado para o novo formato
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive) # Processo
-        header.resizeSection(2, 105)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch) # Fornecedor
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Interactive) # N° de Série
-        header.resizeSection(4, 175)
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch) # Objeto
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents) # Valor Global
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Interactive) # Status
-        header.resizeSection(7, 180)
+
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)  # Contrato
+        header.resizeSection(1, 180)
+
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)      # Fornecedor
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)  # Vigência
+        header.resizeSection(3, 170)
+
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)      # Objeto
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Valor Global
+
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Interactive)  # Status
+        header.resizeSection(6, 180)
 
     # --- 4. Preenchimento dos Dados ---
     # Este loop agora preenche TODAS as colunas, sem chamar _update_row_content
@@ -308,18 +363,54 @@ def _populate_or_update_table(controller, data_source, repopulation=True):
         
         # --- Colunas 1-6 (Apenas se for 'repopulation') ---
         if repopulation:
-            # ✅--- MODIFICAÇÃO APLICADA ---
-            # Usa a nova função de formatação
             formatted_contract_number = _format_contract_number(contrato)
-            model.setItem(row_index, 1, create_centered_item(formatted_contract_number))
-            model.setItem(row_index, 2, create_centered_item(str(contrato.get("licitacao_numero", ""))))
-            model.setItem(row_index, 3, create_centered_item(contrato.get("fornecedor", {}).get("nome", "")))
-            model.setItem(row_index, 4, create_centered_item(str(contrato.get("processo", ""))))
-            model.setItem(row_index, 5, create_centered_item(str(objeto_text)))
-            model.setItem(row_index, 6, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
-            
-            # --- Coluna 7: Status (Item criado aqui) ---
-            model.setItem(row_index, 7, _create_status_item(status_text))
+
+            # Contrato + Processo (licitacao_numero)
+            processo_visual = str(contrato.get("licitacao_numero", "") or "")
+            contrato_plain = f"{formatted_contract_number}\nProcesso: {processo_visual}"
+            contrato_html = (
+                f"<div>{formatted_contract_number}</div>"
+                f"<div style='color:#7a7a7a; font-size:9pt;'>Processo: {processo_visual}</div>"
+            )
+            item_contrato = QStandardItem(contrato_plain)
+            item_contrato.setData(contrato_html, Qt.ItemDataRole.UserRole)
+            item_contrato.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            model.setItem(row_index, 1, item_contrato)
+
+            # Fornecedor + NUP (processo)
+            forn = str(contrato.get("fornecedor", {}).get("nome", "") or "")
+            nup_visual = str(contrato.get("processo", "") or "")
+            forn_plain = f"{forn}\nNUP: {nup_visual}"
+            forn_html = (
+                f"<div>{forn}</div>"
+                f"<div style='color:#7a7a7a; font-size:9pt;'>NUP: {nup_visual}</div>"
+            )
+            item_forn = QStandardItem(forn_plain)
+            item_forn.setData(forn_html, Qt.ItemDataRole.UserRole)
+            item_forn.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            model.setItem(row_index, 2, item_forn)
+
+            # Vigência
+            ini = _format_date_br(contrato.get("vigencia_inicio", ""))
+            fim = _format_date_br(contrato.get("vigencia_fim", ""))
+            vig_plain = f"Início: {ini}\nFim: {fim}"
+            vig_html = (
+                f"<div>Início: {ini}</div>"
+                f"<div style='color:#7a7a7a; font-size:9pt;'>Fim: {fim}</div>"
+            )
+            item_vig = QStandardItem(vig_plain)
+            item_vig.setData(vig_html, Qt.ItemDataRole.UserRole)
+            item_vig.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            model.setItem(row_index, 3, item_vig)
+
+            # Objeto / Valor / Status
+            model.setItem(row_index, 4, create_centered_item(str(objeto_text)))
+            model.setItem(row_index, 5, create_centered_item(str(contrato.get("valor_global", "Não informado"))))
+            model.setItem(row_index, 6, _create_status_item(status_text))
+
+            controller.view.table.verticalHeader().setDefaultSectionSize(44)
+            #controller.view.table.resizeRowsToContents()
+
 
     if repopulation:
         print(f"✅ Tabela carregada com {len(controller.current_data)} contratos.")
