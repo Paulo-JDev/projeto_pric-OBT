@@ -186,45 +186,6 @@ def _build_fornecedor_html(nome: str, nup: str, align: str = _ALIGN) -> str:
         f"<div style='text-align:{align}; color:#7a7a7a; font-size:9pt;'>NUP: {nup}</div>"
     )
 
-def _build_objeto_html(ini: str, fim: str, align: str = _ALIGN) -> str:
-    return (
-        f"<div style='text-align:{align};'>Início: {ini}</div>"
-        f"<div style='text-align:{align}; color:#7a7a7a; font-size:9pt;'>Fim: {fim}</div>"
-    )
-
-def _create_plain_and_html_vigencia(contrato: dict) -> tuple[str, str]:
-    ini = _format_date_br(contrato.get("vigencia_inicio", ""))
-    fim = _format_date_br(contrato.get("vigencia_fim", ""))
-    vig_plain = f"Início: {ini}\nFim: {fim}"
-    vig_html = (
-        f"<div>Início: {ini}</div>"
-        f"<div style='color:#7a7a7a; font-size:9pt;'>Fim: {fim}</div>"
-    )
-    return vig_plain, vig_html
-
-
-def _create_plain_and_html_contrato(contrato: dict) -> tuple[str, str]:
-    formatted_contract_number = _format_contract_number(contrato)
-    processo_visual = str(contrato.get("licitacao_numero", "") or "")
-    contrato_plain = f"{formatted_contract_number}\nPregão: {processo_visual}"
-    contrato_html = (
-        f"<div>{formatted_contract_number}</div>"
-        f"<div style='color:#7a7a7a; font-size:9pt;'>Pregão: {processo_visual}</div>"
-    )
-    return contrato_plain, contrato_html
-
-
-def _create_plain_and_html_fornecedor(contrato: dict) -> tuple[str, str]:
-    forn = str(contrato.get("fornecedor", {}).get("nome", "") or "")
-    nup_visual = str(contrato.get("processo", "") or "")
-    forn_plain = f"{forn}\nNUP: {nup_visual}"
-    forn_html = (
-        f"<div>{forn}</div>"
-        f"<div style='color:#7a7a7a; font-size:9pt;'>NUP: {nup_visual}</div>"
-    )
-    return forn_plain, forn_html
-
-
 def _get_status_and_objeto_from_db(controller, contrato_id, objeto_padrao: str) -> tuple[str, str]:
     """
     Busca status e objeto_editado no banco (status_contratos).
@@ -294,7 +255,7 @@ def _fill_row(model, row_index: int, contrato: dict, today: date,
 
     # --- Coluna 4: Objeto ---
     item_objeto = QStandardItem(str(objeto_text))
-    item_objeto.setData(_build_objeto_html(objeto_text), Qt.ItemDataRole.UserRole)
+    item_objeto.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
     model.setItem(row_index, 4, item_objeto)
 
     # --- Coluna 5: Valor Global ---
