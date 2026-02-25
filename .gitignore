@@ -43,6 +43,7 @@ DB_offline/
 .DS_Store
 Thumbs.db
 dist/
+*.log
 
 # Aquivos Json
 teste.json
@@ -55,9 +56,13 @@ trello_comments.json
 gifs/
 imgs/
 
-# I don't know about this past -> /config
-*.log
+# Exe's
+build/
+
+# API
 app.py
+
+# I don't know about this past -> /config
 m_requirements.txt
 dist-linux/
 *.spec

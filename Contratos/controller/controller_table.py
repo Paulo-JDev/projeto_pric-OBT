@@ -170,19 +170,19 @@ _ALIGN = "center"  # ou "left"
 
 def _build_vigencia_html(ini: str, fim: str, align: str = _ALIGN) -> str:
     return (
-        f"<div style='text-align:{align};'>Início: {ini}</div>"
+        f"<div style='text-align:{align}; color:#FFFFFF;'>Início: {ini}</div>"
         f"<div style='text-align:{align}; color:#7a7a7a; font-size:9pt;'>Fim: {fim}</div>"
     )
 
 def _build_contrato_html(numero: str, pregao: str, align: str = _ALIGN) -> str:
     return (
-        f"<div style='text-align:{align};'>{numero}</div>"
+        f"<div style='text-align:{align}; color:#FFFFFF;'>{numero}</div>"
         f"<div style='text-align:{align}; color:#7a7a7a; font-size:9pt;'>Pregão: {pregao}</div>"
     )
 
 def _build_fornecedor_html(nome: str, nup: str, align: str = _ALIGN) -> str:
     return (
-        f"<div style='text-align:{align};'>{nome}</div>"
+        f"<div style='text-align:{align}; color:#FFFFFF;'>{nome}</div>"
         f"<div style='text-align:{align}; color:#7a7a7a; font-size:9pt;'>NUP: {nup}</div>"
     )
 

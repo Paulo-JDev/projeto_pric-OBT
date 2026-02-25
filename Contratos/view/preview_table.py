@@ -129,7 +129,7 @@ def create_preview_table_widget(controller):
 def populate_preview_table(preview_model, data):
     """Popula a tabela de pré-visualização com dados filtrados, ordenados e formatados."""
     preview_model.clear()
-    preview_model.setHorizontalHeaderLabels(["UASG", "Dias", "Vigencia Inicio", "Vigencia Fim", "Contrato/Ata", "NUP", "Fornecedor", "Status"])
+    preview_model.setHorizontalHeaderLabels(["UASG", "Dias", "Inicio", "Vencimento", "Contrato/Ata", "NUP", "Fornecedor", "Status"])
 
     active, expired, no_date = [], [], []
     for row_data in data:
