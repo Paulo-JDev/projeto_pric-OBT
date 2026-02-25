@@ -420,7 +420,7 @@ class AtasController:
         model = self.view.table_model
         model.clear()
         #headers = ["Dias", "Número", "Ano", "Empresa", "Ata", "Objeto", "Status"]
-        headers = ["Dias", "Vencimento", "Pregão", "Ano", "Empresa", "Ata", "Objeto", "Status"]
+        headers = ["Dias", "Início", "Vencimento", "Pregão", "Ano", "Empresa", "Ata", "Objeto", "Status"]
         model.setHorizontalHeaderLabels(headers)
         today = date.today()
         for ata in atas:
@@ -436,6 +436,12 @@ class AtasController:
                         dias_restantes = (termino_date - today).days
                         termino_formatado = termino_date.strftime("%d/%m/%Y")
 
+            vigencia_inicio = "N/A"
+            if getattr(ata, "celebracao", None):
+                inicio_date = self._parse_date_string(ata.celebracao)
+                if inicio_date:
+                    vigencia_inicio = inicio_date.strftime("%d/%m/%Y")
+
             status_text = ata.status_info.status if ata.status_info else "SEÇÃO ATAS"
             status_item = self._create_centered_item(status_text)
             brush, weight = self._get_status_style(status_text)
@@ -445,28 +451,34 @@ class AtasController:
             status_item.setFont(font)
 
             model.appendRow([
-                self._create_dias_item(dias_restantes), self._create_centered_item(termino_formatado),self._create_centered_item(ata.numero), 
-                self._create_centered_item(ata.ano), self._create_centered_item(ata.empresa),
-                self._create_centered_item(ata.contrato_ata_parecer), self._create_centered_item(ata.objeto),
-                status_item
+                self._create_dias_item(dias_restantes),         # 0 – Dias
+                self._create_centered_item(vigencia_inicio),    # 1 – Vigência Início
+                self._create_centered_item(termino_formatado),  # 2 – Vencimento
+                self._create_centered_item(ata.numero),         # 3 – Pregão
+                self._create_centered_item(ata.ano),            # 4 – Ano
+                self._create_centered_item(ata.empresa),        # 5 – Empresa
+                self._create_centered_item(ata.contrato_ata_parecer),  # 6 – Ata
+                self._create_centered_item(ata.objeto),         # 7 – Objeto
+                status_item                                      # 8 – Status
             ])
+
         # Configura as colunas
         header = self.view.table_view.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed); header.resizeSection(0, 80)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed); header.resizeSection(1, 95)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed); header.resizeSection(2, 75)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed); header.resizeSection(3, 80)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed); header.resizeSection(5, 170)
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
-        header.resizeSection(7, 180)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed);   header.resizeSection(0, 80)   # Dias
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed);   header.resizeSection(1, 95)  # Vigência Início
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed);   header.resizeSection(2, 95)   # Vencimento
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed);   header.resizeSection(3, 75)   # Pregão
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed);   header.resizeSection(4, 80)   # Ano
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)                                # Empresa
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed);   header.resizeSection(6, 170)  # Ata
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)                                # Objeto
+        header.setSectionResizeMode(8, QHeaderView.ResizeMode.Fixed);   header.resizeSection(8, 180)
 
     def show_details_on_double_click(self, index):
         source_index = self.view.proxy_model.mapToSource(index)
         row = source_index.row()
         source_model = self.view.proxy_model.sourceModel()
-        parecer_item = source_model.item(row, 5)
+        parecer_item = source_model.item(row, 6)
         if not parecer_item: return
         
         ata_data = self.model.get_ata_by_parecer(parecer_item.text())
@@ -477,7 +489,7 @@ class AtasController:
         index = self.view.table_view.indexAt(position)
         if not index.isValid(): return
         source_index = self.view.proxy_model.mapToSource(index)
-        parecer = self.view.proxy_model.sourceModel().item(source_index.row(), 5).text()
+        parecer = self.view.proxy_model.sourceModel().item(source_index.row(), 6).text()
         if not parecer: return
         
         menu = QMenu(self.view)
@@ -535,8 +547,8 @@ class AtasController:
                 return
 
             # 3. Encontrar a linha (row) que precisa ser atualizada
-            # A coluna "Ata" (ID) é a [5]
-            column_to_check = 5 
+            # A coluna "Ata" (ID) é a [6]
+            column_to_check = 6 
             row_to_update = -1
             
             for row in range(model.rowCount()):
@@ -566,7 +578,13 @@ class AtasController:
                         dias_restantes = (termino_date - date.today()).days
                         termino_formatado = termino_date.strftime("%d/%m/%Y")
             
-            # Col 7: Status
+            vigencia_inicio = "N/A"
+            if getattr(updated_ata, "celebracao", None):
+                inicio_date = self._parse_date_string(updated_ata.celebracao)
+                if inicio_date:
+                    vigencia_inicio = inicio_date.strftime("%d/%m/%Y")
+            
+            # Col 8: Status
             status_text = updated_ata.status # O AtaData já trata o "SEÇÃO ATAS"
             status_item = self._create_centered_item(status_text)
             brush, weight = self._get_status_style(status_text)
@@ -577,13 +595,14 @@ class AtasController:
             
             # 5. Atualizar CADA CÉLULA daquela linha
             model.setItem(row_to_update, 0, self._create_dias_item(dias_restantes))
-            model.setItem(row_to_update, 1, self._create_centered_item(termino_formatado))
-            model.setItem(row_to_update, 2, self._create_centered_item(updated_ata.numero))
-            model.setItem(row_to_update, 3, self._create_centered_item(updated_ata.ano))
-            model.setItem(row_to_update, 4, self._create_centered_item(updated_ata.empresa))
-            model.setItem(row_to_update, 5, self._create_centered_item(updated_ata.contrato_ata_parecer)) # A própria ID
-            model.setItem(row_to_update, 6, self._create_centered_item(updated_ata.objeto))
-            model.setItem(row_to_update, 7, status_item)
+            model.setItem(row_to_update, 1, self._create_centered_item(vigencia_inicio))
+            model.setItem(row_to_update, 2, self._create_centered_item(termino_formatado))
+            model.setItem(row_to_update, 3, self._create_centered_item(updated_ata.numero))
+            model.setItem(row_to_update, 4, self._create_centered_item(updated_ata.ano))
+            model.setItem(row_to_update, 5, self._create_centered_item(updated_ata.empresa))
+            model.setItem(row_to_update, 6, self._create_centered_item(updated_ata.contrato_ata_parecer)) # A própria ID
+            model.setItem(row_to_update, 7, self._create_centered_item(updated_ata.objeto))
+            model.setItem(row_to_update, 8, status_item)
             
             # 6. Log de sucesso (o que você já estava vendo)
             print(f"✅ Linha da ata {parecer_value} atualizada na tabela.")

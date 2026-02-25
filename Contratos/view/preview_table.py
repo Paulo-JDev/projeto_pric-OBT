@@ -29,6 +29,14 @@ def _create_centered_item(text):
     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
     return item
 
+def _format_date_br(date_str) -> str:
+    if not date_str:
+        return "N/A"
+    try:
+        return datetime.strptime(str(date_str).strip(), "%Y-%m-%d").strftime("%d/%m/%Y")
+    except ValueError:
+        return str(date_str).strip()
+
 def _create_preview_dias_item(dias_restantes_valor):
     """Cria e formata um QStandardItem para a coluna 'Dias' da pré-visualização."""
     dias_item = _create_centered_item(str(dias_restantes_valor))
@@ -102,12 +110,16 @@ def create_preview_table_widget(controller):
         # Define larguras iniciais para colunas específicas
         header.resizeSection(0, 80)    # Coluna "UASG"
         header.resizeSection(1, 80)    # Coluna "Dias"
-        header.resizeSection(2, 110)   # Coluna "Contrato/Ata"
-        header.resizeSection(3, 160)   # Coluna "Processo"
+
+        header.resizeSection(2, 110)   # Coluna "Vigencia Inicio"
+        header.resizeSection(3, 110)   # Coluna "Vigencia Fim"
+
+        header.resizeSection(4, 110)   # Coluna "Contrato/Ata"
+        header.resizeSection(5, 160)   # Coluna "Processo- NUP"
         
         # Permite que as colunas de Fornecedor e Status se estiquem para preencher o espaço
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch) # Fornecedor
-        header.resizeSection(5, 250) # Status
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch) # Fornecedor
+        header.resizeSection(7, 230) # Status
 
     resize_button.clicked.connect(adjust_columns)
 
@@ -117,7 +129,7 @@ def create_preview_table_widget(controller):
 def populate_preview_table(preview_model, data):
     """Popula a tabela de pré-visualização com dados filtrados, ordenados e formatados."""
     preview_model.clear()
-    preview_model.setHorizontalHeaderLabels(["UASG", "Dias", "Contrato/Ata", "NUP", "Fornecedor", "Status"])
+    preview_model.setHorizontalHeaderLabels(["UASG", "Dias", "Vigencia Inicio", "Vigencia Fim", "Contrato/Ata", "NUP", "Fornecedor", "Status"])
 
     active, expired, no_date = [], [], []
     for row_data in data:
@@ -164,6 +176,8 @@ def populate_preview_table(preview_model, data):
         row_items = [
             uasg_item,
             dias_item,
+            _create_centered_item(_format_date_br(row_data.get("vigencia_inicio", ""))),
+            _create_centered_item(_format_date_br(row_data.get("vigencia_fim", ""))),
             _create_centered_item(row_data.get("numero", "N/A")),
             _create_centered_item(row_data.get("processo", "N/A")),
             _create_centered_item(row_data.get("fornecedor_nome", "N/A")),

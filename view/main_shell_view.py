@@ -37,11 +37,11 @@ class MainShellView(QMainWindow):
         home_menu.setToolTip("Home")
         self.nav_list.addItem(home_menu)
 
-        item_contratos = QListWidgetItem(icon_manager.get_icon("contrato"), "")
+        item_contratos = QListWidgetItem(icon_manager.get_icon("logo-contrato"), "")
         item_contratos.setToolTip("Contratos")
         self.nav_list.addItem(item_contratos)
 
-        item_atas = QListWidgetItem(icon_manager.get_icon("atas"), "")
+        item_atas = QListWidgetItem(icon_manager.get_icon("logo-atas"), "")
         item_atas.setToolTip("Atas")
         self.nav_list.addItem(item_atas)
         

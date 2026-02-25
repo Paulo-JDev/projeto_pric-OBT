@@ -418,6 +418,19 @@ class AtaDetailsDialog(QDialog):
 
         QMessageBox.information(self, "Copiar Registros", f"{len(checked_texts)} registro(s) copiado(s) para a área de transferência.")
 
+    def copy_to_clipboard(self, line_edit: QLineEdit):
+        """Copia o texto de um QLineEdit para a área de transferência."""
+        from PyQt6.QtWidgets import QApplication, QMessageBox
+
+        text = line_edit.text().strip()
+        if not text:
+            QMessageBox.information(self, "Copiar link", "Não há link para copiar.")
+            return
+
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
+        QMessageBox.information(self, "Copiar link", "Link copiado para a área de transferência.")
+
     def save_changes(self):
         """Emite um sinal para o controller salvar todos os dados."""
         # O controller vai pegar os dados, salvar TUDO (Geral e Fiscalização),

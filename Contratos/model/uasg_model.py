@@ -636,6 +636,7 @@ class UASGModel:
                     c.valor_global,
                     sc.status,
                     sc.objeto_editado,
+                    c.vigencia_inicio,
                     c.vigencia_fim
                 FROM contratos c
                 JOIN status_contratos sc ON c.id = sc.contrato_id
@@ -655,6 +656,7 @@ class UASGModel:
                     "valor_global": row['valor_global'],
                     "status": row['status'],
                     "objeto_editado": row['objeto_editado'],
+                    "vigencia_inicio": row['vigencia_inicio'],
                     "vigencia_fim": row['vigencia_fim']
                 })
         except sqlite3.Error as e:
