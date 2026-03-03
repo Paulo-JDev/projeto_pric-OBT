@@ -1,3 +1,5 @@
+# utils/utils.py
+
 from PyQt6.QtWidgets import QLabel, QLineEdit, QHBoxLayout
 from PyQt6.QtCore import QSortFilterProxyModel, Qt, QRegularExpression
 import os
@@ -107,3 +109,17 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
+
+def get_config_path(relative_path):
+    """Retorna o caminho para arquivos que devem ser persistentes ao lado do .exe."""
+    if getattr(sys, 'frozen', False):
+        # Se for um executável, base_path é a pasta onde o .exe está
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # Se for script .py, base_path é a raiz do projeto
+        base_path = os.path.abspath(".")
+    
+    full_path = os.path.join(base_path, relative_path)
+    # Garante que a pasta pai exista
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    return full_path

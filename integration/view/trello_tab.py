@@ -1,7 +1,7 @@
 # integration/view/trello_tab.py
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
-    QPushButton, QFrame, QFormLayout, QScrollArea
+    QPushButton, QFrame, QFormLayout, QScrollArea, QTabWidget
 )
 from PyQt6.QtCore import Qt
 
@@ -31,33 +31,52 @@ class TrelloTab(QWidget):
         self.layout.addWidget(QLabel("<b>Acesso à API Trello</b>"))
         self.layout.addWidget(cred_group)
 
-        # --- MAPEAMENTO DE STATUS ---
-        self.layout.addWidget(QLabel("<b>Mapeamento: Status -> ID da Lista Trello</b>"))
+        # --- ABAS DE MAPEAMENTO ---
+        self.tabs = QTabWidget()
         
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        self.mapping_form = QFormLayout(scroll_content)
-
-        # Lista de status conforme o sistema
-        self.status_list = [
+        # Aba Contratos
+        self.tab_contratos = self._create_mapping_tab([
             "SEÇÃO CONTRATOS", "EMPRESA", "SIGDEM", "SIGAD", "ASSINADO", 
             "PUBLICADO", "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO"
-        ]
-        
-        self.mapping_inputs = {}
-        for status in self.status_list:
-            input_field = QLineEdit()
-            input_field.setPlaceholderText(f"ID da lista para {status}")
-            self.mapping_form.addRow(f"{status}:", input_field)
-            self.mapping_inputs[status] = input_field
+        ])
+        self.mapping_inputs_contratos = self.tab_contratos.inputs
 
-        scroll.setWidget(scroll_content)
-        self.layout.addWidget(scroll)
+        # Aba Atas
+        self.tab_atas = self._create_mapping_tab([
+            "SEÇÃO ATAS", "ATA GERADA", "EMPRESA", "SIGDEM", "ASSINADO", 
+            "PUBLICADO", "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO", "SIGAD"
+        ])
+        self.mapping_inputs_atas = self.tab_atas.inputs
+
+        self.tabs.addTab(self.tab_contratos.scroll, "Mapeamento Contratos")
+        self.tabs.addTab(self.tab_atas.scroll, "Mapeamento Atas")
+        self.layout.addWidget(self.tabs)
 
         self.btn_save_creds = QPushButton("Salvar Configurações Trello")
-        self.btn_save_creds.setStyleSheet("background-color: #8AB4F7; color: black; font-weight: bold; height: 35px;")
         self.layout.addWidget(self.btn_save_creds)
+
+    def _create_mapping_tab(self, status_list):
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        content = QWidget()
+        layout = QFormLayout(content)
+        inputs = {}
+        for status in status_list:
+            field = QLineEdit()
+            layout.addRow(f"{status}:", field)
+            inputs[status] = field
+        scroll.setWidget(content)
+        # Objeto auxiliar para facilitar acesso
+        content.scroll = scroll
+        content.inputs = inputs
+        return content
+
+    def _setup_mapping_fields(self, layout, status_list, input_dict):
+        for status in status_list:
+            field = QLineEdit()
+            field.setPlaceholderText(f"ID da lista para {status}")
+            layout.addRow(f"{status}:", field)
+            input_dict[status] = field
 
     def toggle_creds_visibility(self, checked):
         # Mensagem avisando que a pessoa não esta outorizada para ver as credenciais
