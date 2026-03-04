@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey,
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, joinedload
 from datetime import datetime
 import sqlite3
+import uuid as uuid_pkg
 
 # Define o caminho base
 try:
@@ -75,6 +76,7 @@ class StatusAta(Base):
 class RegistroAta(Base):
     __tablename__ = "registros_atas"
     id = Column(Integer, primary_key=True, index=True)
+    uuid = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid_pkg.uuid4()))
     ata_parecer = Column(String, ForeignKey("atas.contrato_ata_parecer"), nullable=False) 
     texto = Column(Text, nullable=False)
     ata = relationship("Ata", back_populates="registros")
@@ -535,6 +537,18 @@ class AtasModel:
                 session.query(RegistroAta).filter(RegistroAta.ata_parecer == parecer_value).delete(synchronize_session=False)
                 for texto in registros_list:
                     session.add(RegistroAta(ata_parecer=parecer_value, texto=texto))
+
+                existentes = {r.texto: r for r in ata.registros}
+                
+                # Deleta os que não estão na nova lista
+                for texto, reg_obj in existentes.items():
+                    if texto not in registros_list:
+                        session.delete(reg_obj)
+                
+                # Adiciona apenas os novos
+                for texto in registros_list:
+                    if texto not in existentes:
+                        session.add(RegistroAta(ata_parecer=parecer_value, texto=texto))
 
                 session.commit()
                 return True

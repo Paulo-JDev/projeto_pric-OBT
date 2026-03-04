@@ -924,12 +924,17 @@ class AtasController:
         dialog.btn_sync_trello.setEnabled(False)
         dialog.btn_sync_trello.setText("Sincronizando...")
 
-        # 2. Prepara o Controller e Worker
+        ui_data = dialog.get_updated_data()
+        status_atual = ui_data.get('status', 'SEÇÃO ATAS')
+
+        for key, value in ui_data.items():
+            if hasattr(ata_data, key):
+                setattr(ata_data, key, value)
+        
+        ata_data.status = status_atual
+
         trello_model = TrelloModel()
         trello_controller = TrelloIndividualController(trello_model)
-        
-        # O status atual da ata (ex: "EMPRESA", "AGU")
-        status_atual = ata_data.status if ata_data.status else "SEÇÃO ATAS"
 
         # Criamos uma classe worker similar à dos contratos
         self.trello_worker = TrelloSyncWorker(trello_controller, ata_data, status_atual)

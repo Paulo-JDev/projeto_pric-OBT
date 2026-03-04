@@ -24,6 +24,9 @@ class TrelloIndividualController:
         except Exception as e:
             print(f"Erro ao ler config Trello: {e}")
             return {}
+        if "cards_sincronizados" not in data or not isinstance(data["cards_sincronizados"], dict):
+            data["cards_sincronizados"] = {"contratos": {}, "atas": {}}
+        return data
 
     def _get_comment_history(self):
         if not self.comments_path.exists():
@@ -33,6 +36,9 @@ class TrelloIndividualController:
                 return json.load(f)
         except Exception:
             return {}
+        if not data or "contratos" not in data:
+            return {"contratos": {}, "atas": {}}
+        return data
 
     def sync_contract(self, contrato_data, status_atual):
         """
@@ -179,6 +185,7 @@ class TrelloIndividualController:
     def sync_ata(self, ata_data, status_atual):
         """Sincroniza individualmente uma Ata com o Trello."""
         config = self._get_config()
+        historico_cards = config.get("cards_sincronizados", {}).get("atas", {})
         
         # Configura as credenciais
         self.trello_model.api_key = config.get("api_key")
@@ -238,6 +245,25 @@ class TrelloIndividualController:
                     json.dump(config, f, indent=4, ensure_ascii=False)
             else:
                 return False, f"Erro ao criar card: {res_new}"
+            
+        registros_db = self.get_ata_records_with_ids(ata_id_local)
+        if registros_db:
+            comment_history = self._get_comment_history()
+            enviados = comment_history.get(ata_id_local, [])
+            novos_enviados = False
+
+            for reg in registros_db:
+                reg_id = reg['id'] # Usa o ID do banco para não repetir comentário
+                if reg_id not in enviados:
+                    texto_comentario = f"📌 **Registro (ID {reg_id}):**\n{reg['texto']}"
+                    if self.trello_model.add_comment(card_id_trello, texto_comentario):
+                        enviados.append(reg_id)
+                        novos_enviados = True
+
+            if novos_enviados:
+                comment_history[ata_id_local] = enviados
+                with open(self.comments_path, 'w', encoding='utf-8') as f:
+                    json.dump(comment_history, f, indent=4, ensure_ascii=False)
 
         # Prazo (Término da Vigência)
         if ata_data.termino and card_id_trello:
@@ -250,11 +276,23 @@ class TrelloIndividualController:
         links = {
             "📜 Ata (Link)": getattr(ata_data.links, 'serie_ata_link', None),
             "📜 Termo Aditivo": getattr(ata_data.links, 'ta_link', None),
-            "📑 Portaria Fiscal": getattr(ata_data.links, 'portaria_link', None)
+            "📑 Portaria Fiscal": getattr(ata_data.links, 'portaria_link', None),
+            "🌐 Portal Licitações": getattr(ata_data, 'portal_licitacoes_link', None)
         }
         for nome, url in links.items():
             if url and "http" in url:
                 self.trello_model.add_attachment(card_id_trello, url, nome)
+        
+        if "cards_sincronizados" not in config: config["cards_sincronizados"] = {}
+        if "atas" not in config["cards_sincronizados"]: config["cards_sincronizados"]["atas"] = {}
+        config["cards_sincronizados"]["atas"][ata_id_local] = card_id_trello
+
+        # ... envio de registros usando UUID ...
+        registros_db = self.get_ata_records_with_ids(ata_id_local)
+        if registros_db:
+            history = self._get_comment_history()
+            enviados = history.get("atas", {}).get(ata_id_local, [])
+            history["atas"][ata_id_local] = enviados
 
         return True, "Ata sincronizada com sucesso."
 
@@ -267,6 +305,19 @@ class TrelloIndividualController:
         session = database.SessionLocal() # Cria a sessão usando a factory atualizada
         try:
             registros = session.query(RegistroStatus).filter(RegistroStatus.contrato_id == str(contrato_id)).all()
+            return [{'uuid': r.uuid, 'texto': r.texto} for r in registros]
+        except Exception as e:
+            print(f"Erro ao buscar registros: {e}")
+            return []
+        finally:
+            session.close()
+
+    def get_ata_records_with_ids(self, ata_parecer):
+        """Busca registros de Atas trazendo o UUID e o Texto."""
+        from atas.model.atas_model import SessionLocal, RegistroAta
+        session = SessionLocal()
+        try:
+            registros = session.query(RegistroAta).filter(RegistroAta.ata_parecer == str(ata_parecer)).all()
             return [{'uuid': r.uuid, 'texto': r.texto} for r in registros]
         except Exception as e:
             print(f"Erro ao buscar registros: {e}")
