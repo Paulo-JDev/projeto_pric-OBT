@@ -3,6 +3,8 @@ import requests
 import json
 import os
 
+from utils.utils import get_config_path
+
 class TrelloModel:
     def __init__(self, api_key=None, token=None):
         """
@@ -23,14 +25,7 @@ class TrelloModel:
 
     def _load_config(self):
         """Carrega configurações do arquivo trello_json.json"""
-        config_path = os.path.join(
-            os.path.dirname(__file__), 
-            "..", 
-            "..",
-            "utils", 
-            "json", 
-            "trello_json.json"
-        )
+        config_path = get_config_path("utils/json/trello_json.json")
 
         if not os.path.exists(config_path):
             print(f"⚠️ Arquivo de configuração não encontrado: {config_path}")
