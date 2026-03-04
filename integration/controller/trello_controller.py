@@ -47,11 +47,21 @@ class TrelloController:
             with open(self.trello_json_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 
+            # Carrega credenciais
             self.view.api_key_input.setText(data.get("api_key", ""))
             self.view.token_input.setText(data.get("token", ""))
             
-            mappings = data.get("mappings", {})
-            for status, field in self.view.mapping_inputs.items():
-                field.setText(mappings.get(status, ""))
+            # --- NOVO: Carrega mapeamento de CONTRATOS ---
+            maps_contratos = data.get("mappings_contratos", {})
+            for status, field in self.view.mapping_inputs_contratos.items():
+                # Se não houver na chave nova, tenta buscar na 'mappings' antiga para migração
+                val = maps_contratos.get(status) or data.get("mappings", {}).get(status, "")
+                field.setText(val)
+
+            # --- NOVO: Carrega mapeamento de ATAS ---
+            maps_atas = data.get("mappings_atas", {})
+            for status, field in self.view.mapping_inputs_atas.items():
+                field.setText(maps_atas.get(status, ""))
+                
         except Exception as e:
             print(f"Erro ao carregar trello_json: {e}")

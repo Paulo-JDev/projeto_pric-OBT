@@ -17,6 +17,9 @@ from utils.icon_loader import icon_manager
 from atas.view.ata_details_dialog import AtaDetailsDialog
 from atas.controller.controller_fiscal_ata import save_fiscalizacao_ata
 
+from integration.model.trello_model import TrelloModel
+from integration.controller.trello_individual_controller import TrelloIndividualController, TrelloSyncWorker
+
 class AtasController:
     def __init__(self, model: AtasModel, view):
         self.model = model
@@ -613,8 +616,8 @@ class AtasController:
 
     def show_ata_details(self, ata_data):
         """Abre a janela de detalhes e conecta o sinal de atualização."""
-        # A AtaDetailsDialog precisará ser atualizada para incluir os campos NUP e Portal de Licitações
         dialog = AtaDetailsDialog(ata_data, self.model, self.view)
+        dialog.btn_sync_trello.clicked.connect(lambda: self.run_trello_sync_ata(dialog, ata_data))
         dialog.ata_updated.connect(lambda: self.update_ata_from_dialog(dialog))
         dialog.exec()
 
@@ -913,3 +916,45 @@ class AtasController:
 
         if ata_data:
             self.show_ata_details(ata_data)
+
+# ================================================================ TRELLO SYNC ==================================================
+    def run_trello_sync_ata(self, dialog, ata_data):
+        """Inicia o processo de sincronização em segundo plano."""
+        # 1. Feedback visual inicial
+        dialog.btn_sync_trello.setEnabled(False)
+        dialog.btn_sync_trello.setText("Sincronizando...")
+
+        # 2. Prepara o Controller e Worker
+        trello_model = TrelloModel()
+        trello_controller = TrelloIndividualController(trello_model)
+        
+        # O status atual da ata (ex: "EMPRESA", "AGU")
+        status_atual = ata_data.status if ata_data.status else "SEÇÃO ATAS"
+
+        # Criamos uma classe worker similar à dos contratos
+        self.trello_worker = TrelloSyncWorker(trello_controller, ata_data, status_atual)
+        
+        # Sobrescrevemos o método run do worker temporariamente para usar sync_ata
+        self.trello_worker.run = lambda: self._execute_sync_ata(trello_controller, ata_data, status_atual)
+
+        # 3. Conecta os sinais de término
+        self.trello_worker.finished.connect(lambda success, msg: self._on_trello_sync_finished(success, msg, dialog))
+        self.trello_worker.start()
+
+    def _execute_sync_ata(self, controller, data, status):
+        """Função auxiliar executada dentro da Thread."""
+        try:
+            success, message = controller.sync_ata(data, status)
+            self.trello_worker.finished.emit(success, message)
+        except Exception as e:
+            self.trello_worker.finished.emit(False, str(e))
+
+    def _on_trello_sync_finished(self, success, message, dialog):
+        """Retorno após a conclusão da thread."""
+        dialog.btn_sync_trello.setEnabled(True)
+        dialog.btn_sync_trello.setText(" Sincronizar com Trello")
+        
+        if success:
+            QMessageBox.information(dialog, "Trello", message)
+        else:
+            QMessageBox.warning(dialog, "Erro Trello", message)

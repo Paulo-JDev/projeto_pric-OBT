@@ -173,6 +173,90 @@ class TrelloIndividualController:
                     json.dump(comment_history, f, indent=4, ensure_ascii=False)
 
         return True, "Sincronização concluída com sucesso."
+    
+    # integration/controller/trello_individual_controller.py
+
+    def sync_ata(self, ata_data, status_atual):
+        """Sincroniza individualmente uma Ata com o Trello."""
+        config = self._get_config()
+        
+        # Configura as credenciais
+        self.trello_model.api_key = config.get("api_key")
+        self.trello_model.token = config.get("token")
+        
+        if not self.trello_model.api_key or not self.trello_model.token:
+             return False, "Credenciais do Trello não configuradas."
+
+        # Busca especificamente no mapeamento de ATAS
+        list_id = config.get("mappings_atas", {}).get(status_atual)
+        if not list_id:
+            return False, f"Status '{status_atual}' não mapeado para Atas no Trello."
+
+        # Identificador único da Ata (Parecer)
+        ata_id_local = str(ata_data.contrato_ata_parecer)
+        historico_cards = config.get("cards_sincronizados", {})
+
+        # Título e Descrição adaptados para Atas
+        titulo = f"ATA: {ata_data.numero}/{ata_data.ano} - {ata_data.empresa}"
+        
+        # Coleta de dados (campos específicos de Atas)
+        nup = getattr(ata_data, 'nup', 'N/A')
+        valor = getattr(ata_data, 'valor_global', '0,00')
+        obj = ata_data.objeto or 'N/A'
+        
+        description = (
+            f"### 📋 Dados da Ata de Registro de Preços\n"
+            f"**🏢 Empresa:** {ata_data.empresa}\n"
+            f"**📑 NUP/Processo:** {nup}\n\n"
+            f"**🔹 Objeto:**\n> {obj}\n\n"
+            f"**💰 Valor Global:** R$ {valor}\n"
+            f"**🆔 Parecer/Ata:** {ata_data.contrato_ata_parecer}\n"
+            f"--- \n*Sincronizado via CA 360 em {datetime.now().strftime('%d/%m/%Y %H:%M')}*"
+        )
+
+        card_id_trello = None
+        # Lógica de Atualizar ou Criar
+        if ata_id_local in historico_cards:
+            card_id_trello = historico_cards[ata_id_local]
+            success_up, _ = self.trello_model.update_card(card_id_trello, list_id, titulo, description)
+            if not success_up:
+                card_id_trello = None 
+
+        if not card_id_trello:
+            success_new, res_new = self.trello_model.create_card(list_id, titulo, description)
+            if success_new:
+                card_id_trello = res_new.get('id')
+                config["cards_sincronizados"][ata_id_local] = card_id_trello
+                
+                # Checklist padrão para Atas
+                checklist = self.trello_model.create_checklist(card_id_trello, "Fases da Ata")
+                if checklist:
+                    for tarefa in ["Assinar Ata", "Publicar Extrato", "Cadastrar no SIASG", "Vincular IRP"]:
+                        self.trello_model.add_checklist_item(checklist['id'], tarefa)
+                
+                with open(self.config_path, 'w', encoding='utf-8') as f:
+                    json.dump(config, f, indent=4, ensure_ascii=False)
+            else:
+                return False, f"Erro ao criar card: {res_new}"
+
+        # Prazo (Término da Vigência)
+        if ata_data.termino and card_id_trello:
+            try:
+                data_iso = f"{ata_data.termino}T18:00:00.000Z"
+                self.trello_model.set_due_date(card_id_trello, data_iso)
+            except: pass
+
+        # Anexos de Links
+        links = {
+            "📜 Ata (Link)": getattr(ata_data.links, 'serie_ata_link', None),
+            "📜 Termo Aditivo": getattr(ata_data.links, 'ta_link', None),
+            "📑 Portaria Fiscal": getattr(ata_data.links, 'portaria_link', None)
+        }
+        for nome, url in links.items():
+            if url and "http" in url:
+                self.trello_model.add_attachment(card_id_trello, url, nome)
+
+        return True, "Ata sincronizada com sucesso."
 
     def get_contract_records_with_ids(self, contrato_id):
         """Busca registros trazendo ID e Texto para controle de duplicidade."""

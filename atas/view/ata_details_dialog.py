@@ -35,6 +35,11 @@ class AtaDetailsDialog(QDialog):
 
         button_layout = QHBoxLayout()
         button_layout.addStretch()
+
+        self.btn_sync_trello = QPushButton(" Sincronizar com Trello")
+        self.btn_sync_trello.setIcon(icon_manager.get_icon("trello")) # Certifica-te que tens este ícone
+        self.btn_sync_trello.setStyleSheet("background-color: #0079BF; color: white; font-weight: bold; padding: 5px;")
+        main_layout.addWidget(self.btn_sync_trello)
         
         save_button = QPushButton("Salvar Alterações")
         save_button.setIcon(icon_manager.get_icon("save"))
