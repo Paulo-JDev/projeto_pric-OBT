@@ -6,9 +6,9 @@ import json
 import time
 import requests
 import sqlite3
-from datetime import datetime # Adicionado para comparação de datas
 from pathlib import Path
 from utils.utils import resource_path
+from datetime import date, datetime, timedelta
 
 from .database import init_database
 from .models import Base, Contrato, StatusContrato, RegistroStatus, RegistroMensagem, Uasg
@@ -740,3 +740,69 @@ class UASGModel:
             db.rollback()
         finally:
             db.close()
+
+# =============================== Novos métodos para migração dos dados expirados para o novo banco de dados de backup. =============================
+
+    def archive_and_delete_expired_contracts(self):
+        """
+        Move contratos vencidos há mais de 100 dias para o banco de backup 
+        e os remove do banco principal de forma segura.
+        """
+        from datetime import date, timedelta
+        
+        backup_db_path = self.database_dir / "cbackup-delete.db"
+        data_corte = (date.today() - timedelta(days=100)).strftime("%Y-%m-%d")
+        
+        conn = None
+        try:
+            conn = self._get_db_connection()
+            cursor = conn.cursor()
+            
+            # 1. Identifica os contratos vencidos
+            cursor.execute("SELECT id FROM contratos WHERE vigencia_fim < ? AND vigencia_fim <> ''", (data_corte,))
+            vencidos = cursor.fetchall()
+            
+            if not vencidos:
+                return
+
+            ids_vencidos = [row['id'] for row in vencidos]
+            # Cria a string de placeholders: ?,?,?,...
+            placeholders = ",".join(["?"] * len(ids_vencidos))
+
+            # 2. Conecta ao banco de backup
+            cursor.execute(f"ATTACH DATABASE '{backup_db_path}' AS backup_db")
+            
+            # Lista completa de tabelas baseada no seu models.py
+            tables = [
+                "contratos", "status_contratos", "registros_status", "links_contratos", 
+                "fiscalizacao", "empenhos", "itens", "arquivos", "historico", "registro_mensagem"
+            ]
+            
+            for table in tables:
+                # Garante que a tabela existe no backup
+                cursor.execute(f"CREATE TABLE IF NOT EXISTS backup_db.{table} AS SELECT * FROM main.{table} WHERE 1=0")
+                
+                # Migra os dados (INSERT OR IGNORE evita erros se o contrato já foi movido antes)
+                col_id = "id" if table == "contratos" else "contrato_id"
+                sql_insert = f"INSERT OR IGNORE INTO backup_db.{table} SELECT * FROM main.{table} WHERE {col_id} IN ({placeholders})"
+                
+                # CORREÇÃO DO ERRO: Passando ids_vencidos como o segundo argumento
+                cursor.execute(sql_insert, ids_vencidos)
+
+            # 3. Deleta do banco principal
+            # Ativa chaves estrangeiras para garantir que o cascade funcione no SQLite
+            cursor.execute("PRAGMA foreign_keys = ON")
+            sql_delete = f"DELETE FROM contratos WHERE id IN ({placeholders})"
+            cursor.execute(sql_delete, ids_vencidos)
+            
+            conn.commit()
+            print(f"✅ Arquivamento concluído: {len(ids_vencidos)} contratos movidos para o backup.")
+
+        except Exception as e:
+            if conn: conn.rollback()
+            print(f"❌ Erro no processo de arquivamento: {e}")
+        finally:
+            if conn:
+                try: cursor.execute("DETACH DATABASE backup_db")
+                except: pass
+                conn.close()

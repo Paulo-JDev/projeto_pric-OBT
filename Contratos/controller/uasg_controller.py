@@ -29,6 +29,9 @@ class UASGController:
         from .dashboard_controller import DashboardController
 
         self.model = UASGModel(base_dir)
+
+        # --- CHAMADA DA LIMPEZA AUTOMÁTICA ---
+        self.model.archive_and_delete_expired_contracts()
         
         # 1. Define dados iniciais (Single Source of Truth)
         self.current_data = [] 
