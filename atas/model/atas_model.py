@@ -534,10 +534,6 @@ class AtasModel:
                     ata.status_info = StatusAta(ata_parecer=parecer_value)
                 ata.status_info.status = updated_data.get('status', 'SEÇÃO ATAS')
 
-                session.query(RegistroAta).filter(RegistroAta.ata_parecer == parecer_value).delete(synchronize_session=False)
-                for texto in registros_list:
-                    session.add(RegistroAta(ata_parecer=parecer_value, texto=texto))
-
                 existentes = {r.texto: r for r in ata.registros}
                 
                 # Deleta os que não estão na nova lista

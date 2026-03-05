@@ -21,7 +21,7 @@ from view.main_shell_view import MainShellView
 from controller.main_controller import MainController
 from utils.utils import resource_path
 
-APP_VERSION = "10.7.6"
+APP_VERSION = "10.8.8"
 
 def setup_logging(base_dir):
     # (Sua função de logging continua a mesma)
@@ -73,7 +73,17 @@ def setup_application():
     logging.info("Aplicação finalizada.")
 
 if __name__ == "__main__":
-    setup_application()
+    try:
+        setup_application()
+    except KeyboardInterrupt:
+        # Captura o sinal de interrupção (Ctrl+C ou Stop da IDE) graciosamente
+        print("\n⏳ Inicialização cancelada (KeyboardInterrupt). Encerrando o programa.")
+        sys.exit(0)
+    except Exception as e:
+        # Captura qualquer outro erro fatal na inicialização
+        logging.error(f"Erro fatal ao iniciar a aplicação: {e}")
+        print(f"❌ Erro fatal: {e}")
+        sys.exit(1)
 
 # 711000, 787000, 787010, 787200, 787310, 787320, 787700, 787900, 787400, 787500 (testes)
 # 160298, testando o a parte do git

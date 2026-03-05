@@ -98,9 +98,10 @@ def _get_status_style(status_text: str):
         "AGU": (QColor(255, 160, 160), QFont.Weight.Bold),
         "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold),
         "SIGAD": (QColor(230, 180, 100), QFont.Weight.Bold),
+        "PLANILHA": (QColor(50, 205, 50), QFont.Weight.Bold), # Novo STATUS
+        "PORT. MARINHA": (QColor(135, 206, 250), QFont.Weight.Bold)
     }
     return status_styles.get(status_text, (Qt.GlobalColor.white, QFont.Weight.Normal))
-
 
 def _create_status_item(status_text: str) -> QStandardItem:
     """Cria e formata um QStandardItem para a coluna 'Status'."""

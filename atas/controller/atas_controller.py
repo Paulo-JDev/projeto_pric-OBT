@@ -356,11 +356,13 @@ class AtasController:
             "ASSINADO": (QColor(230, 180, 100), QFont.Weight.Bold),
             "PUBLICADO": (QColor(135, 206, 250), QFont.Weight.Bold),
             "PORTARIA": (QColor(230, 230, 150), QFont.Weight.Bold),
+            "PORT. MARINHA": (QColor(135, 206, 250), QFont.Weight.Bold), # NOVO STATUS
             "ALERTA PRAZO": (QColor(255, 160, 160), QFont.Weight.Bold),
             "NOTA TÉCNICA": (QColor(255, 160, 160), QFont.Weight.Bold),
             "AGU": (QColor(255, 160, 160), QFont.Weight.Bold),
             "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold),
-            "SIGAD" : (QColor(135, 206, 250), QFont.Weight.Bold)
+            "SIGAD" : (QColor(135, 206, 250), QFont.Weight.Bold),
+            "PLANILHA" : (QColor(50, 205, 50), QFont.Weight.Bold) # Novo STATUS
         }
         color, weight = status_styles.get(status_text, (QColor("#FFFFFF"), QFont.Weight.Normal))
         return QBrush(color), weight

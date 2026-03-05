@@ -67,15 +67,19 @@ class TrelloIndividualController:
         cnpj = contrato_data.get('fornecedor_cnpj') or contrato_data.get('fornecedor', {}).get('cnpj_cpf_idgener', 'N/A')
         obj_final = contrato_data.get('objeto_editado') or contrato_data.get('objeto', 'N/A')
         vigencia_fim = contrato_data.get('vigencia_fim')
+        vigencia_inicio = contrato_data.get('vigencia_inicio')
         
         titulo = f"Contrato: {contrato_data.get('numero', 'S/N')}"
         description = (
             f"### 📋 Dados do Contrato\n"
-            f"**🏢 Fornecedor:** {fornecedor}\n"
-            f"**🆔 CNPJ:** {cnpj}\n\n"
+            f"**🏢 Empresa:** {fornecedor}\n"
+            f"**📌 Pregão:** {contrato_data.get('licitacao_numero', 'N/A')}" # licitacao_numero
+            f"**📋 CNPJ:** {cnpj}\n\n"
+            f"**📑 Processo:** {contrato_data.get('processo', 'N/A')}\n"
             f"**🔹 Objeto:**\n> {obj_final}\n\n"
             f"**💰 Valor Global:** R$ {contrato_data.get('valor_global', '0,00')}\n"
-            f"**📑 Processo:** {contrato_data.get('processo', 'N/A')}\n"
+            f"**🆔 Contrato:** {contrato_id_local}" # Numero do contrato
+            f"**📆 Vigência:** {vigencia_inicio} a {vigencia_fim}\n\n"
             f"--- \n*Sincronizado via CA 360 em {datetime.now().strftime('%d/%m/%Y %H:%M')}*"
         )
 
@@ -110,11 +114,7 @@ class TrelloIndividualController:
                 if checklist:
                     # Defina aqui os passos padrão para todo contrato novo
                     tarefas_padrao = [
-                        "Verificar Assinaturas",
-                        "Publicar no PNCP",
-                        "Emitir Nota de Empenho",
-                        "Designar Fiscal",
-                        "Arquivar Processo Físico"
+                        "Concluido"
                     ]
 
                     for tarefa in tarefas_padrao:
@@ -139,9 +139,9 @@ class TrelloIndividualController:
             # B) Links como Anexos
             links_para_enviar = {
                 "📄 Contrato (Link)": contrato_data.get('link_contrato'),
-                "⚓ Portal Marinha": contrato_data.get('link_portal_marinha'),
-                "📜 Termo Aditivo": contrato_data.get('link_ta'),
-                "🌐 PNCP": contrato_data.get('link_pncp_espc')
+                #"⚓ Portal Marinha": contrato_data.get('link_portal_marinha'),
+                #"📜 Termo Aditivo": contrato_data.get('link_ta'),
+                #"🌐 PNCP": contrato_data.get('link_pncp_espc')
             }
 
             for nome_link, url_link in links_para_enviar.items():
@@ -214,9 +214,12 @@ class TrelloIndividualController:
         description = (
             f"### 📋 Dados da Ata de Registro de Preços\n"
             f"**🏢 Empresa:** {ata_data.empresa}\n"
+            F"**📌 Pregão:** {ata_data.numero}/{ata_data.ano}\n"
             f"**📑 NUP/Processo:** {nup}\n\n"
+            f"**📋 CNPJ:** {ata_data.cnpj}\n"
             f"**🔹 Objeto:**\n> {obj}\n\n"
             f"**💰 Valor Global:** R$ {valor}\n"
+            f"**🗓️ Vigência:** {ata_data.vigencia_inicial} - {ata_data.vigencia_fim}\n\n"
             f"**🆔 Parecer/Ata:** {ata_data.contrato_ata_parecer}\n"
             f"--- \n*Sincronizado via CA 360 em {datetime.now().strftime('%d/%m/%Y %H:%M')}*"
         )
@@ -238,7 +241,7 @@ class TrelloIndividualController:
                 # Checklist padrão para Atas
                 checklist = self.trello_model.create_checklist(card_id_trello, "Fases da Ata")
                 if checklist:
-                    for tarefa in ["Assinar Ata", "Publicar Extrato", "Cadastrar no SIASG", "Vincular IRP"]:
+                    for tarefa in ["Concluido"]:
                         self.trello_model.add_checklist_item(checklist['id'], tarefa)
                 
                 with open(self.config_path, 'w', encoding='utf-8') as f:
@@ -275,9 +278,9 @@ class TrelloIndividualController:
         # Anexos de Links
         links = {
             "📜 Ata (Link)": getattr(ata_data.links, 'serie_ata_link', None),
-            "📜 Termo Aditivo": getattr(ata_data.links, 'ta_link', None),
-            "📑 Portaria Fiscal": getattr(ata_data.links, 'portaria_link', None),
-            "🌐 Portal Licitações": getattr(ata_data, 'portal_licitacoes_link', None)
+            #"📜 Termo Aditivo": getattr(ata_data.links, 'ta_link', None),
+            #"📑 Portaria Fiscal": getattr(ata_data.links, 'portaria_link', None),
+            #"🌐 Portal Licitações": getattr(ata_data, 'portal_licitacoes_link', None)
         }
         for nome, url in links.items():
             if url and "http" in url:

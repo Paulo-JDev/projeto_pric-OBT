@@ -19,7 +19,9 @@ def _get_status_style(status_text):
         "NOTA TÉCNICA": (QColor(255, 160, 160), QFont.Weight.Bold),
         "AGU": (QColor(255, 160, 160), QFont.Weight.Bold),
         "PRORROGADO": (QColor(135, 206, 250), QFont.Weight.Bold),
-        "SIGAD" : (QColor(230, 180, 100), QFont.Weight.Bold)
+        "SIGAD" : (QColor(230, 180, 100), QFont.Weight.Bold),
+        "PLANILHA" : (QColor(50, 205, 50), QFont.Weight.Bold),
+        "PORT. MARINHA": (QColor(135, 206, 250), QFont.Weight.Bold)
     }
     return status_styles.get(status_text, (QColor("#FFFFFF"), QFont.Weight.Normal))
 
@@ -139,10 +141,12 @@ def populate_preview_table(preview_model, data):
                 vigencia_fim = datetime.strptime(vigencia_fim_str, "%Y-%m-%d").date()
                 dias_restantes = (vigencia_fim - date.today()).days
                 row_data['dias_restantes'] = dias_restantes
-                if dias_restantes < 0:
+                if -100 <= dias_restantes < 0:
                     expired.append(row_data)
-                else:
+                elif dias_restantes >= 0:
                     active.append(row_data)
+                # Contratos com dias_restantes < -100 são ignorados (não aparecem na lista)
+                
             except ValueError:
                 row_data['dias_restantes'] = "Erro Data"
                 no_date.append(row_data)

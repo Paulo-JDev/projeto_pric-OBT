@@ -135,8 +135,8 @@ class AtaDetailsDialog(QDialog):
         status_label.setStyleSheet("font-weight: bold; color: #E5E5E5; font-size: 13px;")
         self.status_dropdown = QComboBox()
         self.status_dropdown.addItems([
-            "SEÇÃO ATAS", "EMPRESA", "SIGDEM", "SIGAD","ASSINADO", "PUBLICADO", "PORTARIA",
-            "ALERTA PRAZO", "ATA GERADA", "NOTA TÉCNICA", "AGU", "PRORROGADO"
+            "SEÇÃO ATAS", "ATA GERADA", "EMPRESA", "SIGDEM", "SIGAD","ASSINADO", "PUBLICADO", "PLANILHA",
+            "PORTARIA", "PORT. MARINHA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO"
         ])
         self.status_dropdown.setFixedWidth(230)
         self.status_dropdown.setStyleSheet("""
@@ -279,14 +279,14 @@ class AtaDetailsDialog(QDialog):
         self.numero_le.setText(self.ata_data.numero or "")
         self.ano_le.setText(self.ata_data.ano or "")
         self.nup_le.setText(self.ata_data.nup or "")
-        self.cnpj_le.setText(getattr(self.ata_data, "cnpj", "") or "")
         self.setor_le.setText(self.ata_data.setor or "")
         self.modalidade_le.setText(self.ata_data.modalidade or "")
         self.empresa_le.setText(self.ata_data.empresa or "")
         self.objeto_le.setText(self.ata_data.objeto or "")
         self.termo_aditivo_le.setText(self.ata_data.termo_aditivo or "")
         self.portaria_le.setText(self.ata_data.portaria_fiscalizacao or "")
-        self.valor_global_le.setText(getattr(self.ata_data.valor_global, "valor_global", "") or "")
+        self.cnpj_le.setText(self.ata_data.cnpj or "")
+        self.valor_global_le.setText(self.ata_data.valor_global or "")
 
         # Links
         self.serie_ata_link_le.setText(self.ata_data.serie_ata_link or "")

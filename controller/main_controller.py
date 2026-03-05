@@ -1,6 +1,7 @@
 # controller/main_controller.py
 
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QTimer  # --- Adicionada a importação do QTimer ---
 
 # Importa os componentes dos módulos específicos
 from Contratos.controller.uasg_controller import UASGController
@@ -20,6 +21,20 @@ class MainController:
         self.view = view
         self.base_dir = base_dir
 
+        # Conecta apenas os botões da Home que são leves primeiro
+        self.view.info_button.clicked.connect(self.show_info_dialog)
+        self.view.backup_button.clicked.connect(self.show_backup_dialog)
+        self.view.help_button.clicked.connect(self.show_help_dialog)
+
+        # Deixa a barra lateral desativada por um milissegundo até carregar tudo
+        self.view.nav_list.setEnabled(False)
+
+        # ⏳ AGENDA O CARREGAMENTO PESADO PARA LOGO APÓS A TELA ABRIR (100 ms)
+        QTimer.singleShot(150, self.load_heavy_modules)
+
+    def load_heavy_modules(self):
+        """Carrega os bancos de dados e views pesadas apenas após a interface renderizar."""
+        
         # 1. Prepara e adiciona o módulo de Contratos
         self.contratos_controller = UASGController(self.base_dir, self.view)
         self.view.stacked_widget.addWidget(self.contratos_controller.view)
@@ -30,16 +45,13 @@ class MainController:
         self.atas_controller = AtasController(self.atas_model, self.atas_view)
         self.view.stacked_widget.addWidget(self.atas_view)
 
-        # 3. Conecta o menu de navegação à função de troca de tela
+        # 3. Agora que contratos_controller existe, conecta o botão de Automação
+        self.view.automation_button.clicked.connect(self.show_automation_dialog)
+
+        # 4. Conecta o menu de navegação à função de troca de tela e reativa a barra
         self.view.nav_list.currentRowChanged.connect(self.switch_module)
         self.view.nav_list.setCurrentRow(0)
-
-        # --- Conexões dos novos botões da tela Home ---
-        self.view.info_button.clicked.connect(self.show_info_dialog)
-        self.view.backup_button.clicked.connect(self.show_backup_dialog)
-        self.view.help_button.clicked.connect(self.show_help_dialog)
-        self.view.automation_button.clicked.connect(self.show_automation_dialog)
-        # --- Fim das novas conexões ---
+        self.view.nav_list.setEnabled(True)
 
     def switch_module(self, index):
         # O índice do stacked_widget é o índice da lista (pois o 0 agora é o menu Home)

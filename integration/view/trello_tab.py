@@ -36,15 +36,15 @@ class TrelloTab(QWidget):
         
         # Aba Contratos
         self.tab_contratos = self._create_mapping_tab([
-            "SEÇÃO CONTRATOS", "EMPRESA", "SIGDEM", "SIGAD", "ASSINADO", 
-            "PUBLICADO", "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO"
+            "SEÇÃO CONTRATOS", "EMPRESA", "SIGDEM", "SIGAD", "ASSINADO", "PLANILHA",
+            "PUBLICADO", "PORT. MARINHA", "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO"
         ])
         self.mapping_inputs_contratos = self.tab_contratos.inputs
 
         # Aba Atas
         self.tab_atas = self._create_mapping_tab([
-            "SEÇÃO ATAS", "ATA GERADA", "EMPRESA", "SIGDEM", "ASSINADO", 
-            "PUBLICADO", "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO", "SIGAD"
+            "SEÇÃO ATAS", "ATA GERADA", "EMPRESA", "SIGDEM", "ASSINADO", "PLANILHA", 
+            "PUBLICADO", "PORT. MARINHA", "PORTARIA", "ALERTA PRAZO", "NOTA TÉCNICA", "AGU", "PRORROGADO", "SIGAD"
         ])
         self.mapping_inputs_atas = self.tab_atas.inputs
 
