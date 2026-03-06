@@ -39,6 +39,15 @@ class TrelloIndividualController:
         if not data or "contratos" not in data:
             return {"contratos": {}, "atas": {}}
         return data
+    
+    def _format_date_to_br(self, date_str):
+        """Formata data de AAAA-MM-DD para DD/MM/AAAA de forma segura"""
+        if not date_str or str(date_str).strip() in ('', 'None', 'N/A'):
+            return 'N/A'
+        try:
+            return datetime.strptime(str(date_str).strip(), '%Y-%m-%d').strftime('%d/%m/%Y')
+        except ValueError:
+            return str(date_str) # Retorna original se não for possível converter
 
     def sync_contract(self, contrato_data, status_atual):
         """
@@ -66,8 +75,12 @@ class TrelloIndividualController:
         fornecedor = contrato_data.get('fornecedor_nome') or contrato_data.get('fornecedor', {}).get('nome', 'N/A')
         cnpj = contrato_data.get('fornecedor_cnpj') or contrato_data.get('fornecedor', {}).get('cnpj_cpf_idgener', 'N/A')
         obj_final = contrato_data.get('objeto_editado') or contrato_data.get('objeto', 'N/A')
-        vigencia_fim = contrato_data.get('vigencia_fim')
         vigencia_inicio = contrato_data.get('vigencia_inicio')
+        vigencia_fim = contrato_data.get('vigencia_fim')
+        
+        # Datas Formatadas (para a descrição do Card)
+        vigencia_inicio_fmt = self._format_date_to_br(vigencia_inicio)
+        vigencia_fim_fmt = self._format_date_to_br(vigencia_fim)
         
         titulo = f"Contrato: {contrato_data.get('numero', 'S/N')}"
         description = (
@@ -78,8 +91,7 @@ class TrelloIndividualController:
             f"**📑 Processo:** {contrato_data.get('processo', 'N/A')}\n"
             f"**🔹 Objeto:**\n> {obj_final}\n\n"
             f"**💰 Valor Global:** R$ {contrato_data.get('valor_global', '0,00')}\n"
-            f"**🆔 Contrato:** {contrato_id_local}" # Numero do contrato
-            f"**📆 Vigência:** {vigencia_inicio} a {vigencia_fim}\n\n"
+            f"**📆 Vigência:** {vigencia_inicio_fmt} a {vigencia_fim_fmt}\n\n"
             f"--- \n*Sincronizado via CA 360 em {datetime.now().strftime('%d/%m/%Y %H:%M')}*"
         )
 
@@ -126,26 +138,27 @@ class TrelloIndividualController:
                 return False, f"Erro ao criar card: {res_new}"
             
         if card_id_trello:
-            # A) Data de Entrega (Due Date)
+            # A) Data de Entrega - Usa a variável com a data AAAA-MM-DD
             if vigencia_fim:
                 try:
-                    # Adiciona horário para garantir que o Trello entenda (final do dia)
                     data_formatada = f"{vigencia_fim}T18:00:00.000Z"
                     self.trello_model.set_due_date(card_id_trello, data_formatada)
-                    print(f"📅 Prazo definido para: {vigencia_fim}")
                 except Exception as e:
                     print(f"Erro ao definir data: {e}")
 
-            # B) Links como Anexos
+            # B) Links como Anexos - Leitura Segura
+            links_dict = contrato_data.get('links', {})
+            if not isinstance(links_dict, dict): links_dict = {}
+
             links_para_enviar = {
                 "📄 Contrato (Link)": contrato_data.get('link_contrato'),
                 #"⚓ Portal Marinha": contrato_data.get('link_portal_marinha'),
                 #"📜 Termo Aditivo": contrato_data.get('link_ta'),
-                #"🌐 PNCP": contrato_data.get('link_pncp_espc')
+                "🌐 PNCP": contrato_data.get('link_pncp_espc')
             }
 
             for nome_link, url_link in links_para_enviar.items():
-                if url_link and "http" in url_link: # Só envia se tiver link válido
+                if url_link and isinstance(url_link, str) and "http" in url_link:
                     self.trello_model.add_attachment(card_id_trello, url_link, nome_link)
                     print(f"📎 Anexo adicionado: {nome_link}")
 
@@ -210,6 +223,13 @@ class TrelloIndividualController:
         nup = getattr(ata_data, 'nup', 'N/A')
         valor = getattr(ata_data, 'valor_global', '0,00')
         obj = ata_data.objeto or 'N/A'
+
+        # Correção: O objeto AtaData possui 'celebracao' e 'termino', e não 'vigencia_inicial'
+        vigencia_inicio = getattr(ata_data, 'celebracao', 'N/A')
+        vigencia_fim = getattr(ata_data, 'termino', 'N/A')
+        
+        vigencia_inicio_fmt = self._format_date_to_br(vigencia_inicio)
+        vigencia_fim_fmt = self._format_date_to_br(vigencia_fim)
         
         description = (
             f"### 📋 Dados da Ata de Registro de Preços\n"
@@ -219,7 +239,7 @@ class TrelloIndividualController:
             f"**📋 CNPJ:** {ata_data.cnpj}\n"
             f"**🔹 Objeto:**\n> {obj}\n\n"
             f"**💰 Valor Global:** R$ {valor}\n"
-            f"**🗓️ Vigência:** {ata_data.vigencia_inicial} - {ata_data.vigencia_fim}\n\n"
+            f"**🗓️ Vigência:** {vigencia_inicio_fmt} - {vigencia_fim_fmt}\n\n"
             f"**🆔 Parecer/Ata:** {ata_data.contrato_ata_parecer}\n"
             f"--- \n*Sincronizado via CA 360 em {datetime.now().strftime('%d/%m/%Y %H:%M')}*"
         )
@@ -276,15 +296,22 @@ class TrelloIndividualController:
             except: pass
 
         # Anexos de Links
-        links = {
-            "📜 Ata (Link)": getattr(ata_data.links, 'serie_ata_link', None),
-            #"📜 Termo Aditivo": getattr(ata_data.links, 'ta_link', None),
-            #"📑 Portaria Fiscal": getattr(ata_data.links, 'portaria_link', None),
-            #"🌐 Portal Licitações": getattr(ata_data, 'portal_licitacoes_link', None)
-        }
-        for nome, url in links.items():
-            if url and "http" in url:
-                self.trello_model.add_attachment(card_id_trello, url, nome)
+        if card_id_trello:
+            links = {
+                "📜 Ata (Link)": getattr(ata_data, 'serie_ata_link', None),
+                #"📜 Termo Aditivo": getattr(ata_data, 'ta_link', None),
+                #"📑 Portaria Fiscal": getattr(ata_data, 'portaria_link', None),
+                "🌐 Portal Licitações": getattr(ata_data, 'portal_licitacoes_link', None)
+            }
+            for nome, url in links.items():
+                if url and isinstance(url, str) and "http" in url:
+                    self.trello_model.add_attachment(card_id_trello, url, nome)
+                    
+            if vigencia_fim and vigencia_fim != 'N/A':
+                try:
+                    data_iso = f"{vigencia_fim}T18:00:00.000Z"
+                    self.trello_model.set_due_date(card_id_trello, data_iso)
+                except: pass
         
         if "cards_sincronizados" not in config: config["cards_sincronizados"] = {}
         if "atas" not in config["cards_sincronizados"]: config["cards_sincronizados"]["atas"] = {}

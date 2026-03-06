@@ -484,8 +484,21 @@ class DetailsDialog(QDialog):
 
         # Prepara dados do contrato
         contrato_para_trello = self.data.copy()
+        
         if hasattr(self, 'objeto_edit') and self.objeto_edit:
             contrato_para_trello['objeto_editado'] = self.objeto_edit.text()
+
+        # 🟢 CAPTURANDO OS LINKS DA INTERFACE E INJETANDO NO DICIONÁRIO
+        if hasattr(self, 'link_contrato_le'):
+            contrato_para_trello['link_contrato'] = self.link_contrato_le.text().strip()
+        if hasattr(self, 'link_ta_le'):
+            contrato_para_trello['link_ta'] = self.link_ta_le.text().strip()
+        if hasattr(self, 'link_portaria_le'):
+            contrato_para_trello['link_portaria'] = self.link_portaria_le.text().strip()
+        if hasattr(self, 'link_pncp_espc_le'):
+            contrato_para_trello['link_pncp_espc'] = self.link_pncp_espc_le.text().strip()
+        if hasattr(self, 'link_portal_marinha_le'):
+            contrato_para_trello['link_portal_marinha'] = self.link_portal_marinha_le.text().strip()
 
         # Log no terminal (aparece imediatamente)
         logging.info(f"🔄 Iniciando sincronização do contrato {self.data.get('numero', 'N/A')} com o Trello...")

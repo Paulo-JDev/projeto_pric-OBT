@@ -246,13 +246,16 @@ class TrelloModel:
         """Adiciona um link como anexo no card."""
         url_api = f"{self.base_url}/cards/{card_id}/attachments"
         query = {
-            'key': self.api_key, 
-            'token': self.token, 
+            'key': self.api_key,
+            'token': self.token
+        }
+        payload = {
             'url': url,
             'name': name
         }
         try:
-            requests.post(url_api, params=query)
+            # Enviando url e name pelo json corpo da requisição
+            requests.post(url_api, params=query, json=payload)
             return True
         except:
             return False
