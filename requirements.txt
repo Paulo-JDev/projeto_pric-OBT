@@ -1,12 +1,15 @@
 PyQt6==6.7.0
+PyQt6-Charts==6.7.0
 openpyxl==3.1.5
 python-docx==1.2.0
 requests==2.32.4
 fastapi==0.100.0
 uvicorn==0.23.2
-SQLAlchemy==2.0.31
+SQLAlchemy==2.0.48
 Pillow==11.0.0
-python-dotenv==1.1.0 #1.0.1
-PyQt6-Charts==6.7.0
+python-dotenv==1.1.0
 pandas==2.3.2
 odfpy==1.4.1
+
+PyInstaller==6.11.1
+pyinstaller-hooks-contrib==2025.0
