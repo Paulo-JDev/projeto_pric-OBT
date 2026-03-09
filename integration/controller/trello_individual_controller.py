@@ -7,37 +7,44 @@ from PyQt6.QtCore import QThread, pyqtSignal
 # Importações necessárias para o banco de dados e modelos
 from Contratos.model import database
 from Contratos.model.models import RegistroStatus
+from utils.utils import get_config_path
 
 class TrelloIndividualController:
     def __init__(self, trello_model):
         self.trello_model = trello_model
         # Ajuste de caminhos relativos para garantir funcionamento
-        self.config_path = Path("utils/json/trello_json.json")
-        self.comments_path = Path("utils/json/trello_comments.json")
+        self.config_path = Path(get_config_path("utils/json/trello_json.json"))
+        self.comments_path = Path(get_config_path("utils/json/trello_comments.json"))
 
     def _get_config(self):
         if not self.config_path.exists():
-            return {"api_key": "", "token": "", "mappings": {}, "cards_sincronizados": {}}
+            return {"api_key": "", "token": "", "mappings_contratos": {}, "mappings_atas": {}, "cards_sincronizados": {}}
         try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
         except Exception as e:
             print(f"Erro ao ler config Trello: {e}")
             return {}
+        
+        # Agora o código alcança esta etapa para evitar erros de leitura!
         if "cards_sincronizados" not in data or not isinstance(data["cards_sincronizados"], dict):
             data["cards_sincronizados"] = {"contratos": {}, "atas": {}}
+            
         return data
 
     def _get_comment_history(self):
         if not self.comments_path.exists():
-            return {} # Estrutura: {"id_contrato": [id_reg1, id_reg2]}
+            return {"contratos": {}, "atas": {}} 
+            
         try:
             with open(self.comments_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
         except Exception:
-            return {}
+            return {"contratos": {}, "atas": {}}
+            
         if not data or "contratos" not in data:
             return {"contratos": {}, "atas": {}}
+            
         return data
     
     def _format_date_to_br(self, date_str):
@@ -63,12 +70,12 @@ class TrelloIndividualController:
         if not self.trello_model.api_key or not self.trello_model.token:
              return False, "Credenciais do Trello não configuradas."
 
-        list_id = config.get("mappings", {}).get(status_atual)
+        list_id = config.get("mappings_contratos", {}).get(status_atual)
         if not list_id:
             return False, f"Status '{status_atual}' não mapeado para uma lista no Trello."
 
         contrato_id_local = str(contrato_data.get('id'))
-        historico_cards = config.get("cards_sincronizados", {})
+        historico_cards_contratos = config.get("cards_sincronizados", {}).get("contratos", {})
         comment_history = self._get_comment_history()
 
         # --- COLETA DE DADOS ROBUSTA ---
@@ -98,10 +105,8 @@ class TrelloIndividualController:
         card_id_trello = None
         res_final = None
 
-        # --- LÓGICA: ATUALIZAR/MOVER OU CRIAR NOVO ---
-        if contrato_id_local in historico_cards:
-            card_id_trello = historico_cards[contrato_id_local]
-            # Tenta atualizar. Se o card foi deletado no Trello, isso retorna False
+        if contrato_id_local in historico_cards_contratos:
+            card_id_trello = historico_cards_contratos[contrato_id_local]
             success_up, res_up = self.trello_model.update_card(card_id_trello, list_id, titulo, description)
             if success_up:
                 res_final = res_up
@@ -118,9 +123,11 @@ class TrelloIndividualController:
                 # Atualiza o arquivo de mapeamento ID Local -> ID Trello
                 config = self._get_config() # Recarrega para evitar conflitos
                 if "cards_sincronizados" not in config:
-                    config["cards_sincronizados"] = {}
+                    config["cards_sincronizados"] = {"contratos": {}, "atas": {}}
+                if "contratos" not in config["cards_sincronizados"]:
+                    config["cards_sincronizados"]["contratos"] = {}
                 
-                config["cards_sincronizados"][contrato_id_local] = card_id_trello
+                config["cards_sincronizados"]["contratos"][contrato_id_local] = card_id_trello
 
                 checklist = self.trello_model.create_checklist(card_id_trello, "Tramitação / Pendências")
                 if checklist:
@@ -157,10 +164,16 @@ class TrelloIndividualController:
                 "🌐 PNCP": contrato_data.get('link_pncp_espc')
             }
 
+            anexos_existentes = self.trello_model.get_attachments(card_id_trello)
+            urls_existentes = [anexo.get('url', '') for anexo in anexos_existentes]
+
             for nome_link, url_link in links_para_enviar.items():
                 if url_link and isinstance(url_link, str) and "http" in url_link:
-                    self.trello_model.add_attachment(card_id_trello, url_link, nome_link)
-                    print(f"📎 Anexo adicionado: {nome_link}")
+                    if url_link not in urls_existentes:
+                        self.trello_model.add_attachment(card_id_trello, url_link, nome_link)
+                        print(f"📎 Anexo adicionado: {nome_link}")
+                    else:
+                        print(f"📎 Anexo {nome_link} já existe na lista.")
 
         # --- ADIÇÃO DOS REGISTROS COMO COMENTÁRIOS ---
         # Busca os registros usando SQLAlchemy Session
@@ -168,7 +181,10 @@ class TrelloIndividualController:
         
         if registros_db:
             comment_history = self._get_comment_history()
-            enviados = comment_history.get(contrato_id_local, [])
+            if "contratos" not in comment_history:
+                comment_history["contratos"] = {}
+                
+            enviados = comment_history["contratos"].get(contrato_id_local, [])
             novos_enviados = False
 
             for reg in registros_db:
@@ -176,7 +192,7 @@ class TrelloIndividualController:
                 reg_uuid = reg['uuid']
 
                 if reg_uuid not in enviados:
-                    texto_comentario = f"📌 **Registro ({reg_uuid[:8]}...):**\n{reg['texto']}"
+                    texto_comentario = f"📌 **Registro\n{reg['texto']}"
 
                     if self.trello_model.add_comment(card_id_trello, texto_comentario):
                         enviados.append(reg_uuid)
@@ -187,25 +203,23 @@ class TrelloIndividualController:
 
             # Atualiza histórico
             if novos_enviados:
-                comment_history[contrato_id_local] = enviados
+                comment_history["contratos"][contrato_id_local] = enviados
                 with open(self.comments_path, 'w', encoding='utf-8') as f:
                     json.dump(comment_history, f, indent=4, ensure_ascii=False)
 
         return True, "Sincronização concluída com sucesso."
-    
-    # integration/controller/trello_individual_controller.py
 
     def sync_ata(self, ata_data, status_atual):
         """Sincroniza individualmente uma Ata com o Trello."""
         config = self._get_config()
-        historico_cards = config.get("cards_sincronizados", {}).get("atas", {})
+        historico_cards_ata = config.get("cards_sincronizados", {}).get("atas", {})
         
         # Configura as credenciais
         self.trello_model.api_key = config.get("api_key")
         self.trello_model.token = config.get("token")
         
         if not self.trello_model.api_key or not self.trello_model.token:
-             return False, "Credenciais do Trello não configuradas."
+            return False, "Credenciais do Trello não configuradas."
 
         # Busca especificamente no mapeamento de ATAS
         list_id = config.get("mappings_atas", {}).get(status_atual)
@@ -214,7 +228,6 @@ class TrelloIndividualController:
 
         # Identificador único da Ata (Parecer)
         ata_id_local = str(ata_data.contrato_ata_parecer)
-        historico_cards = config.get("cards_sincronizados", {})
 
         # Título e Descrição adaptados para Atas
         titulo = f"ATA: {ata_data.numero}/{ata_data.ano} - {ata_data.empresa}"
@@ -246,8 +259,8 @@ class TrelloIndividualController:
 
         card_id_trello = None
         # Lógica de Atualizar ou Criar
-        if ata_id_local in historico_cards:
-            card_id_trello = historico_cards[ata_id_local]
+        if ata_id_local in historico_cards_ata:
+            card_id_trello = historico_cards_ata[ata_id_local]
             success_up, _ = self.trello_model.update_card(card_id_trello, list_id, titulo, description)
             if not success_up:
                 card_id_trello = None 
@@ -256,7 +269,14 @@ class TrelloIndividualController:
             success_new, res_new = self.trello_model.create_card(list_id, titulo, description)
             if success_new:
                 card_id_trello = res_new.get('id')
-                config["cards_sincronizados"][ata_id_local] = card_id_trello
+
+                config = self._get_config() # Recarrega para evitar conflitos
+                if "cards_sincronizados" not in config:
+                    config["cards_sincronizados"] = {"contratos": {}, "atas": {}}
+                if "atas" not in config["cards_sincronizados"]:
+                    config["cards_sincronizados"]["atas"] = {}
+
+                config["cards_sincronizados"]["atas"][ata_id_local] = card_id_trello
                 
                 # Checklist padrão para Atas
                 checklist = self.trello_model.create_checklist(card_id_trello, "Fases da Ata")
@@ -272,11 +292,17 @@ class TrelloIndividualController:
         registros_db = self.get_ata_records_with_ids(ata_id_local)
         if registros_db:
             comment_history = self._get_comment_history()
-            enviados = comment_history.get(ata_id_local, [])
+            
+            # 🟢 Garante que a estrutura existe
+            if "atas" not in comment_history:
+                comment_history["atas"] = {}
+                
+            # 🟢 Lê os enviados APENAS das atas
+            enviados = comment_history["atas"].get(ata_id_local, [])
             novos_enviados = False
 
             for reg in registros_db:
-                reg_id = reg['id'] # Usa o ID do banco para não repetir comentário
+                reg_id = reg['uuid'] # Usa o ID do banco para não repetir comentário
                 if reg_id not in enviados:
                     texto_comentario = f"📌 **Registro (ID {reg_id}):**\n{reg['texto']}"
                     if self.trello_model.add_comment(card_id_trello, texto_comentario):
@@ -303,10 +329,18 @@ class TrelloIndividualController:
                 #"📑 Portaria Fiscal": getattr(ata_data, 'portaria_link', None),
                 "🌐 Portal Licitações": getattr(ata_data, 'portal_licitacoes_link', None)
             }
+
+            enxos_existentes = self.trello_model.get_attachments(card_id_trello)
+            urls_existentes = [anexo['url'] for anexo in enxos_existentes]
+
             for nome, url in links.items():
                 if url and isinstance(url, str) and "http" in url:
-                    self.trello_model.add_attachment(card_id_trello, url, nome)
-                    
+                    if url not in urls_existentes:
+                        self.trello_model.add_attachment(card_id_trello, url, nome)
+                        print(f"✅ Anexo '{nome}' adicionado ao card.")
+                    else:
+                        print(f"🌐 Anexo '{nome}' ainda nao adicionado ou ignorado ao card.")
+
             if vigencia_fim and vigencia_fim != 'N/A':
                 try:
                     data_iso = f"{vigencia_fim}T18:00:00.000Z"

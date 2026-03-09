@@ -54,8 +54,16 @@ class MainController:
         self.view.nav_list.setEnabled(True)
 
     def switch_module(self, index):
+        import time
+        print(f"🟡 [1] Botão clicado! Preparando para abrir o módulo índice {index}...")
+        
+        start_time = time.time()
+        
         # O índice do stacked_widget é o índice da lista (pois o 0 agora é o menu Home)
         self.view.stacked_widget.setCurrentIndex(index)
+        
+        end_time = time.time()
+        print(f"🟢 [2] Tela renderizada! Tempo que levou: {end_time - start_time:.2f} segundos.")
         
     def run(self):
         self.view.show()

@@ -53,12 +53,16 @@ class TrelloModel:
             self.api_key = ""
             self.token = ""
 
-    def get_list_id_for_status(self, status):
+    def get_list_id_for_status(self, status, tipo="contratos"):
         """
         Retorna o ID da lista mapeada para o status.
-
+        O parâmetro 'tipo' deve ser 'contratos' ou 'atas'.
         """
-        return self.config.get("mappings", {}).get(status)
+        if tipo == "atas":
+            return self.config.get("mappings_atas", {}).get(status)
+        
+        # Se não for 'atas', assume o padrão que é 'contratos'
+        return self.config.get("mappings_contratos", {}).get(status)
 
     def get_card_id_for_contract(self, contract_id):
         """
@@ -259,6 +263,21 @@ class TrelloModel:
             return True
         except:
             return False
+        
+    def get_attachments(self, card_id):
+        """Busca os anexos atuais do cartão para evitar duplicidade."""
+        url_api = f"{self.base_url}/cards/{card_id}/attachments"
+        query = {
+            'key': self.api_key,
+            'token': self.token
+        }
+        try:
+            response = requests.get(url_api, params=query)
+            if response.status_code == 200:
+                return response.json()
+        except Exception as e:
+            print(f"Erro ao buscar anexos no Trello: {e}")
+        return []
 
     def create_checklist(self, card_id, name):
         """Cria uma checklist no cartão."""

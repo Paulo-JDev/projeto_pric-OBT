@@ -472,7 +472,7 @@ class DetailsDialog(QDialog):
 
         # Verifica se o status está mapeado
         if hasattr(self, 'trello_individual_ctrl'):
-            list_id = self.trello_individual_ctrl.trello_model.config.get("mappings", {}).get(status_atual)
+            list_id = self.trello_individual_ctrl.trello_model.get_list_id_for_status(status_atual, tipo="contratos")
             if not list_id:
                 QMessageBox.warning(
                     self, 
