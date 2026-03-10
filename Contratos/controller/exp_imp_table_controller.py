@@ -4,7 +4,6 @@
 import os
 import re
 import json
-import pandas as pd
 from datetime import datetime, date
 from PyQt6.QtWidgets import QMessageBox, QFileDialog
 from openpyxl import Workbook, load_workbook

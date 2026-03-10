@@ -78,4 +78,4 @@ docker run -it --rm \
     projeto-pric
 
 # Fazer o Exe do projeto
-pyinstaller main.py --name CA360 --icon utils/icons/mn.ico --collect-all sqlalchemy --collect-all pandas --add-data "utils/icons;utils/icons" --add-data "utils/css/style.qss;utils/css" --add-data "utils/msg;utils/msg" --add-data "utils/template;utils/template" --add-data "utils/json/tipos_ata.json;utils/json" --add-data "config/.env;config"
+pyinstaller main.py --name Contratos360 --icon utils/icons/mn.ico --collect-all sqlalchemy --collect-all pandas --collect-all numpy --add-data "utils/icons;utils/icons" --add-data "utils/css/style.qss;utils/css" --add-data "utils/msg;utils/msg" --add-data "utils/template;utils/template" --add-data "utils/json/tipos_ata.json;utils/json" --add-data "config/.env;config"

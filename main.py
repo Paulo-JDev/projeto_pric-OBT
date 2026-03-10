@@ -15,13 +15,20 @@ import sys
 import os
 import logging
 from PyQt6.QtWidgets import QApplication
-
-# Importa os novos componentes principais
-from view.main_shell_view import MainShellView
-from controller.main_controller import MainController
 from utils.utils import resource_path
 
-APP_VERSION = "11.0.0"
+APP_VERSION = "11.0.1"
+
+def install_global_exception_hook():
+    """Evita traceback ruidoso para KeyboardInterrupt disparado dentro do loop Qt."""
+    def _hook(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            logging.info("KeyboardInterrupt capturado no loop principal; ação cancelada sem derrubar app.")
+            return
+
+        logging.error("Exceção não tratada no loop principal.", exc_info=(exc_type, exc_value, exc_traceback))
+
+    sys.excepthook = _hook
 
 def setup_logging(base_dir):
     # (Sua função de logging continua a mesma)
@@ -49,7 +56,13 @@ def setup_application():
     print(f"📦 Versão do APP V{APP_VERSION}")
     print(f"📁 Diretório base: {base_dir}")
     setup_logging(base_dir)
+    install_global_exception_hook()
     logging.info("Aplicação iniciada com a nova estrutura modular.")
+
+    # Importações tardias reduzem o custo de bootstrap do Python e evitam
+    # travamentos longos durante import em ambientes como VSCode.
+    from view.main_shell_view import MainShellView
+    from controller.main_controller import MainController
 
     # Carrega o estilo antes de criar a janela
     style_path = resource_path("utils/css/style.qss")
@@ -73,6 +86,7 @@ def setup_application():
     logging.info("Aplicação finalizada.")
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     try:
         setup_application()
     except KeyboardInterrupt:

@@ -12,7 +12,6 @@ from Contratos.controller.controller_table import populate_table, update_row_fro
 from Contratos.controller.mensagem_controller import MensagemController
 from Contratos.controller.settings_controller import SettingsController
 from Contratos.controller.manual_contract_controller import ManualContractController
-from Contratos.controller.exp_imp_table_controller import ExpImpTableController
 
 from PyQt6.QtWidgets import QMessageBox, QMenu, QFileDialog, QApplication, QHeaderView
 from PyQt6.QtGui import QStandardItem, QFont, QColor, QBrush
@@ -47,7 +46,8 @@ class UASGController:
         self.dashboard_controller = DashboardController(self.model, self.view)
         self.manual_contract_ctrl = ManualContractController(self.model, self.view)
         
-        # 5. Inicializa o controller de tabelas real
+        # 5. Inicializa o controller de tabelas real (import tardio para reduzir custo de boot)
+        from Contratos.controller.exp_imp_table_controller import ExpImpTableController
         self.table_controller = ExpImpTableController(self)
         
         self.view.settings_button.clicked.connect(self.show_settings_dialog)
