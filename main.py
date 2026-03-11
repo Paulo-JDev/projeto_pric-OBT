@@ -17,7 +17,7 @@ import logging
 from PyQt6.QtWidgets import QApplication
 from utils.utils import resource_path
 
-APP_VERSION = "11.0.1"
+APP_VERSION = "11.0.2"
 
 def install_global_exception_hook():
     """Evita traceback ruidoso para KeyboardInterrupt disparado dentro do loop Qt."""

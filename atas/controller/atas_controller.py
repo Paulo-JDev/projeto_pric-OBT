@@ -35,6 +35,9 @@ class AtasController:
         # --- SIGNALS DO MENU "PLANILHA" (antigo "DADOS") ---
         self.view.import_action.triggered.connect(self.import_data)
         self.view.export_completo_action.triggered.connect(self.generate_excel_report)
+
+        self.view.export_bi_action.triggered.connect(self.generate_bi_export)
+
         self.view.template_vazio_action.triggered.connect(self.generate_empty_template)
         self.view.export_para_importacao_action.triggered.connect(self.export_for_reimport)
 
@@ -397,7 +400,8 @@ class AtasController:
         if reply == QMessageBox.StandardButton.No: return
         
         source_model = self.view.proxy_model.sourceModel()
-        pareceres_to_delete = [source_model.item(self.view.proxy_model.mapToSource(idx).row(), 5).text() for idx in selected_indexes]
+        
+        pareceres_to_delete = [source_model.item(self.view.proxy_model.mapToSource(idx).row(), 6).text() for idx in selected_indexes]
         
         for parecer in pareceres_to_delete:
             self.model.delete_ata(parecer)
@@ -483,12 +487,16 @@ class AtasController:
         source_index = self.view.proxy_model.mapToSource(index)
         row = source_index.row()
         source_model = self.view.proxy_model.sourceModel()
+        
+        # Coluna 6 é onde o número da Ata (Parecer) está guardado
         parecer_item = source_model.item(row, 6)
         if not parecer_item: return
         
         ata_data = self.model.get_ata_by_parecer(parecer_item.text())
         if ata_data:
             self.show_ata_details(ata_data)
+        else:
+            QMessageBox.warning(self.view, "Erro", f"A ata '{parecer_item.text()}' não foi encontrada no banco de dados!")
 
     def show_context_menu(self, position):
         index = self.view.table_view.indexAt(position)
@@ -618,10 +626,21 @@ class AtasController:
 
     def show_ata_details(self, ata_data):
         """Abre a janela de detalhes e conecta o sinal de atualização."""
-        dialog = AtaDetailsDialog(ata_data, self.model, self.view)
-        dialog.btn_sync_trello.clicked.connect(lambda: self.run_trello_sync_ata(dialog, ata_data))
-        dialog.ata_updated.connect(lambda: self.update_ata_from_dialog(dialog))
-        dialog.exec()
+        try:
+            dialog = AtaDetailsDialog(ata_data, self.model, self.view)
+            
+            if hasattr(dialog, 'btn_sync_trello'):
+                dialog.btn_sync_trello.clicked.connect(lambda: self.run_trello_sync_ata(dialog, ata_data))
+            else:
+                print("Aviso: Botão 'btn_sync_trello' não encontrado em AtaDetailsDialog (Ignorando...).")
+                
+            dialog.ata_updated.connect(lambda: self.update_ata_from_dialog(dialog))
+            dialog.exec()
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc() # Mostra o erro verdadeiro no terminal
+            QMessageBox.critical(self.view, "Erro ao abrir detalhes", f"Erro interno ao gerar a tela:\n{e}")
 
     def generate_excel_report(self):
         """
@@ -782,6 +801,88 @@ class AtasController:
         except Exception as e:
             QMessageBox.critical(self.view, "Erro ao Gerar Planilha", f"Ocorreu um erro ao gerar a planilha:\n{str(e)}")
 
+    def generate_bi_export(self):
+        """
+        Gera uma planilha limpa (sem formatação visual complexa) focada apenas 
+        nos dados necessários para alimentar um Dashboard de BI.
+        """
+        atas = self.model.get_all_atas()
+        if not atas:
+            QMessageBox.warning(self.view, "Nenhum Dado", "Não há atas para gerar a tabela de BI.")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.view, "Salvar Exportação para BI", "Dados_BI_Atas.xlsx",
+            "Excel Files (*.xlsx);;All Files (*)"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            workbook = Workbook()
+            ws = workbook.active
+            ws.title = "Dados BI"
+
+            # Cabeçalhos focados em análise de dados
+            headers = [
+                'Setor', 'Modalidade', 'Empresa', 'Ata/Parecer', 'Objeto',
+                'Status','Data de Celebração', 'Data de Término', 'Termo Aditivo', 
+                'Valor Global', 'CNPJ', 'Link da Ata', 'Link da Portaria'
+            ]
+            ws.append(headers)
+
+            # Estilo simples para o cabeçalho
+            header_font = Font(bold=True)
+            for cell in ws[1]:
+                cell.font = header_font
+
+            # Inserção dos dados solicitados
+            for ata in atas:
+                # Extração segura dos links
+                link_ata = ata.links.serie_ata_link if ata.links and getattr(ata.links, 'serie_ata_link', None) else "Sem link"
+                link_portaria = ata.links.portaria_link if ata.links and getattr(ata.links, 'portaria_link', None) else "Sem link"
+
+                # Formatação de datas para o Excel reconhecer (YYYY-MM-DD)
+                # O BI lida melhor com formatos padronizados.
+                celebracao = ata.celebracao if ata.celebracao and ata.celebracao != 'None' else ""
+                termino = ata.termino if ata.termino and ata.termino != 'None' else ""
+
+                ws.append([
+                    ata.setor or "", 
+                    ata.modalidade or "", 
+                    ata.empresa or "",
+                    ata.contrato_ata_parecer or "", 
+                    ata.objeto or "",
+                    ata.status_info.status or "", 
+                    celebracao,
+                    termino,
+                    ata.termo_aditivo or "", 
+                    ata.valor_global or "0", 
+                    ata.cnpj or "", 
+                    link_ata, 
+                    link_portaria
+                ])
+
+            # Auto-ajuste simples das larguras para melhor leitura do usuário
+            for col in ws.columns:
+                max_length = 0
+                column = col[0].column_letter
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(cell.value)
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)
+                ws.column_dimensions[column].width = min(adjusted_width, 50) # Limita a 50 para o objeto não ficar enorme
+
+            workbook.save(file_path)
+            QMessageBox.information(self.view, "Sucesso", f"Dados para BI exportados com sucesso para:\n{file_path}")
+            
+        except Exception as e:
+            QMessageBox.critical(self.view, "Erro", f"Ocorreu um erro ao exportar os dados para BI: {e}")
+
     def generate_empty_template(self):
         """Gera uma planilha Excel vazia com os cabeçalhos necessários para a importação."""
         file_path, _ = QFileDialog.getSaveFileName(
@@ -914,10 +1015,15 @@ class AtasController:
         if not parecer_item: return
 
         parecer_value = parecer_item.data(Qt.ItemDataRole.UserRole)
+        if not parecer_value:
+            parecer_value = parecer_item.text()
+
         ata_data = self.model.get_ata_by_parecer(parecer_value)
 
         if ata_data:
             self.show_ata_details(ata_data)
+        else:
+            QMessageBox.warning(self.view, "Aviso", f"A ata '{parecer_value}' não foi encontrada no banco de dados!")
 
 # ================================================================ TRELLO SYNC ==================================================
     def run_trello_sync_ata(self, dialog, ata_data):

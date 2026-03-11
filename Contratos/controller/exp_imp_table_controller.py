@@ -362,11 +362,23 @@ class ExpImpTableController:
                     falha_count += 1
                     continue
                 
-                # Tenta encontrar o contrato correspondente usando a chave composta
-                if chave_planilha in program_contracts:
-                    contrato = program_contracts[chave_planilha]
-                    contrato_id = str(contrato.get("id"))
-                    
+                # --- NOVO CÓDIGO DE BUSCA ---
+                uasg_planilha, numero_ano_planilha = chave_planilha
+                contrato_id = None
+                
+                if uasg_planilha:
+                    # Busca exata com UASG (Ex: 787000 e 00140/2021)
+                    if chave_planilha in program_contracts:
+                        contrato_id = str(program_contracts[chave_planilha].get("id"))
+                else:
+                    # Busca ignorando a UASG (útil para formatos "001-2023")
+                    for (uasg_key, num_ano_key), contrato in program_contracts.items():
+                        if num_ano_key == numero_ano_planilha:
+                            contrato_id = str(contrato.get("id"))
+                            chave_planilha = (uasg_key, num_ano_key) # Atualiza a chave para o print final sair com a UASG correta
+                            break
+                            
+                if contrato_id:
                     # Prepara os dados para salvar
                     link_data = {
                         'link_contrato': None,
@@ -403,7 +415,7 @@ class ExpImpTableController:
             
             print("--- Importação Finalizada ---")
             QMessageBox.information(self.view, "Importação Concluída", f"Importação finalizada!\n\nSucessos: {sucesso_count}\nFalhas: {falha_count}")
-            self.update_table(self.view.uasg_info_label.text().split(" ")[1])
+            self.main_ctrl.update_table(self.view.uasg_info_label.text().split(" ")[1])
 
         except Exception as e:
             QMessageBox.critical(self.view, "Erro ao Importar", f"Ocorreu um erro ao processar a planilha:\n{e}")
@@ -634,14 +646,75 @@ class ExpImpTableController:
             numero_ano_formatado = f"{number:05d}/{year}" # Formato padronizado: 00001/2025
             return (uasg, numero_ano_formatado)
         return None
+    
+    def _normalize_contract_number(self, contract_string):
+        """Padroniza o número do contrato da base de dados para o formato 00000/AAAA."""
+        import re
+        if not contract_string:
+            return None
+        
+        numeros = re.findall(r'\d+', str(contract_string))
+        if len(numeros) >= 2:
+            numero = int(numeros[0])
+            ano = str(numeros[1])
+            if len(ano) == 2: 
+                ano = f"20{ano}"
+            return f"{numero:05d}/{ano}"
+            
+        return str(contract_string).strip()
 
     # O método _normalize_contract_number permanece o mesmo.
-    def _normalize_contract_number(self, contract_string):
-        """Extrai (número, ano) do formato do programa 'NUMERO/ANO'."""
-        if isinstance(contract_string, str) and '/' in contract_string:
-            parts = contract_string.split('/')
-            if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-                number = int(parts[0])
-                year = parts[1]
-                return f"{number:05d}/{year}"
+    def _normalize_spreadsheet_key(self, key_string):
+        """Extrai (UASG, 'NUMERO/ANO') ou (None, 'NUMERO/ANO') de formatos variados."""
+        key_string = str(key_string).strip()
+        
+        # Padrão 1: Com UASG (Ex: 87000/21-140/00, 87010/2024-015, 87400/...)
+        match_uasg = re.search(r'(\d{5})[-/](\d{2,4})[-/](\d+)', key_string)
+        if match_uasg:
+            uasg = match_uasg.group(1)
+            part2 = match_uasg.group(2)
+            part3 = match_uasg.group(3)
+            
+            # Descobre quem é o ano (part2 ou part3)
+            if len(part2) == 4 or (len(part2) == 2 and len(part3) >= 3):
+                year = part2
+                number = int(part3)
+            else:
+                year = part3
+                number = int(part2)
+            
+            # Ajuste dinâmico de UASG (Mapeia QUALQUER 87xxx -> 787xxx)
+            if len(uasg) == 5 and uasg.startswith('8'):
+                uasg = f"7{uasg}"
+            
+            if len(year) == 2:
+                year = f"20{year}"
+                
+            numero_ano_formatado = f"{number:05d}/{year}"
+            return (uasg, numero_ano_formatado)
+            
+        # Padrão 2: Sem UASG (Ex: 001-2023, 1531/2017, 2024-0027/00)
+        numeros = re.findall(r'\d+', key_string)
+        if len(numeros) >= 2:
+            n1, n2 = numeros[0], numeros[1]
+            
+            def is_year(s): return len(s) == 4 and 1990 <= int(s) <= 2100
+            
+            if is_year(n2):
+                year, number = n2, int(n1)
+            elif is_year(n1):
+                year, number = n1, int(n2)
+            else:
+                # Fallback para anos de 2 dígitos
+                if len(n2) == 2:
+                    year, number = n2, int(n1)
+                else:
+                    year, number = n1, int(n2)
+                    
+            if len(str(year)) == 2:
+                year = f"20{year}"
+                
+            numero_ano_formatado = f"{number:05d}/{year}"
+            return (None, numero_ano_formatado)
+            
         return None

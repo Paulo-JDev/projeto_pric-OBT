@@ -65,7 +65,10 @@ class AtasView(QWidget):
         self.planilha_menu = QMenu(self)
         self.import_action = self.planilha_menu.addAction(icon_manager.get_icon("importar"), "Importar Planilha")
         self.export_completo_action = self.planilha_menu.addAction(icon_manager.get_icon("excel_down"), "Exportar Tabela Completa")
+        self.export_bi_action = self.planilha_menu.addAction(icon_manager.get_icon("statistics"), "Exportar para BI")
+
         self.planilha_menu.addSeparator()
+        
         self.template_vazio_action = self.planilha_menu.addAction(icon_manager.get_icon("excel"), "Gerar Tabela Vazia")
         self.export_para_importacao_action = self.planilha_menu.addAction(icon_manager.get_icon("excel_up"), "Exportar para Re-importação")
         self.planilha_button.setMenu(self.planilha_menu)

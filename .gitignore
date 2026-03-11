@@ -58,6 +58,7 @@ imgs/
 
 # Exe's
 build/
+scripts/
 
 # API
 app.py

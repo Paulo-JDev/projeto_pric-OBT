@@ -1,12 +1,11 @@
 # scripts/migrate_atas_uuid.py
 import sqlite3
 import uuid
-import os
 from pathlib import Path
 
 def migrate():
-    # Caminho do banco de atas (ajustado para a sua estrutura)
-    db_path = Path("database/atas_controle.db")
+    # 🟢 CORREÇÃO: Caminho exato apontando para o banco de dados que a aplicação está a usar
+    db_path = Path(r"C:\projeto_pric-OBT\dist\Contratos360\database\atas_controle.db")
     
     if not db_path.exists():
         print(f"❌ Banco não encontrado em: {db_path}")
